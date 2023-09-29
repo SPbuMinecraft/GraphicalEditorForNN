@@ -23,24 +23,29 @@ db = SQLAlchemy(app)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    layers = db.relationship('Layer', backref='user')
+    models = db.relationship('Model', backref='user_id')
+
+
+class Model(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text)
+    owner = db.Column(db.Integer, db.ForeignKey('user.id'))
+    layers = db.relationship('Layer', backref='model_id')
 
 
 class Layer(db.Model):
-    __tablename__ = 'layer'
     id = db.Column(db.Integer, primary_key=True)
-    in_features = db.Column(db.Integer, nullable=False)
-    out_features = db.Column(db.Integer, nullable=False)
-    bias = db.Column(db.Boolean, nullable=False)
-    owner = db.Column(db.Integer, db.ForeignKey('user.id'))
+    type = db.Column(db.Text)
+    parameters = db.Column(db.Text)
+    model = db.Column(db.Integer, db.ForeignKey('model.id'))
 
 
 class Connection(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     layer_from = db.Column(db.Integer, db.ForeignKey('layer.id'))
     layer_to = db.Column(db.Integer, db.ForeignKey('layer.id'))
-    layers_from = db.relationship('Layer', backref='from', foreign_keys=[layer_from])
-    layers_to = db.relationship('Layer', backref='to', foreign_keys=[layer_to])
+    layers_from = db.relationship('Layer', backref='from_id', foreign_keys=[layer_from])
+    layers_to = db.relationship('Layer', backref='to_id', foreign_keys=[layer_to])
 
 
 class SQLWorker:
@@ -48,32 +53,32 @@ class SQLWorker:
         with app.app_context():
             db.create_all()
 
-    def add_layer(self, in_features: int, out_features: int, bias: bool, owner: int):
+    def add_layer(self, type: str, parameters: str, model: int):
         with app.app_context():
-            db.session.add(Layer(in_features=in_features, out_features=out_features, bias=bias, owner=owner))
+            db.session.add(Layer(type=type, parameters=parameters, model=model))
             db.session.commit()
 
     def add_connection(self, layer_from: int, layer_to: int):
         with app.app_context():
-            if self.check_dimencions(layer_from, layer_to):
+            if self.check_dimensions(layer_from, layer_to):
                 db.session.add(Connection(layer_from=layer_from, layer_to=layer_to))
                 db.session.commit()
 
-    def get_user_layers(self, owner: int):
+    def get_model_layers(self, model: int):
         with app.app_context():
-            layers = Layer.query.filter(Layer.owner == owner).all()
+            layers = Layer.query.filter(Layer.model == model).all()
             return layers
 
-    def get_user_connections(self, owner: int):
+    def get_model_connections(self, model: int):
         with app.app_context():
             connections_blocks = [Connection.query.filter(Connection.layer_from == layer.id).all() for layer in
-                                    Layer.query.filter(Layer.owner == owner).all()]
+                                    Layer.query.filter(Layer.model == model).all()]
             connections = []
             for block in connections_blocks:
                 connections += block
             return connections
 
-    def check_dimencions(self, layer_from, layer_to):
+    def check_dimensions(self, layer_from, layer_to):
         return True
 
 
@@ -86,7 +91,7 @@ def add_layer():
     if not json:
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
-        sql_worker.add_layer(json['in_features'], json['out_features'], json['bias'], json['owner'])
+        sql_worker.add_layer(json['type'], json['parameters'], json['model'])
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
     except CSVError as e:
@@ -108,17 +113,16 @@ def add_connection():
     return "done", HTTPStatus.CREATED
 
 
-@app.route('/get_graph_elements/<int:user_id>', methods=['GET'])
-def get_graph_elements(user_id: int):
+@app.route('/get_graph_elements/<int:model_id>', methods=['GET'])
+def get_graph_elements(model_id: int):
     layers = [{
-        'in_features': layer.in_features,
-        'out_features': layer.out_features,
-        'bias': layer.bias
-    } for layer in sql_worker.get_user_layers(user_id)]
+        'type': layer.type,
+        'parameters': layer.parameters,
+    } for layer in sql_worker.get_model_layers(model_id)]
     connections = [{
         'layer_from': connection.layer_from,
         'layer_to': connection.layer_to
-    } for connection in sql_worker.get_user_connections(user_id)]
+    } for connection in sql_worker.get_model_connections(model_id)]
     return jsonify({'layers': layers, 'connections': connections})
 
 
