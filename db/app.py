@@ -12,13 +12,13 @@ def error(code: int, message: str):
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'minecraft'
+app = Flask(__name__)  # Has to be global by Flask documentation
+app.config['SECRET_KEY'] = 'minecraft'  # Setting config
 app.config['SQLALCHEMY_DATABASE_URI'] = \
     'sqlite:///' + os.path.join(basedir, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
+db = SQLAlchemy(app)  # Has to be global by Flask documentation
 
 
 class User(db.Model):
@@ -82,7 +82,7 @@ class SQLWorker:
         return True
 
 
-sql_worker = SQLWorker()
+sql_worker = SQLWorker()  # Has to be there
 
 
 @app.route('/add_layer', methods=['POST'])
