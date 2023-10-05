@@ -50,12 +50,11 @@ void Tensor::backward(){
 
 }
 
-void Tensor::accumulate(Blob&  grad){
-    gradient += grad;
+void Tensor::accumulate(Blob&  gradient){
+    this->gradient += gradient;
     childrenGradReady++;
     if (childrenGradReady == childrenCount)
-        for(auto p: parents) 
-            p.get().accumulate(grad);
+        backward();
 };
 
 void Tensor::clear(){
