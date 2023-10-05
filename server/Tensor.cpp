@@ -38,14 +38,14 @@ void Tensor::backward(){
     for (int i = 0; i < parents.size(); ++i) parents[i].get().accumulate(gs[i]);
 
 }
-//непонятно, как обходить детей (добавить vector<TensorRef> children ?)
+
 void Tensor::accumulate(Blob&  grad){
     gradient += grad;
     std::transform(parents.begin(), parents.end(), parents.begin(),
                     [](TensorRef t) { t.get().childrenGradReady++; });
     for(auto p: parents) 
         if (p.get().childrenGradReady == p.get().childrenCount)
-            p.get().backward();
+            p.get().accumulate(grad);
 };
 
 void Tensor::clear(){
