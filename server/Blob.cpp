@@ -2,6 +2,7 @@
 #include <ostream>
 #include <cassert>
 #include <algorithm>
+#include <cstring>
 
 using namespace std;
 
@@ -18,6 +19,9 @@ Blob::Blob(size_t rows, size_t cols, float* data): rows(rows), cols(cols) {
 Blob::Blob(const Blob& other): rows(other.rows), cols(other.cols) {
     data = new float[rows * cols];
     copy_n(other.data, rows * cols, data);
+}
+Blob::Blob(): rows(0), cols(0){
+    this->data = nullptr;
 }
 
 Blob::~Blob(){

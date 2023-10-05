@@ -5,13 +5,14 @@
 
 class Blob {
     float* data;
-    Blob(std::size_t rows, std::size_t cols);
+    
 public:
     const std::size_t rows;
     const std::size_t cols;
-
+    Blob(std::size_t rows, std::size_t cols);
     Blob(std::size_t rows, std::size_t cols, float* data);
     Blob(const Blob& other);
+    Blob();
     ~Blob();
 
     float at(std::size_t i, std::size_t j) const;
@@ -36,3 +37,5 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Blob& b);
 };
+
+typedef std::reference_wrapper<Blob> BlobRef;
