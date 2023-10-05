@@ -11,28 +11,39 @@ using namespace std;
 
 static None noop = None();
 
-//кажется, что нужно добавить Blob& data в конструктор, иначе какова размерность и значение output и gradient?
+void get_parent_datas(vector<BlobRef> &datas, Tensor& tensor){
+    std::transform(tensor.parents.begin(), tensor.parents.end(), datas.begin(),
+                [](TensorRef t) { return t.get().output; });
+}
+
 Tensor::Tensor(const Operation& operation, vector<TensorRef> parents): operation(operation) {
     this->parents = parents;
     std::transform(parents.begin(), parents.end(), parents.begin(),
                     [](TensorRef t) { t.get().childrenCount++; });
-    output = Blob((size_t)1, (size_t)1);
-    gradient = Blob((size_t)1, (size_t)1);
+
+    vector<BlobRef> datas((size_t)parents.size());
+    get_parent_datas(datas, *this);
+
+    output = operation.compute(datas);
+    gradient = Blob((size_t)output.rows, (size_t)output.cols);
 }
 
-Tensor::Tensor(): Tensor(noop, vector<TensorRef> {}) {};
+Tensor::Tensor(Blob& data): operation(noop) {
+    parents = vector<TensorRef> {};
+    output = data;
+    gradient = Blob((size_t)output.rows, (size_t)output.cols);
+};
 
 Blob& Tensor::forward() {
     vector<BlobRef> datas((size_t)parents.size());
-    std::transform(parents.begin(), parents.end(), datas.begin(), 
-                    [](TensorRef t) { return t.get().output; });
+    get_parent_datas(datas, *this);
     output = operation.compute(datas);
     return output;
 }
+
 void Tensor::backward(){
     vector<BlobRef> datas((size_t)parents.size());
-    std::transform(parents.begin(), parents.end(), datas.begin(),
-                    [](TensorRef t) { return t.get().output; });
+    get_parent_datas(datas, *this);
     vector<BlobRef> gs = operation.grad(gradient, datas);
     assert(gs.size() == parents.size());
     for (int i = 0; i < parents.size(); ++i) parents[i].get().accumulate(gs[i]);
@@ -41,16 +52,14 @@ void Tensor::backward(){
 
 void Tensor::accumulate(Blob&  grad){
     gradient += grad;
-    std::transform(parents.begin(), parents.end(), parents.begin(),
-                    [](TensorRef t) { t.get().childrenGradReady++; });
-    for(auto p: parents) 
-        if (p.get().childrenGradReady == p.get().childrenCount)
+    childrenGradReady++;
+    if (childrenGradReady == childrenCount)
+        for(auto p: parents) 
             p.get().accumulate(grad);
 };
 
 void Tensor::clear(){
-    output = Blob((size_t)1, (size_t)1);
-    gradient = Blob((size_t)1, (size_t)1);
+    gradient = Blob((size_t)output.rows, (size_t)output.cols);
     this->isOutputCached = false;
     for (auto p: parents) p.get().clear();
 };

@@ -10,20 +10,21 @@ class Tensor;
 typedef std::reference_wrapper<Tensor> TensorRef;
 
 class Tensor {
-    Blob output;
-    Blob gradient;
-    std::vector<TensorRef> parents;
-    const Operation& operation;
-    bool isOutputCached = false;
-    int childrenCount = 0;
-    int childrenGradReady = 0;
+    private:
+        Blob output;
+        Blob gradient;
+        std::vector<TensorRef> parents;
+        const Operation& operation;
+        bool isOutputCached = false;
+        int childrenCount = 0;
+        int childrenGradReady = 0;
+        friend void get_parent_datas(std::vector<BlobRef> &datas, Tensor& tensor);
 
-    Tensor(const Operation& operation, std::vector<TensorRef> parents);
-    Tensor();
-
-    Blob& forward();
-    void backward();
-    void accumulate(Blob& grad);
-
-    void clear();
+    public:
+        Tensor(const Operation& operation, std::vector<TensorRef> parents);
+        Tensor(Blob& data);
+        Blob& forward();
+        void backward();
+        void accumulate(Blob& grad);
+        void clear();
 };
