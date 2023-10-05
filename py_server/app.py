@@ -117,5 +117,27 @@ def train_model(user_id: int, model_id: int):
     #     error(HTTPStatus.BAD_REQUEST, message=str(e))
 
 
+# dummy: TODO (in sprint 2)
+# Hardcoded function to make predictions for XOR model
+@app.route('/predict/<int:user_id>/<int:model_id>', methods=['POST'])
+def predict(user_id: int, model_id: int):
+    json = request.json
+    if not json:
+        error(HTTPStatus.BAD_REQUEST, message="No json provided")
+    try:
+        response = requests.get(
+            CPP_SERVER_ADDRESS + "/predict",
+            json=jsonify({"x": json["x"], "y": json["y"]}),
+            timeout=3
+        )
+        return restopse.text, HTTPStatus.OK
+    except KeyError as e:
+        error(HTTPStatus.BAD_REQUEST, str(e))
+    except TimeoutError as e:
+        error(HTTPStatus.REQUEST_TIMEOUT, "Time limit exceeded")
+    except Exception as e:
+        error(HTTPStatus.BAD_REQUEST, str(e))
+
+
 if __name__ == "__main__":
     app.run(host="localhost", port=app.config["PY_SERVER_PORT"], debug=True)
