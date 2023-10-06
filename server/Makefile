@@ -9,10 +9,10 @@ CC = g++
 # Compiler flags
 FLAGS = -g -Wall -std=c++17
 
-SRC=BlobTests.cpp Blob.cpp
-OBJ=BlobTests.o Blob.o
+SRC=Blob.cpp Operation.cpp Tensor.cpp main.cpp
+OBJ=Blob.o Operation.o Tensor.o main.o
 
-TARGET=test
+TARGET=main
 
 all: $(TARGET)
 
@@ -24,5 +24,8 @@ $(TARGET): $(OBJ)
 %.o: %.cpp
 	$(CC) $(FLAGS) -c $< -o $@
 
+test: BlobTests.o Blob.o
+	$(CC) $(FLAGS) $^ -o $@
+
 clean:
-	rm test $(OBJ)
+	rm main test $(OBJ) BlobTests.o

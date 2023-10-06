@@ -1,26 +1,25 @@
 #include "Blob.h"
-#include <ostream>
 #include <cassert>
 #include <algorithm>
+#include <cstring>
 
 using namespace std;
 
-Blob::Blob(size_t rows, size_t cols): rows(rows), cols(cols) {
-    this->data = new float[rows * cols];
-    memset(data, 0, rows * cols * sizeof(float));
-}
-
-Blob::Blob(size_t rows, size_t cols, float* data): rows(rows), cols(cols) {
+Blob::Blob(size_t rows, size_t cols, const float* data): rows(rows), cols(cols) {
     this->data = new float[rows * cols];
     copy_n(data, rows * cols, this->data);
 }
 
-Blob::Blob(const Blob& other): rows(other.rows), cols(other.cols) {
-    data = new float[rows * cols];
-    copy_n(other.data, rows * cols, data);
+Blob::Blob(size_t rows, size_t cols): rows(rows), cols(cols) {
+    this->data = new float[rows * cols];
+    clear();
 }
 
-Blob::~Blob(){
+Blob::Blob(const Blob& other): Blob(other.rows, other.cols, other.data) {}
+
+Blob::Blob(): data(nullptr), rows(0), cols(0) {}
+
+Blob::~Blob() {
     delete[] data;
 }
 
@@ -37,12 +36,13 @@ float* Blob::operator[](size_t index) {
     return (data + cols * index);
 }
 
+void Blob::clear() {
+    memset(this->data, 0, rows * cols * sizeof(float));
+}
+
 bool Blob::operator==(const Blob& b) const {
     if (rows != b.rows || cols != b.cols) return false;
-    for (int i = 0; i < rows; ++i)
-        for (int j = 0; j < cols; ++j)
-            if ((*this)[i][j] != b[i][j]) return false;
-    return true;
+    return equal(this->data, this->data + rows * cols, b.data);
 }
 
 bool Blob::operator!=(const Blob& b) const {
@@ -56,8 +56,13 @@ Blob Blob::operator-() const {
 }
 
 Blob Blob::operator+(const Blob& t) const {
-    Blob tmp = *this;
-    tmp += t;
+    const Blob *big = this;
+    const Blob *small = &t;
+
+    if (big->rows < small->rows) swap(big, small);
+
+    Blob tmp = *big;
+    tmp += *small;
     return tmp;
 }
 
@@ -85,20 +90,46 @@ Blob Blob::transposed() const {
     return result;
 }
 
+Blob Blob::applying(UnaryTransform transform) const {
+    Blob result {rows, cols};
+    std::transform(data, data + rows * cols, result.data, transform);
+    return result;
+}
+
+Blob operator*(float x, const Blob& b) {
+    Blob result {b.rows, b.cols};
+    transform(b.data, b.data + b.rows * b.cols, result.data,
+              [x](float v) { return x * v; });
+    return result;
+}
+
+Blob operator*(const Blob& b, float x) {
+    return x * b;
+}
+
 void swap(Blob& first, Blob& second) {
     assert(first.rows == second.rows && first.cols == second.cols);
     swap(first.data, second.data);
 }
 
 Blob& Blob::operator=(const Blob& t) {
+    if (this == &t) return *this;
+
     Blob tmp(t);
     swap(*this, tmp);
     return *this;
 }
 
 Blob& Blob::operator+=(const Blob& t) {
-    assert(rows == t.rows && cols == t.cols);
-    transform(data, data + (rows * cols), t.data, data, [](float x, float y){ return (x + y); });
+    assert(rows % t.rows == 0);
+    assert(cols % t.cols == 0);
+    for (int r = 0; r < rows; ++r)
+        for (int c = 0; c < cols; c += t.cols)
+            transform(t.data + (r % t.rows) * t.cols,
+                      t.data + (r % t.rows + 1) * t.cols,
+                      data + r * cols + c,
+                      data + r * cols + c,
+                      [](float x, float y) { return x + y; });
     return *this;
 }
 
