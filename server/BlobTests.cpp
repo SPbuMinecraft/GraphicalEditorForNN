@@ -59,6 +59,17 @@ TEST_CASE("Simple") {
         CHECK(a + -d == a - d);
     }
 
+    SUBCASE("Test stretching +") {
+        float fones[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+        Blob oneByOne {1, 1, fones};
+        Blob oneByTwo {2, 1, fones};
+        Blob oneByFive {1, 5, fones};
+        Blob ones {2, 5, fones};
+        CHECK(a + ones == a + oneByOne);
+        CHECK(a + ones == a + oneByTwo);
+        CHECK(a + ones == a + oneByFive);
+    }
+
     SUBCASE("Test *") {
         float result[] = { -95, -110, -220, -260 };
         Blob c {2, 2, result};
