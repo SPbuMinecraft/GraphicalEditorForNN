@@ -17,27 +17,41 @@
         integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs="
         crossorigin="anonymous"
 ></script>
+
+
 <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.css"
 />
+
+
 <link
         rel="stylesheet"
         type="text/css"
-        href="https://jerosoler.github.io/Drawflow/beautiful.css"
+        href="./style.css"
 />
+
+
 <link
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
         integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ="
         crossorigin="anonymous"
 />
+
+
 <link
         href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
         rel="stylesheet"
 />
+
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
 <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
+
+
+
+<!-- HTML parts -->
 
 <header>
     <h2>Demo constructor</h2>
@@ -72,7 +86,25 @@
                 data-node="email"
         >
             <i class="fas fa-mouse"></i><span> Module Y</span>
+
+        </div> <br>
+
+        <div style = "position:relative; left:45px; top:2px; background-color:white;">
+            <form id="xy_form">
+                <div class="input-group">
+                    <label for="x_value">X</label><br>
+                    <input type="text" id="x_value" name="x_value"><br>
+
+                    <label for="y_value">Y</label><br>
+                    <input type="text" class="form-control" id="y_value" name="y_value"> <br> <br>
+
+                    <button type="submit" value="Submit" id="btnSubmit">
+                        Submit
+                    </button>
+                </div>
+            </form>
         </div>
+
     </div>
     <div class="col-right">
         <div class="menu">
@@ -129,6 +161,9 @@
     </div>
 </div>
 
+
+<!-- JS scripts -->
+
 <script>
     var id = document.getElementById("drawflow");
     const editor = new Drawflow(id);
@@ -153,11 +188,11 @@
 
                         },
                         outputs: {
-                                     output_1: {
-                                       connections: [
-                                         { node: "4", output: "input_1" }
-                                       ]
-                                     }
+                            output_1: {
+                                connections: [
+                                    { node: "4", output: "input_1" }
+                                ]
+                            }
                         },
                         pos_x: 700,
                         pos_y: 363
@@ -203,7 +238,7 @@
     });
 
     editor.on("mouseMove", function (position) {
-        console.log("Position mouse x:" + position.x + " y:" + position.y);
+        //console.log("Position mouse x:" + position.x + " y:" + position.y);
     });
 
     editor.on("nodeMoved", function (id) {
@@ -308,7 +343,7 @@
         `;
                 editor.addNode(
                     "moduleA",
-                    0,
+                    1,
                     1,
                     pos_x,
                     pos_y,
@@ -323,7 +358,7 @@
             <div class="title-box"><i class="fab moduleA"></i> Module A</div>
           </div>
           `;
-                editor.addNode("moduleA", 1, 0, pos_x, pos_y, "moduleA", {}, moduleA);
+                editor.addNode("moduleA", 2, 0, pos_x, pos_y, "moduleA", {}, moduleA);
                 break;
             case "Module C":
                 var ModuleC = `
@@ -337,8 +372,8 @@
           `;
                 editor.addNode(
                     "Module C",
-                    0,
                     1,
+                    2,
                     pos_x,
                     pos_y,
                     "Module C",
@@ -521,7 +556,7 @@
         editor.precanvas.style.transform = "";
         editor.precanvas.style.left = editor.canvas_x + "px";
         editor.precanvas.style.top = editor.canvas_y + "px";
-        console.log(transform);
+        // console.log(transform);
 
         editor.editor_mode = "fixed";
     }
@@ -554,6 +589,77 @@
             unlock.style.display = "none";
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////
+    // JSON sending
+
+    async function performPostHttpRequest(fetchlink, headers, body) {
+        if(!fetchlink || !headers || !body) {
+            throw new Error("One or more POST request parameters was not passed :( .")
+        }
+        try {
+            const rawResponse = await fetch(fetchlink, {
+                mode: "no-cors",
+                method: "POST",
+                headers: headers,
+                body: JSON.stringify(body)
+            })
+            const content = await rawResponse.json()
+            return content
+        }
+        catch (err) {
+            console.log(`Error at fetch POST: ${err}`)
+            throw err
+        }
+    }
+
+
+    function buildJsonFormData(form) {
+        const jsonFormData = { }
+        for (const pair of new FormData(form)) {
+            jsonFormData[pair[0]] = pair[1]
+        }
+        return jsonFormData
+    }
+
+    function buildHeaders(authorization = null) {
+        const headers = {
+            "Content-Type": "application/json",
+            "Authorization": (authorization) ? authorization : "Bearer TOKEN_MISSING"
+        };
+        return headers;
+    }
+
+    async function submitForm(e, form) {
+        e.preventDefault()
+
+
+        const btnSubmit = document.getElementById("btnSubmit")
+        btnSubmit.disabled = true
+        setTimeout(() => btnSubmit.disabled = false, 2000)
+
+        const jsonFormData = buildJsonFormData(form)
+        const headers = buildHeaders()
+        const response = await performPostHttpRequest('http://localhost:2000/predict/1/1/', headers, jsonFormData)
+
+        if (response) {
+            console.log("Success request")
+        }
+        else {
+            console.log("An error occured")
+        }
+    }
+
+
+    // event listener
+    const xy_form = document.querySelector("#xy_form");
+    if (xy_form) {
+        xy_form.addEventListener("submit", function(e) {
+            submitForm(e, this);
+        });
+    }
+
+
 </script>
 </body>
 </html>
