@@ -1,0 +1,62 @@
+{
+    "graph": {
+        "connections": [
+            {
+                "layer_from": 0,
+                "layer_to": 1
+            },
+            {
+                "layer_from": 1,
+                "layer_to": 2
+            },
+            {
+                "layer_from": 2,
+                "layer_to": 3
+            }
+        ],
+        "layers": [
+            {
+                "id": 0,
+                "type": "input",
+                "parameters": {
+                    "outputSize": 2
+                }
+            },
+            {
+                "id": 1,
+                "type": "linear",
+                "parameters": {
+                    "inputSize": 2,
+                    "outputSize": 2
+                }
+            },
+            {
+                "id": 2,
+                "type": "linear",
+                "parameters": {
+                    "inputSize": 2,
+                    "outputSize": 1
+                }
+            },
+            {
+                "id": 3,
+                "type": "output",
+                "parameters": {
+                    "inputSize": 1
+                }
+            }
+        ]
+    },
+
+    "dataset": {
+        "input": [
+            [ 0, 0 ],
+            [ 0, 1 ],
+            [ 1, 0 ],
+            [ 1, 1 ]
+        ],
+        "output": [
+            [ 0, 0, 0, 1 ]
+        ]
+    }
+}
