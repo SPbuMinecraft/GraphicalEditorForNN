@@ -9,9 +9,8 @@ from flask import Response, abort
 class LayersConnectionStatus(Enum):
     OK = 0
     DoNotExist = 1
-    FromDifferentModels = 2
-    AccessDenied = 3
-    DimensionsMismatch = 4
+    AccessDenied = 2
+    DimensionsMismatch = 3
 
 
 def to_port(num: int) -> int:

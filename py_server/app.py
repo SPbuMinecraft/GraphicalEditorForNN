@@ -71,11 +71,9 @@ def add_connection(user_id: int, model_id: int):
         layer_from_id, layer_to_id = int(json['layer_from']), int(json['layer_to'])
         allowed = sql_worker.verify_connection(user_id, model_id, layer_from_id, layer_to_id)
         if allowed == LayersConnectionStatus.DoNotExist:
-            error(HTTPStatus.NOT_FOUND, "At leat on of layers does not exist")
-        if allowed == LayersConnectionStatus.FromDifferentModels:
-            error(HTTPStatus.PRECONDITION_FAILED, "Layers refer to different models")
+            error(HTTPStatus.NOT_FOUND, "At least on of layers does not exist")
         if allowed == LayersConnectionStatus.AccessDenied:
-            error(HTTPStatus.FORBIDDEN, "You have no rights for training this model")
+            error(HTTPStatus.FORBIDDEN, "You have no rights for changing this model")
         if allowed == LayersConnectionStatus.DimensionsMismatch:
             error(HTTPStatus.PRECONDITION_FAILED, message="Dimensions do not match")
         inserted_id = sql_worker.add_connection(layer_from_id, layer_to_id, model_id)

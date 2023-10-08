@@ -104,11 +104,11 @@ class SQLWorker:
             model = Model.query.filter(Model.id == model_id).first()
             model_items = json.loads(model.content)
             layers = model_items['layers']
-            layer1 = list(filter(lambda layer: layer['id'] == layer_from, layers))[0]
-            layer2 = list(filter(lambda layer: layer['id'] == layer_to, layers))[0]
+            layer1 = list(filter(lambda layer: layer['id'] == layer_from, layers))
+            layer2 = list(filter(lambda layer: layer['id'] == layer_to, layers))
             if not layer1 or not layer2:
                 return LayersConnectionStatus.DoNotExist
-            if not self.check_dimensions(layer1, layer2):
+            if not self.check_dimensions(layer1[0], layer2[0]):
                 return LayersConnectionStatus.DimensionsMismatch
             return LayersConnectionStatus.OK
 
