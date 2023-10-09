@@ -22,18 +22,6 @@ DB_ADDRESS = "http://" + app.config["DB_HOSTNAME"] + ":" + str(app.config["DB_PO
 CPP_SERVER_ADDRESS = "http://" + app.config["PY_SERVER_HOSTNAME"] + ":" + str(app.config["PY_SERVER_PORT"])
 
 
-def get_graph_elements(model_id: int):
-    layers = [{
-        'type': layer.layer_type,
-        'parameters': layer.parameters,
-    } for layer in sql_worker.get_model_layers(model_id)]
-    connections = [{
-        'layer_from': connection.layer_from,
-        'layer_to': connection.layer_to
-    } for connection in sql_worker.get_model_connections(model_id)]
-    return {'layers': layers, 'connections': connections}
-
-
 @app.route('/add_user', methods=['POST'])
 def add_user():
     json = request.json
@@ -48,8 +36,11 @@ def add_user():
 
 @app.route('/add_model/<int:user_id>', methods=['POST'])
 def add_model(user_id: int):
+    json = request.json
+    if not json:
+        error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
-        inserted_id = sql_worker.add_model(user_id)
+        inserted_id = sql_worker.add_model(user_id, json['name'])
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
     return str(inserted_id), HTTPStatus.CREATED
@@ -71,23 +62,21 @@ def add_layer(user_id: int, model_id: int):
     return str(inserted_id), HTTPStatus.CREATED
 
 
-@app.route('/add_connection/<int:user_id>', methods=['POST'])
-def add_connection(user_id: int):
+@app.route('/add_connection/<int:user_id>/<int:model_id>', methods=['POST'])
+def add_connection(user_id: int, model_id: int):
     json = request.json
     if not json:
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
         layer_from_id, layer_to_id = int(json['layer_from']), int(json['layer_to'])
-        allowed = sql_worker.verify_connection(user_id, layer_from_id, layer_to_id)
+        allowed = sql_worker.verify_connection(user_id, model_id, layer_from_id, layer_to_id)
         if allowed == LayersConnectionStatus.DoNotExist:
-            error(HTTPStatus.NOT_FOUND, "At leat on of layers does not exist")
-        if allowed == LayersConnectionStatus.FromDifferentModels:
-            error(HTTPStatus.PRECONDITION_FAILED, "Layers refer to different models")
+            error(HTTPStatus.NOT_FOUND, "At least on of layers does not exist")
         if allowed == LayersConnectionStatus.AccessDenied:
-            error(HTTPStatus.FORBIDDEN, "You have no rights for training this model")
+            error(HTTPStatus.FORBIDDEN, "You have no rights for changing this model")
         if allowed == LayersConnectionStatus.DimensionsMismatch:
             error(HTTPStatus.PRECONDITION_FAILED, message="Dimensions do not match")
-        inserted_id = sql_worker.add_connection(layer_from_id, layer_to_id)
+        inserted_id = sql_worker.add_connection(layer_from_id, layer_to_id, model_id)
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
     return str(inserted_id), HTTPStatus.CREATED
@@ -101,7 +90,7 @@ def train_model(user_id: int, model_id: int):
         error(HTTPStatus.FORBIDDEN, "You have no rights for training this model")
 
     try:
-        model = get_graph_elements(model_id)
+        model = sql_worker.get_graph_elements(model_id)
         for i in range(len(model['layers'])):
             model['layers'][i]['parameters'] = parse_parameters(model['layers'][i]['parameters'])
         if not is_valid_model(model):
@@ -130,7 +119,7 @@ def predict(user_id: int, model_id: int):
             json=jsonify({"x": json["x"], "y": json["y"]}),
             timeout=3
         )
-        return restopse.text, HTTPStatus.OK
+        return response.text, HTTPStatus.OK
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, str(e))
     except TimeoutError as e:
