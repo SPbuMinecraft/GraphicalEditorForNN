@@ -13,6 +13,13 @@ class LayersConnectionStatus(Enum):
     DimensionsMismatch = 3
 
 
+class DeleteStatus(Enum):
+    OK = 0
+    ModelNotExist = 1
+    ElementNotExist = 2
+    LayerNotFree = 3
+
+
 def to_port(num: int) -> int:
     return int(os.environ.get("PORT", num))
 

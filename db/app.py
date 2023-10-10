@@ -12,7 +12,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
-from utils import LayersConnectionStatus, parse_parameters, error
+from utils import LayersConnectionStatus, DeleteStatus, parse_parameters, error
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -72,7 +72,7 @@ class SQLWorker:
             if not model:
                 return -1
             model_items = json.loads(model.content)  # Throws exception if model.content is not json
-            new_id = len(model_items['layers'])
+            new_id = model_items['layers'][-1]['id'] + 1 if len(model_items['layers']) > 0 else 0
             new_layer = {'id': new_id, 'layer_type': layer_type, 'parameters': parameters}  # Should be refactored?
             model_items['layers'].append(new_layer)
             model.content = json.dumps(model_items)
@@ -86,13 +86,47 @@ class SQLWorker:
             if not model:
                 return -1
             model_items = json.loads(model.content)
-            new_id = len(model_items['connections'])
+            new_id = model_items['connections'][-1]['id'] + 1 if len(model_items['connections']) > 0 else 0
             new_connection = {'id': new_id, 'layer_from': layer_from, 'layer_to': layer_to}
             model_items['connections'].append(new_connection)
             model.content = json.dumps(model_items)
             db.session.add(model)
             db.session.commit()
             return new_id
+
+    def delete_layer(self, layer_id: int, model_id: int):
+        with app.app_context():
+            model = Model.query.filter(Model.id == model_id).first()
+            if not model:
+                return DeleteStatus.ModelNotExist
+            model_items = json.loads(model.content)
+            if any(filter(lambda connection: connection['layer_from'] == layer_id or connection['layer_to'] == id,
+                          model_items['connections'])):
+                return DeleteStatus.LayerNotFree
+            new_layers_list = list(filter(lambda layer: layer['id'] != layer_id, model_items['layers']))
+            if len(new_layers_list) == len(model_items['layers']):
+                return DeleteStatus.ElementNotExist
+            model_items['layers'] = new_layers_list
+            model.content = json.dumps(model_items)
+            db.session.add(model)
+            db.session.commit()
+            return DeleteStatus.OK
+
+    def delete_connection(self, connection_id: int, model_id: int):
+        with app.app_context():
+            model = Model.query.filter(Model.id == model_id).first()
+            if not model:
+                return DeleteStatus.ModelNotExist
+            model_items = json.loads(model.content)
+            new_connections_list = list(
+                filter(lambda connection: connection['id'] != connection_id, model_items['connections']))
+            if len(new_connections_list) == len(model_items['connections']):
+                return DeleteStatus.ElementNotExist
+            model_items['connections'] = new_connections_list
+            model.content = json.dumps(model_items)
+            db.session.add(model)
+            db.session.commit()
+            return DeleteStatus.OK
 
     def check_dimensions(self, layer_from: dict, layer_to: dict):
         return True
