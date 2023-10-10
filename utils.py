@@ -16,9 +16,8 @@ class LayersConnectionStatus(Enum):
 class DeleteStatus(Enum):
     OK = 0
     ModelNotExist = 1
-    LayerNotExist = 2
-    ConnectionNotExist = 3
-    LayerNotFree = 4
+    ElementNotExist = 2
+    LayerNotFree = 3
 
 
 def to_port(num: int) -> int:

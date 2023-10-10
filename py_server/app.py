@@ -92,7 +92,7 @@ def delete_layer(user_id: int, model_id: int):
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
         status = sql_worker.delete_layer(int(json['id']), model_id)
-        if status == DeleteStatus.LayerNotExist:
+        if status == DeleteStatus.ElementNotExist:
             error(HTTPStatus.NOT_FOUND, "Layer does not exist")
         if status == DeleteStatus.LayerNotFree:
             error(HTTPStatus.BAD_REQUEST, "The layer contains connections")
@@ -111,7 +111,7 @@ def delete_connection(user_id: int, model_id: int):
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
         status = sql_worker.delete_connection(int(json['id']), model_id)
-        if status == DeleteStatus.ConnectionNotExist:
+        if status == DeleteStatus.ElementNotExist:
             error(HTTPStatus.NOT_FOUND, "Connection does not exist")
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))

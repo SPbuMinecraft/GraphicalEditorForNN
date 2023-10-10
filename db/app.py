@@ -105,7 +105,7 @@ class SQLWorker:
                 return DeleteStatus.LayerNotFree
             new_layers_list = list(filter(lambda layer: layer['id'] != layer_id, model_items['layers']))
             if len(new_layers_list) == len(model_items['layers']):
-                return DeleteStatus.LayerNotExist
+                return DeleteStatus.ElementNotExist
             model_items['layers'] = new_layers_list
             model.content = json.dumps(model_items)
             db.session.add(model)
@@ -121,7 +121,7 @@ class SQLWorker:
             new_connections_list = list(
                 filter(lambda connection: connection['id'] != connection_id, model_items['connections']))
             if len(new_connections_list) == len(model_items['connections']):
-                return DeleteStatus.ConnectionNotExist
+                return DeleteStatus.ElementNotExist
             model_items['connections'] = new_connections_list
             model.content = json.dumps(model_items)
             db.session.add(model)
