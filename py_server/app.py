@@ -13,7 +13,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
-from utils import error, parse_parameters, is_valid_model, LayersConnectionStatus
+from utils import error, parse_parameters, is_valid_model, LayersConnectionStatus, DeleteStatus
 from db.app import sql_worker
 
 app = Flask(__name__)
@@ -21,18 +21,6 @@ app.config.from_pyfile("../config.py")
 
 DB_ADDRESS = "http://" + app.config["DB_HOSTNAME"] + ":" + str(app.config["DB_PORT"])
 CPP_SERVER_ADDRESS = "http://" + app.config["SERVER_HOSTNAME"] + ":" + str(app.config["SERVER_PORT"])
-
-
-def get_graph_elements(model_id: int):
-    layers = [{
-        'type': layer.layer_type,
-        'parameters': layer.parameters,
-    } for layer in sql_worker.get_model_layers(model_id)]
-    connections = [{
-        'layer_from': connection.layer_from,
-        'layer_to': connection.layer_to
-    } for connection in sql_worker.get_model_connections(model_id)]
-    return {'layers': layers, 'connections': connections}
 
 
 @app.route('/add_user', methods=['POST'])
@@ -49,8 +37,11 @@ def add_user():
 
 @app.route('/add_model/<int:user_id>', methods=['POST'])
 def add_model(user_id: int):
+    json = request.json
+    if not json:
+        error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
-        inserted_id = sql_worker.add_model(user_id)
+        inserted_id = sql_worker.add_model(user_id, json['name'])
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
     return str(inserted_id), HTTPStatus.CREATED
@@ -72,26 +63,60 @@ def add_layer(user_id: int, model_id: int):
     return str(inserted_id), HTTPStatus.CREATED
 
 
-@app.route('/add_connection/<int:user_id>', methods=['POST'])
-def add_connection(user_id: int):
+@app.route('/add_connection/<int:user_id>/<int:model_id>', methods=['POST'])
+def add_connection(user_id: int, model_id: int):
     json = request.json
     if not json:
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
         layer_from_id, layer_to_id = int(json['layer_from']), int(json['layer_to'])
-        allowed = sql_worker.verify_connection(user_id, layer_from_id, layer_to_id)
+        allowed = sql_worker.verify_connection(user_id, model_id, layer_from_id, layer_to_id)
         if allowed == LayersConnectionStatus.DoNotExist:
-            error(HTTPStatus.NOT_FOUND, "At leat on of layers does not exist")
-        if allowed == LayersConnectionStatus.FromDifferentModels:
-            error(HTTPStatus.PRECONDITION_FAILED, "Layers refer to different models")
+            error(HTTPStatus.NOT_FOUND, "At least one of layers does not exist")
         if allowed == LayersConnectionStatus.AccessDenied:
-            error(HTTPStatus.FORBIDDEN, "You have no rights for training this model")
+            error(HTTPStatus.FORBIDDEN, "You have no rights for changing this model")
         if allowed == LayersConnectionStatus.DimensionsMismatch:
             error(HTTPStatus.PRECONDITION_FAILED, message="Dimensions do not match")
-        inserted_id = sql_worker.add_connection(layer_from_id, layer_to_id)
+        inserted_id = sql_worker.add_connection(layer_from_id, layer_to_id, model_id)
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
     return str(inserted_id), HTTPStatus.CREATED
+
+
+@app.route('/delete_layer/<int:user_id>/<int:model_id>', methods=['POST'])
+def delete_layer(user_id: int, model_id: int):
+    allowed = sql_worker.verify_access(user_id, model_id)
+    if not allowed:
+        error(HTTPStatus.FORBIDDEN, "You have no rights for changing this model")
+    json = request.json
+    if not json:
+        error(HTTPStatus.BAD_REQUEST, message="No json provided")
+    try:
+        status = sql_worker.delete_layer(int(json['id']), model_id)
+        if status == DeleteStatus.ElementNotExist:
+            error(HTTPStatus.NOT_FOUND, "Layer does not exist")
+        if status == DeleteStatus.LayerNotFree:
+            error(HTTPStatus.BAD_REQUEST, "The layer contains connections")
+    except KeyError as e:
+        error(HTTPStatus.BAD_REQUEST, message=str(e))
+    return "done", HTTPStatus.OK
+
+
+@app.route('/delete_connection/<int:user_id>/<int:model_id>', methods=['POST'])
+def delete_connection(user_id: int, model_id: int):
+    allowed = sql_worker.verify_access(user_id, model_id)
+    if not allowed:
+        error(HTTPStatus.FORBIDDEN, "You have no rights for changing this model")
+    json = request.json
+    if not json:
+        error(HTTPStatus.BAD_REQUEST, message="No json provided")
+    try:
+        status = sql_worker.delete_connection(int(json['id']), model_id)
+        if status == DeleteStatus.ElementNotExist:
+            error(HTTPStatus.NOT_FOUND, "Connection does not exist")
+    except KeyError as e:
+        error(HTTPStatus.BAD_REQUEST, message=str(e))
+    return "done", HTTPStatus.OK
 
 
 @app.route('/train/<int:user_id>/<int:model_id>', methods=['POST'])
@@ -102,7 +127,7 @@ def train_model(user_id: int, model_id: int):
         error(HTTPStatus.FORBIDDEN, "You have no rights for training this model")
 
     try:
-        model = get_graph_elements(model_id)
+        model = sql_worker.get_graph_elements(model_id)
         for i in range(len(model['layers'])):
             model['layers'][i]['parameters'] = parse_parameters(model['layers'][i]['parameters'])
         if not is_valid_model(model):

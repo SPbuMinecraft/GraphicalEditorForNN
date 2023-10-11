@@ -1,0 +1,36 @@
+Build/
+build/
+
+# IDE
+.vscode
+.idea
+*.xcodeproj
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.cache
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# C++
+*.slo
+*.lo
+*.o
+*.obj
+*.exe
+*.out
+*.app
