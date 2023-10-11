@@ -4,7 +4,7 @@ from utils import to_port
 
 PY_SERVER_PORT = to_port(2000)
 # CLIENT_PORT = to_port(2000)
-# SERVER_PORT = to_port(3000)
+SERVER_PORT = to_port(8080)
 DB_PORT = to_port(4000)
 
 CLIENT_HOSTNAME = "localhost"

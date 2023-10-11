@@ -5,6 +5,7 @@ from flask import Flask, abort, request, Response, jsonify
 
 import os
 import sys
+import json
 import inspect
 
 # Maybe there is a normal solution, who knows??
@@ -19,7 +20,7 @@ app = Flask(__name__)
 app.config.from_pyfile("../config.py")
 
 DB_ADDRESS = "http://" + app.config["DB_HOSTNAME"] + ":" + str(app.config["DB_PORT"])
-CPP_SERVER_ADDRESS = "http://" + app.config["PY_SERVER_HOSTNAME"] + ":" + str(app.config["PY_SERVER_PORT"])
+CPP_SERVER_ADDRESS = "http://" + app.config["SERVER_HOSTNAME"] + ":" + str(app.config["SERVER_PORT"])
 
 
 def get_graph_elements(model_id: int):
@@ -125,12 +126,12 @@ def predict(user_id: int, model_id: int):
     if not json:
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
-        response = requests.get(
+        response = requests.post(
             CPP_SERVER_ADDRESS + "/predict",
-            json=jsonify({"x": json["x"], "y": json["y"]}),
+            json=jsonify({"x": json["x"], "y": json["y"]}).json,
             timeout=3
         )
-        return restopse.text, HTTPStatus.OK
+        return response.text, HTTPStatus.OK
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, str(e))
     except TimeoutError as e:
