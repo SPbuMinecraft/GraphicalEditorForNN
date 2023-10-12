@@ -7,9 +7,6 @@ from flask import Flask
 from mlcraft import make_app
 from mlcraft.db import db, User, Model
 
-with open(os.path.join(os.path.dirname(__file__), "data.sql"), "r") as f:
-    script = f.read()
-
 data = [
     ("My imaginary OR", 0, "{}", False),
     ("My imaginary AND", 0, "{}", True),

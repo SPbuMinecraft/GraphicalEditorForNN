@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstddef>
+#include <functional>
 
 typedef float (*UnaryTransform)(float x);
 

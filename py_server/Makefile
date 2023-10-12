@@ -13,7 +13,7 @@ all: debug
 debug: install
 	@echo "Starting python server"
 	@echo "---------------------------------------------------------------------------"
-	flask --app $(APP) run --debug $(FLAGS)
+	$(BIN)/flask --app $(APP) run --debug $(FLAGS)
 
 release: install
 	@$(BIN)/pip install waitress
@@ -29,8 +29,8 @@ install: pyproject.toml $(ENVDIR)
 # dummy file to not install package every time
 	touch install 
 
-env:
-	$(PYTHON) -m venv $(ENVDIR)
+$(ENVDIR):
+	$(PYTHON) -m venv $@
 
 clean:
 	@rm install

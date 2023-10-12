@@ -4,7 +4,7 @@ CC = g++
 # Compiler flags
 RELEASE_FLAGS = -O3
 
-FLAGS = -g -Wall -std=c++17 -isystemapi -isystemcore
+FLAGS = -g -Wall -std=c++17 -isystemapi -isystemcore -isystem$(BOOST_ROOT)/include -L$(BOOST_ROOT)/lib
 BIN = bin
 
 SRC = $(wildcard api/*.cpp) $(wildcard core/*.cpp)
