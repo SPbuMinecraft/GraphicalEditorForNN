@@ -129,14 +129,14 @@ def train_model(user_id: int, model_id: int):
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
         model = sql_worker.get_graph_elements(model_id)
-        model['layers'] = list(map(lambda layer: parse_parameters(layer['parameters']), model['layers']))
+        for i in range(len(model['layers'])):
+            model['layers'][i]['parameters'] = parse_parameters(model['layers'][i]['parameters'])
         if not is_valid_model(model):
             error(HTTPStatus.NOT_ACCEPTABLE, "Invalid model found")
-
         # Convert json to another format for C++
-        model['connection'] = list(
-            map(lambda connection: [connection['layer_from'], connection['layer_to']], model['connection']))
-        model['dataset'] = json
+        model['connections'] = list(
+            map(lambda connection: [connection['layer_from'], connection['layer_to']], model['connections']))
+        model['dataset'] = json['dataset']
 
         response = requests.get(CPP_SERVER_ADDRESS + '/train', json=model, timeout=3)
         return response.text, response.status_code
@@ -144,8 +144,6 @@ def train_model(user_id: int, model_id: int):
         error(HTTPStatus.BAD_REQUEST, str(e))
     except TimeoutError as e:
         error(HTTPStatus.REQUEST_TIMEOUT, "Training time limit exceeded")
-    except Exception as e:
-        error(HTTPStatus.BAD_REQUEST, message=str(e))
 
 
 @app.route('/predict/<int:user_id>/<int:model_id>', methods=['POST'])
