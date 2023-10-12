@@ -1,4 +1,5 @@
 #include "Tensor.h"
+#include "crow_all.h"
 
 using namespace std;
 
@@ -15,7 +16,7 @@ static const Multiply multOperation;
 static const Sum sumOperation;
 static const Loss lossOperation;
 
-int main() {
+int example() {
     Blob x {4, 2, input};
     Blob w {2, 1};
     Blob b {1, 1};

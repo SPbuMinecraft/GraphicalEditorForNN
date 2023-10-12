@@ -1,0 +1,18 @@
+[project]
+name = "mlcraft"
+version = "1.0.0"
+description = "no, seriously, you cannot build without description, wtf???"
+dependencies = [
+    "flask", "Flask-SQLAlchemy", "requests", "pytest", "mypy"
+]
+
+[build-system]
+requires = ["flit_core<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["mlcraft"]

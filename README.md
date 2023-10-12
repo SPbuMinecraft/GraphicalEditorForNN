@@ -1,5 +1,30 @@
 # GraphicalEditorForNN
 
+## Build options
+
+1. Build everything and launch in debug mode:
+```
+make
+```
+2. Build everything and launch in release mode (more optimized):
+```
+make release
+```
+This way, it will be a total mess in the terminal. Need the logging files
+
+3. Run separately each component, for example for `py_server`:
+```
+cd py_server
+make
+```
+This way, only one component will be launched
+
+4. The same thing can be done with tests, you can either run
+```
+make test
+```
+In the root, or separately in each directory
+
 ## Formats
 
 Some json formats to use for requests

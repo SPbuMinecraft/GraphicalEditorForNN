@@ -1,0 +1,19 @@
+{
+    "client": {
+        "HOST": "localhost",
+        "PORT": 2001
+    },
+
+    "py_server": { 
+        "HOST": "localhost",
+        "PORT": 3000,
+        "SECRET_KEY": "minecraft",
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///database.db",
+        "SQLALCHEMY_TRACK_MODIFICATIONS": false
+    },
+
+    "cpp_server": {
+        "HOST": "localhost",
+        "PORT": 2000
+    }
+}
