@@ -39,3 +39,4 @@ dmypy.json
 
 # Makefile
 install
+bin

@@ -6,6 +6,7 @@ PYTHON = $(shell which 'python3' || which 'python' || (echo "python not found"; 
 all: common
 debug: common
 release: common
+build:
 
 common: index.html
 	@echo "Starting client server"

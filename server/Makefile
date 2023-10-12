@@ -2,11 +2,11 @@
 # Compiler
 CC = g++
 # Compiler flags
-FLAGS = -g -Wall -std=c++17
 RELEASE_FLAGS = -O3
 
-HDR1 = api
-HDR2 = core
+FLAGS = -g -Wall -std=c++17 -isystemapi -isystemcore
+BIN = bin
+
 SRC = $(wildcard api/*.cpp) $(wildcard core/*.cpp)
 OBJ = $(SRC:.cpp=.o)
 RELEASE_OBJ = $(SRC:.cpp=_release.o)
@@ -14,9 +14,9 @@ RELEASE_OBJ = $(SRC:.cpp=_release.o)
 TEST_SRC = $(wildcard tests/*.cpp) $(wildcard core/*.cpp)
 TEST_OBJ = $(TEST_SRC:.cpp=.o)
 
-DEBUG_TARGET = cpp_server
-RELEASE_TARGET = cpp_server_release # the same thing
-TEST_TARGET = cpp_tests
+DEBUG_TARGET = $(BIN)/cpp_server
+RELEASE_TARGET = $(BIN)/cpp_server_release
+TEST_TARGET = $(BIN)/cpp_tests
 
 all: debug # Default is debug target
 
@@ -25,22 +25,24 @@ debug: $(DEBUG_TARGET)
 	@echo "------------------------------------------------------------------"
 	./$(DEBUG_TARGET)
 
-$(DEBUG_TARGET): $(OBJ)
-	$(CC) $(FLAGS) $^ -o $(DEBUG_TARGET)
+$(DEBUG_TARGET): $(OBJ) $(BIN)
+	$(CC) $(FLAGS) $(OBJ) -o $(DEBUG_TARGET)
 
 release: $(RELEASE_TARGET)
 	@echo "Starting cpp server in release"
 	@echo "------------------------------------------------------------------"
 	./$(RELEASE_TARGET)
 
-$(RELEASE_TARGET): $(RELEASE_OBJ)
-	$(CC) $(FLAGS) $(RELEASE_FLAGS) $^ -o $(RELEASE_TARGET)
+build: $(DEBUG_TARGET)
+
+$(RELEASE_TARGET): $(RELEASE_OBJ) $(BIN)
+	$(CC) $(FLAGS) $(RELEASE_FLAGS) $(RELEASE_OBJ) -o $(RELEASE_TARGET)
 
 %_release.o: %.cpp
-	$(CC) $(FLAGS) $(RELEASE_FLAGS) -I$(HDR1) -I$(HDR2) -c $< -o $@
+	$(CC) $(FLAGS) $(RELEASE_FLAGS) -c $< -o $@
 
 %.o: %.cpp
-	$(CC) $(FLAGS) -I$(HDR1) -I$(HDR2) -c $< -o $@
+	$(CC) $(FLAGS) -c $< -o $@
 
 test: $(TEST_TARGET)
 	@echo "Testing cpp server"
@@ -48,8 +50,11 @@ test: $(TEST_TARGET)
 	./$(TEST_TARGET)
 	@echo "------------------------------------------------------------------"
 
-$(TEST_TARGET): $(TEST_OBJ)
-	$(CC) $(FLAGS) $^ -o $@
+$(TEST_TARGET): $(TEST_OBJ) $(BIN)
+	$(CC) $(FLAGS) $(TEST_OBJ) -o $@
+
+$(BIN):
+	mkdir $(BIN)
 
 clean:
 	@rm -f $(OBJ)

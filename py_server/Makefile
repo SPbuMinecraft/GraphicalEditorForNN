@@ -19,6 +19,8 @@ release: install
 	@$(BIN)/pip install waitress
 	@$(BIN)/waitress-serve --host=$(HOST) --port=$(PORT) --call '$(APP):make_app' 
 
+build: install
+
 test: install
 	@$(BIN)/pytest
 

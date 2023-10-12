@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 
-#include "crow_all.h"
+#include <crow_all.h>
 
 using namespace std;
 using namespace crow;
@@ -52,7 +52,7 @@ int main() {
         return response(status::OK);
     });
 
-    app.port(2000).multithreaded().run();
+    app.port(port).multithreaded().run();
 
     return 0;
 }

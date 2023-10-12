@@ -1,4 +1,4 @@
-.PHONY: all debug release clean
+.PHONY: all debug release build clean
 
 DIRS = client py_server server
 MAKEFLAGS += -j6
@@ -13,6 +13,11 @@ debug:
 release:
 	@for dir in $(DIRS) ; do \
 	( cd $$dir ; make release &) ; \
+	done
+
+build:
+	@for dir in $(DIRS) ; do \
+	( cd $$dir ; make build) ; \
 	done
 
 test:
