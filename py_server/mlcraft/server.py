@@ -3,8 +3,11 @@ from http import HTTPStatus
 from flask import Blueprint, request, current_app
 
 from .utils import (
-    error, parse_parameters, is_valid_model,
-    LayersConnectionStatus, DeleteStatus,
+    error,
+    parse_parameters,
+    is_valid_model,
+    LayersConnectionStatus,
+    DeleteStatus,
 )
 from .db import sql_worker
 
@@ -116,7 +119,9 @@ def train_model(user_id: int, model_id: int):
     allowed = sql_worker.verify_access(user_id, model_id)
     if not allowed:
         error(HTTPStatus.FORBIDDEN, "You have no rights for training this model")
-
+    json = request.json
+    if not json:
+        error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
         model = sql_worker.get_graph_elements(model_id)
         for i in range(len(model["layers"])):
@@ -125,31 +130,38 @@ def train_model(user_id: int, model_id: int):
             )
         if not is_valid_model(model):
             error(HTTPStatus.NOT_ACCEPTABLE, "Invalid model found")
-        # response = requests.Response(text="OK", status_code=HTTPStatus.OK)
-        # requests.post(CPP_SERVER_ADDRESS + "/train", json=jsonify(model), timeout=3)  # Timeout=?
-        # What does 'train' method (C++) return?
-        return model  # return "Training finished", HTTPStatus.OK
+        # Convert json to another format for C++
+        model["connections"] = list(
+            map(
+                lambda connection: [connection["layer_from"], connection["layer_to"]],
+                model["connections"],
+            )
+        )
+        model["dataset"] = json["dataset"]
+
+        response = requests.get(CPP_SERVER_ADDRESS + "/train", json=model, timeout=3)
+        return response.text, response.status_code
+    except KeyError as e:
+        error(HTTPStatus.BAD_REQUEST, str(e))
     except TimeoutError as e:
         error(HTTPStatus.REQUEST_TIMEOUT, "Training time limit exceeded")
-    # Observe possible errors and catch them
-    # except Exception as e:
-    #     error(HTTPStatus.BAD_REQUEST, message=str(e))
 
 
-# dummy: TODO (in sprint 2)
-# Hardcoded function to make predictions for XOR model
 @app.route("/predict/<int:user_id>/<int:model_id>", methods=["POST"])
 def predict(user_id: int, model_id: int):
+    allowed = sql_worker.verify_access(user_id, model_id)
+    if not allowed:
+        error(HTTPStatus.FORBIDDEN, "You have no rights for training this model")
     json = request.json
     if not json:
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
-        response = requests.post(
+        response = requests.get(
             current_app.config["CPP_SERVER"] + "/predict",
-            json={"x": json["x"], "y": json["y"]},
+            json={"input": [[json["x"], json["y"]]]},
             timeout=3,
         )
-        return response.text, HTTPStatus.OK
+        return response.text, response.status_code
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, str(e))
     except TimeoutError as e:
