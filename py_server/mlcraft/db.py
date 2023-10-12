@@ -6,14 +6,14 @@ from .utils import LayersConnectionStatus, DeleteStatus
 db = SQLAlchemy()  # Has to be global by Flask documentation
 
 
-class User(db.Model):
+class User(db.Model):  # type: ignore
     __tablename__ = "users_table"
 
     id = db.Column(db.Integer, primary_key=True)
     model = db.relationship("Model", backref="user_id")
 
 
-class Model(db.Model):
+class Model(db.Model):  # type: ignore
     __tablename__ = "models_table"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -105,13 +105,11 @@ class SQLWorker:
                 return DeleteStatus.ModelNotExist
             model_items = json.loads(model.content)
             if any(
-                filter(
-                    lambda connection: connection["layer_from"] == layer_id
-                    or connection["layer_to"] == id,
-                    model_items["connections"],
-                )
+                conn["layer_from"] == layer_id or conn["layer_to"] == id
+                for conn in model_items["connection"]
             ):
                 return DeleteStatus.LayerNotFree
+
             new_layers_list = list(
                 filter(lambda layer: layer["id"] != layer_id, model_items["layers"])
             )
@@ -177,6 +175,9 @@ class SQLWorker:
                 return -1
             model_items = json.loads(model.content)
             return model_items
+
+
+sql_worker: SQLWorker = None  # type: ignore
 
 
 def init_app(app):

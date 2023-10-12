@@ -23,6 +23,11 @@ instance/
 .webassets-cache
 .db
 
+# Tests
+.pytest_cache
+.coverage
+htmlcov
+
 # mypy
 .mypy_cache/
 .dmypy.json

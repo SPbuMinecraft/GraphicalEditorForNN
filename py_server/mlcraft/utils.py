@@ -81,5 +81,5 @@ def parse_parameters(layer_string: str) -> dict[str, tp.Any]:
         if re.match(r"^\[[^,]+(,[^,]+)*\]$", param_value) is not None:
             params_dict[param_name] = list(param_value[1:-1].split(","))
         else:
-            params_dict[param_name] = param_value
+            params_dict[param_name] = param_value # type: ignore
     return params_dict

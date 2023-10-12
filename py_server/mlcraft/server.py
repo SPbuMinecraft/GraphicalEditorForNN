@@ -139,7 +139,9 @@ def train_model(user_id: int, model_id: int):
         )
         model["dataset"] = json["dataset"]
 
-        response = requests.get(CPP_SERVER_ADDRESS + "/train", json=model, timeout=3)
+        response = requests.get(
+            current_app.config["CPP_SERVER"] + "/train", json=model, timeout=3
+        )
         return response.text, response.status_code
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, str(e))
