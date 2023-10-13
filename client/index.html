@@ -207,7 +207,7 @@
     editor.start();
 
     // Events!
-    editor.on("nodeCreated", function (id) {
+    editor.on("nodeCreated", function (id) {      // Добавление нового слоя (блока)
         console.log("Node created " + id);
     });
 
@@ -229,6 +229,14 @@
 
     editor.on("connectionCreated", function (connection) {
         console.log("Connection created");
+
+        let layers_connection = {
+            layer_from: connection.output_id,
+            layer_to: connection.input_id
+        };
+
+        sendJson(layers_connection, "http://localhost:2000/add_connection/100/1")
+
         console.log(connection);
     });
 
@@ -301,7 +309,7 @@
                 )
                 .closest("#drawflow");
             if (parentdrawflow != null) {
-                addNodeToDrawFlow(
+                addNodeToConstructor(
                     mobile_item_selec,
                     mobile_last_move.touches[0].clientX,
                     mobile_last_move.touches[0].clientY
@@ -311,14 +319,18 @@
         } else {
             ev.preventDefault();
             var data = ev.dataTransfer.getData("node");
-            addNodeToDrawFlow(data, ev.clientX, ev.clientY);
+            addNodeToConstructor(data, ev.clientX, ev.clientY);
         }
     }
 
-    function addNodeToDrawFlow(name, pos_x, pos_y) {
+    // Добавление слоя (блока)
+    function addNodeToConstructor(name, pos_x, pos_y) {
+        console.log("added node")
+
         if (editor.editor_mode === "fixed") {
             return false;
         }
+
         pos_x =
             pos_x *
             (editor.precanvas.clientWidth /
@@ -336,10 +348,12 @@
 
         switch (name) {
             case "moduleA":
+
                 var moduleA = `
         <div>
           <div class="title-box"><i class="fab moduleA"></i> Module 2</div>
         </div>
+
         `;
                 editor.addNode(
                     "moduleA",
@@ -351,7 +365,18 @@
                     {},
                     moduleA
                 );
+
+                let Obj1 = {
+                    type: "Module A",
+                    parameters: "input_1=0 output_1=1"
+                };
+
+                sendJson(Obj1, "http://localhost:2000/add_layer/100/1")
+
+
                 break;
+
+
             case "moduleA":
                 var moduleA = `
           <div>
@@ -359,7 +384,17 @@
           </div>
           `;
                 editor.addNode("moduleA", 2, 0, pos_x, pos_y, "moduleA", {}, moduleA);
+
+                let Obj2 = {
+                    type: "Module A",
+                    parameters: "input_1=0 output_1=1"
+                };
+
+                sendJson(Obj2, "http://localhost:2000/add_layer/100/1")
+
+
                 break;
+
             case "Module C":
                 var ModuleC = `
           <div>
@@ -380,6 +415,15 @@
                     { name: "" },
                     ModuleC
                 );
+
+                let Obj3 = {
+                    type: "Module C",
+                    parameters: "input_1=0 output_1=1"
+                };
+
+                sendJson(Obj3, "http://localhost:2000/add_layer/100/1")
+
+
                 break;
             case "Module D":
                 var ModuleD = `
@@ -407,6 +451,15 @@
                     { channel: "channel_3" },
                     ModuleD
                 );
+
+                let Obj4 = {
+                    type: "Module D",
+                    parameters: "input_1=0 output_1=1"
+                };
+
+                sendJson(Obj4, "http://localhost:2000/add_layer/100/1")
+
+
                 break;
             case "aws":
                 var aws = `
@@ -430,6 +483,14 @@
                     { db: { dbname: "", key: "" } },
                     aws
                 );
+
+                let Obj5 = {
+                    type: "aws",
+                    parameters: "input_1=0 output_1=1"
+                };
+
+                sendJson(Obj5, "http://localhost:2000/add_layer/100/1")
+
                 break;
             case "log":
                 var log = `
@@ -556,7 +617,6 @@
         editor.precanvas.style.transform = "";
         editor.precanvas.style.left = editor.canvas_x + "px";
         editor.precanvas.style.top = editor.canvas_y + "px";
-        // console.log(transform);
 
         editor.editor_mode = "fixed";
     }
@@ -564,7 +624,6 @@
     function closemodal(e) {
         e.target.closest(".drawflow-node").style.zIndex = "2";
         e.target.parentElement.parentElement.style.display = "none";
-        //document.getElementById("modalfix").style.display = "none";
         editor.precanvas.style.transform = transform;
         editor.precanvas.style.left = "0px";
         editor.precanvas.style.top = "0px";
@@ -590,44 +649,29 @@
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////
-    // JSON sending
 
-    async function performPostHttpRequest(fetchlink, headers, body) {
-        if(!fetchlink || !headers || !body) {
-            throw new Error("One or more POST request parameters was not passed :( .")
-        }
-        try {
-            const rawResponse = await fetch(fetchlink, {
-                mode: "no-cors",
-                method: "POST",
-                headers: headers,
-                body: JSON.stringify(body)
-            })
-            const content = await rawResponse.json()
-            return content
-        }
-        catch (err) {
-            console.log(`Error at fetch POST: ${err}`)
-            throw err
-        }
+    /* JSON requests handling */
+
+    function sendJson(sending_object, url) {
+
+        //let url = `http://localhost:2000/add_layer/100/${node_id}`;     // Test user_id = 100
+        fetch(url, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {'content-type': 'application/json'},
+            body: JSON.stringify(sending_object)
+        })
+            .then(response => response.text())
+            .then((response) => {
+                console.log(`RESPONSE: ${response}`)})
     }
 
-
     function buildJsonFormData(form) {
-        const jsonFormData = { }
+        const jsonFormData = {}
         for (const pair of new FormData(form)) {
             jsonFormData[pair[0]] = pair[1]
         }
         return jsonFormData
-    }
-
-    function buildHeaders(authorization = null) {
-        const headers = {
-            "Content-Type": "application/json",
-            "Authorization": (authorization) ? authorization : "Bearer TOKEN_MISSING"
-        };
-        return headers;
     }
 
     async function submitForm(e, form) {
@@ -644,8 +688,7 @@
 
         if (response) {
             console.log("Success request")
-        }
-        else {
+        } else {
             console.log("An error occured")
         }
     }
@@ -654,10 +697,11 @@
     // event listener
     const xy_form = document.querySelector("#xy_form");
     if (xy_form) {
-        xy_form.addEventListener("submit", function(e) {
+        xy_form.addEventListener("submit", function (e) {
             submitForm(e, this);
         });
     }
+
 
 
 </script>
