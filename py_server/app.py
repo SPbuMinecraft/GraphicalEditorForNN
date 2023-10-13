@@ -2,6 +2,7 @@ import requests
 from datetime import datetime
 from http import HTTPStatus
 from flask import Flask, abort, request, Response, jsonify
+from flask_cors import CORS
 
 import os
 import sys
@@ -10,12 +11,13 @@ import inspect
 # Maybe there is a normal solution, who knows??
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir) 
+sys.path.insert(0, parentdir)
 
 from utils import error, parse_parameters, is_valid_model, LayersConnectionStatus, DeleteStatus
 from db.app import sql_worker
 
 app = Flask(__name__)
+CORS(app)
 app.config.from_pyfile("../config.py")
 
 DB_ADDRESS = "http://" + app.config["DB_HOSTNAME"] + ":" + str(app.config["DB_PORT"])
