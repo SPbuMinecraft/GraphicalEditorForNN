@@ -16,10 +16,17 @@ __pycache__/
 *.py[cod]
 *$py.class
 .cache
+.venv
 
 # Flask stuff:
 instance/
 .webassets-cache
+.db
+
+# Tests
+.pytest_cache
+.coverage
+htmlcov
 
 # mypy
 .mypy_cache/
@@ -34,3 +41,7 @@ dmypy.json
 *.exe
 *.out
 *.app
+
+# Makefile
+install
+bin

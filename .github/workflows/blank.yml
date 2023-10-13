@@ -8,30 +8,42 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: install-boost
+        uses: MarkusJx/install-boost@v2.4.4
+        id: install-boost
+        with:
+          boost_version: 1.81.0 
+
+      - name: Try to build everything
+        run: make build
+        env:
+          BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
+
+  typecheck:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
       # Runs a set of commands using the runners shell
       - name: Mypy Check
-        uses: jpetrucciani/mypy-check@0.991
+        uses: jpetrucciani/mypy-check@1.0.0
         with:
-          requirements_file: "requirements.txt"
-          mypy_flags: '--config-file .mypy.ini'
+          path: "py_server"
+          requirements: "flask flask-sqlalchemy requests pytest types-requests"
+          mypy_flags: '--config-file py_server/pyproject.toml'
+          python_version: "3.10"
