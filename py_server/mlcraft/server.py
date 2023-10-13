@@ -1,6 +1,7 @@
 import requests
 from http import HTTPStatus
 from flask import Blueprint, request, current_app
+from flask_cors import CORS
 
 from .utils import (
     error,
@@ -13,6 +14,7 @@ from .db import sql_worker
 
 
 app = Blueprint("make a better name", __name__)
+CORS(app)
 
 
 @app.route("/add_user", methods=["POST"])
