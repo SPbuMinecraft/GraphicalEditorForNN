@@ -1,31 +1,64 @@
-# USAGE:
-# cd server
-# make
-# ./test
-# make clean
-
+.PHONY: debug release test clean
 # Compiler
 CC = g++
 # Compiler flags
-FLAGS = -g -Wall -std=c++17
+RELEASE_FLAGS = -O3
 
-SRC=Blob.cpp Operation.cpp Tensor.cpp main.cpp
-OBJ=Blob.o Operation.o Tensor.o main.o
+FLAGS = -g -Wall -std=c++17 -isystemapi -isystemcore -isystem$(BOOST_ROOT)/include -L$(BOOST_ROOT)/lib
+BIN = bin
 
-TARGET=main
+SRC = $(wildcard api/*.cpp) $(wildcard core/*.cpp)
+OBJ = $(SRC:.cpp=.o)
+RELEASE_OBJ = $(SRC:.cpp=_release.o)
 
-all: $(TARGET)
+TEST_SRC = $(wildcard tests/*.cpp) $(wildcard core/*.cpp)
+TEST_OBJ = $(TEST_SRC:.cpp=.o)
 
-# With all the object files in place, compile the final target
-$(TARGET): $(OBJ)
-	$(CC) $(FLAGS) $(OBJ) -o $@
+DEBUG_TARGET = $(BIN)/cpp_server
+RELEASE_TARGET = $(BIN)/cpp_server_release
+TEST_TARGET = $(BIN)/cpp_tests
 
-# Compile all source files with $(HDR) directory included in search path
+all: debug # Default is debug target
+
+debug: $(DEBUG_TARGET)
+	@echo "Starting cpp server in debug"
+	@echo "------------------------------------------------------------------"
+	./$(DEBUG_TARGET)
+
+$(DEBUG_TARGET): $(OBJ) $(BIN)
+	$(CC) $(FLAGS) $(OBJ) -o $(DEBUG_TARGET)
+
+release: $(RELEASE_TARGET)
+	@echo "Starting cpp server in release"
+	@echo "------------------------------------------------------------------"
+	./$(RELEASE_TARGET)
+
+build: $(DEBUG_TARGET)
+
+$(RELEASE_TARGET): $(RELEASE_OBJ) $(BIN)
+	$(CC) $(FLAGS) $(RELEASE_FLAGS) $(RELEASE_OBJ) -o $(RELEASE_TARGET)
+
+%_release.o: %.cpp
+	$(CC) $(FLAGS) $(RELEASE_FLAGS) -c $< -o $@
+
 %.o: %.cpp
 	$(CC) $(FLAGS) -c $< -o $@
 
-test: BlobTests.o Blob.o
-	$(CC) $(FLAGS) $^ -o $@
+test: $(TEST_TARGET)
+	@echo "Testing cpp server"
+	@echo "------------------------------------------------------------------"
+	./$(TEST_TARGET)
+	@echo "------------------------------------------------------------------"
+
+$(TEST_TARGET): $(TEST_OBJ) $(BIN)
+	$(CC) $(FLAGS) $(TEST_OBJ) -o $@
+
+$(BIN):
+	mkdir $(BIN)
 
 clean:
-	rm main test $(OBJ) BlobTests.o
+	@rm -f $(OBJ)
+	@rm -f $(RELEASE_OBJ)
+	@rm -f $(TEST_OBJ)
+	@rm -f $(RELEASE_TARGET) $(DEBUG_TARGET) $(TEST_TARGET)
+	@rm -f test

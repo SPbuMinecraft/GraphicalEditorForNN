@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Operation.h"
+#include <optional>
 
 class Tensor;
 typedef std::reference_wrapper<Tensor> TensorRef;
