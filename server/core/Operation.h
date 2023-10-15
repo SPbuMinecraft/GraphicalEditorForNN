@@ -19,6 +19,13 @@ struct OpNone: Operation {
     std::vector<size_t> computeDim(const std::vector<BlobRef>& args) const override;
 };
 
+struct OpId: Operation {
+    std::string name = "Id";
+    void compute(const std::vector<BlobRef>& args, Blob& res) const override;
+    void grad(Blob& gradient, const std::vector<BlobRef>& args, std::vector<BlobRef>& res) const override;
+    std::vector<size_t> computeDim(const std::vector<BlobRef>& args) const override;
+};
+
 struct Sum: Operation {
     std::string name = "Sum";
     void compute(const std::vector<BlobRef>& args, Blob& res) const override;

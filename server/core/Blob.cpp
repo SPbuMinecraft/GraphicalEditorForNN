@@ -19,7 +19,7 @@ Blob::Blob(size_t rows, size_t cols, const float value): rows(rows), cols(cols) 
             data[i * cols + j] = value;
 }
 
-Blob::Blob(size_t rows, size_t cols, RandomObject* const object): rows(rows), cols(cols) {
+Blob::Blob(size_t rows, size_t cols, RandomObject* object): rows(rows), cols(cols) {
     this->data = new float[rows * cols];
     if (object == nullptr) clear();
     else object->simpleInit(this->data, rows * cols);

@@ -13,6 +13,19 @@ void OpNone::grad(Blob& gradient, const vector<BlobRef>& args, std::vector<BlobR
 
 std::vector<size_t> OpNone::computeDim(const std::vector<BlobRef>& args) const {return {};}
 
+void OpId::compute(const std::vector<BlobRef>& args, Blob& res) const {
+    for (int i = 0; i < args[0].get().rows; i++)
+        for (int j = 0; j < args[0].get().cols; j++)
+            res[i][j] = args[0].get()[i][j];
+}
+
+void OpId::grad(Blob& grad, const std::vector<BlobRef>& args, std::vector<BlobRef>& res) const {
+}
+
+std::vector<size_t> OpId::computeDim(const std::vector<BlobRef>& args) const {
+    return {args[0].get().rows, args[0].get().cols};
+}
+
 void Sum::compute(const vector<BlobRef>& args, Blob& res) const {
     res += args[0].get();
     res += args[1].get();
@@ -54,7 +67,6 @@ void ReLU::compute(const vector<BlobRef>& args, Blob& res) const {
             res[i][j] += args[0].get()[i][j] > 0 ? args[0].get()[i][j] : 0;
 }
 void ReLU::grad(Blob& grad, const vector<BlobRef>& args, std::vector<BlobRef>& res) const {
-
     for (int i = 0; i < args[0].get().rows; i++)
         for (int j = 0; j < args[0].get().cols; j++)
             res[0].get()[i][j] += args[0].get()[i][j] >= 0 ? grad[i][j] : 0;
@@ -89,6 +101,7 @@ void Square::compute(const vector<BlobRef>& args, Blob& res) const {
         for (int j = 0; j < args[0].get().rows; ++j)
             res[i][j] += args[0].get()[i][j] * args[0].get()[i][j];
 }
+
 void Square::grad(Blob& grad, const vector<BlobRef>& args, std::vector<BlobRef>& res) const {
     for (int i = 0; i < args[0].get().cols; ++i)
         for (int j = 0; j < args[0].get().rows; ++j)
@@ -105,6 +118,7 @@ void Mean::compute(const vector<BlobRef>& args, Blob& res) const {
             res[0][0] += args[0].get()[i][j];
     res *= (1.0f / (args[0].get().rows * args[0].get().cols));
 }
+
 void Mean::grad(Blob& grad, const vector<BlobRef>& args, std::vector<BlobRef>& res) const {
     float number = grad[0][0] * (1.0f / (args[0].get().rows * args[0].get().cols));
     for (int i = 0; i < args[0].get().rows; i++) 

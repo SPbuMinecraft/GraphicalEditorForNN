@@ -17,8 +17,11 @@ void Tensor::getParentsGrads(vector<BlobRef> &grads) {
     for (auto p: parents) grads.push_back(p.get().gradient.value());
 }
 
-Tensor::Tensor(const Operation& operation, const vector<TensorRef>& parents): operation(operation), parents(parents) {
-    for (auto p: parents) p.get().childrenCount++;
+Tensor::Tensor(const Operation& operation, const vector<TensorRef>& parents, bool noGrad)
+               : operation(operation), parents(parents) {
+    if (!noGrad) {
+        for (auto p: parents) p.get().childrenCount++;
+    }
 
     vector<BlobRef> datas;
     getParentsData(datas);
@@ -40,6 +43,10 @@ BlobRef Tensor::forward() {
     if (outputIsNull) {
         vector<BlobRef> datas;
         getParentsData(datas);
+        vector<size_t> dims = operation.computeDim(datas);
+        if (dims[0] != output.value().rows) {
+            output.emplace(Blob{dims[0], dims[1]});
+        }
         operation.compute(datas, output.value());
         outputIsNull = false;
     }

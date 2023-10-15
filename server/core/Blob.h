@@ -17,7 +17,7 @@ public:
 
     Blob(std::size_t rows, std::size_t cols, const float* data);
     Blob(std::size_t rows, std::size_t cols, const float value);
-    Blob(std::size_t rows, std::size_t cols, RandomObject* const object = nullptr);
+    Blob(std::size_t rows, std::size_t cols, RandomObject* object = nullptr);
     Blob();
     Blob(const Blob& other);
     ~Blob();

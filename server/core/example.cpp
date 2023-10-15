@@ -29,14 +29,7 @@ static const BiasSum sumOperation;
 static const ReLU reluOperation;
 
 int example() {
-    std::unordered_map<std::string, float> layer1Params = {};
-    layer1Params["h"] = 2;
-    layer1Params["w"] = 2;
-    // layer1Params["w"] = 1;
-
-    std::unordered_map<std::string, float> layer2Params = {};
-    layer2Params["h"] = 2;
-    layer2Params["w"] = 1;
+    LinearLayerParameters params{2ull, 2ull, true};
 
     Blob x {4, 2, input};
     auto inputNode = Tensor(x);
@@ -52,21 +45,21 @@ int example() {
     RandomObject initObject(0, 1, 42);
     OptimizerBase SGD = OptimizerBase(0.1);
     // LinearLayer layer1 {layer1Params, {inputNode}};
-    LinearLayer layer1 {layer1Params, {inputNode}, &initObject};
+    LinearLayer layer1 {params, {inputNode}, &initObject};
     SGD.append(layer1.layerOperationParams);
 
     TensorRef res = layer1.result.value();
-    ReLULayer reluLayer1  {{}, {res}};
+    ReLULayer reluLayer1  {{res}};
 
 
     res = reluLayer1.result.value();
     // LinearLayer layer2 {layer2Params, {*res}};
-    LinearLayer layer2 {layer2Params, {res}, &initObject};
+    LinearLayer layer2 {params, {res}, &initObject};
     res = layer2.result.value();
     SGD.append(layer2.layerOperationParams);
 
 
-    MSELoss mseLoss {{}, {res, trueNode}};
+    MSELoss mseLoss {{res, trueNode}};
 
     auto lastNode = mseLoss.result.value();
     
