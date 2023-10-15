@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <unordered_map>
 #include <optional>
 #include <string>
@@ -7,6 +8,8 @@
 
 #include "RandomInit.h"
 #include "Tensor.h"
+#include "Parser.h"
+
 
 class Layer {
 protected:
@@ -14,6 +17,13 @@ protected:
 public:
     std::optional<Tensor> result; 
     std::vector<TensorRef> layerOperationParams;
+};
+
+class Data2dLayer: public Layer {
+public:
+    size_t width, height;
+    
+    Data2dLayer(const Data2dLayerParameters& params, const std::vector<float>& values);
 };
 
 class LinearLayer: public Layer {
@@ -24,20 +34,15 @@ public:
     Tensor b;
     
     LinearLayer(
-        std::unordered_map<std::string, float> params, 
-        const std::vector<TensorRef>& args,
-        RandomObject* const randomInit = nullptr
+        const LinearLayerParameters& params,
+        const std::vector<TensorRef>& args, RandomObject* randomInit = nullptr
     );
 };
 
 class ReLULayer: public Layer {
 public:
     ReLU relu;
-    ReLULayer(
-        std::unordered_map<std::string, float> params, 
-        const std::vector<TensorRef>& args,
-        RandomObject* const randomInit = nullptr
-    );
+    ReLULayer(const std::vector<TensorRef>& args);
 };
 
 class MSELoss: public Layer {
@@ -45,19 +50,12 @@ public:
     Substract sub;
     Square sqr;
     Mean mean;
-    MSELoss(
-        std::unordered_map<std::string, float> params, 
-        const std::vector<TensorRef>& args,
-        RandomObject* const randomInit = nullptr
-    );
+    MSELoss(const std::vector<TensorRef>& args, RandomObject* randomInit = nullptr);
 };
 
 class MultLayer: public Layer {
 public:
     Multiply mult;
     MultLayer(
-        std::unordered_map<std::string, float> params, 
-        const std::vector<TensorRef>& args,
-        RandomObject* const randomInit = nullptr
-    );
+        const std::vector<TensorRef>& args, RandomObject* randomInit = nullptr);
 };
