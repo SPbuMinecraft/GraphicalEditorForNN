@@ -1,14 +1,20 @@
-#include "Tensor.h"
 #include <algorithm>
 #include <functional>
 #include <cassert>
 
+#include "Blob.h"
+#include "Tensor.h"
+
 using namespace std;
 
-static const None noop = None();
+static const OpNone noop = OpNone();
 
 void Tensor::getParentsData(vector<BlobRef> &datas) {
     for (auto p: parents) datas.push_back(p.get().forward());
+}
+
+void Tensor::getParentsGrads(vector<BlobRef> &grads) {
+    for (auto p: parents) grads.push_back(p.get().gradient.value());
 }
 
 Tensor::Tensor(const Operation& operation, const vector<TensorRef>& parents): operation(operation), parents(parents) {
@@ -17,48 +23,41 @@ Tensor::Tensor(const Operation& operation, const vector<TensorRef>& parents): op
     vector<BlobRef> datas;
     getParentsData(datas);
 
-    Blob output = operation.compute(datas);
-    this->output = output;
-    Blob gradient {output.rows, output.cols};
-    this->gradient = gradient;
+    vector<size_t> dims = operation.computeDim(datas);
+    output = Blob {dims[0], dims[1]};
+    operation.compute(datas, output.value());
+    outputIsNull = false;
+    gradient = Blob {output->rows, output->cols};
 }
 
 Tensor::Tensor(const Blob& data): operation(noop), parents({}) {
-    Blob output = data;
-    this->output = output;
-    Blob gradient {data.rows, data.cols};
-    this->gradient = gradient;
+    output = Blob {data.rows, data.cols, data.getData()};
+    outputIsNull = false;
+    gradient = Blob {data.rows, data.cols};
 }
 
 BlobRef Tensor::forward() {
-    if (!output) {
+    if (outputIsNull) {
         vector<BlobRef> datas;
         getParentsData(datas);
-        Blob output = operation.compute(datas);
-        this->output = output;
+        operation.compute(datas, output.value());
+        outputIsNull = false;
     }
     return *output;
 }
 
 void Tensor::backward() {
     vector<BlobRef> datas;
+    vector<BlobRef> grads;
     getParentsData(datas);
-    vector<Blob> gs = operation.grad(*gradient, datas);
-    assert(gs.size() == parents.size());
+    getParentsGrads(grads);
+    operation.grad(*gradient, datas, grads);
+    assert(grads.size() == parents.size());
     for (int i = 0; i < parents.size(); ++i)
-        parents[i].get().accumulate(gs[i]);
+        parents[i].get().accumulate();
 }
 
-void Tensor::accumulate(const Blob& gradient){
-    if (gradient.rows > this->gradient->rows) {
-        for (int i = 0; i < gradient.rows; ++i) {
-            for (int j = 0; j < gradient.cols; ++j) {
-                (*this->gradient)[0][j] += gradient[i][j];
-            }
-        }
-    } else {
-        *this->gradient += gradient;
-    }
+void Tensor::accumulate(){
     childrenGradReady++;
     if (childrenGradReady == childrenCount)
         backward();
@@ -67,7 +66,21 @@ void Tensor::accumulate(const Blob& gradient){
 void Tensor::clear() {
     gradient->clear();
     // if has parents, then clear output cache
-    if (parents.size()) this->output = {};
+    if (parents.size()) {
+        this->output->clear();
+        outputIsNull = true;
+    }
     this->childrenGradReady = 0;
     for (auto p: parents) p.get().clear();
+}
+
+Tensor Tensor::operator=(const Tensor & other) {
+    this->operation = other.operation;
+    this->outputIsNull = other.outputIsNull;
+    this->childrenCount = other.childrenCount;
+    this->childrenGradReady = other.childrenGradReady;
+    this->parents = other.parents;
+    this->output = other.output;
+    this->gradient = other.gradient;
+    return *this;
 }
