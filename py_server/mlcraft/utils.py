@@ -10,6 +10,7 @@ class LayersConnectionStatus(Enum):
     DoNotExist = 1
     AccessDenied = 2
     DimensionsMismatch = 3
+    WrongDirection = 4
 
 
 class DeleteStatus(Enum):

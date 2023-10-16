@@ -165,6 +165,8 @@ class SQLWorker:
                 return LayersConnectionStatus.DoNotExist
             if not self.check_dimensions(layer1[0], layer2[0]):
                 return LayersConnectionStatus.DimensionsMismatch
+            if layer2[0]["layer_type"] == "Data" or layer1[0]["layer_type"] == "Output":
+                return LayersConnectionStatus.WrongDirection
             return LayersConnectionStatus.OK
 
     def verify_access(self, user_id, model_id):
