@@ -125,6 +125,8 @@ def train_model(user_id: int, model_id: int):
     if not json:
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
+        if sql_worker.is_model_trained(model_id):
+            error(HTTPStatus.PRECONDITION_FAILED, "Already trained")
         model = sql_worker.get_graph_elements(model_id)
         for i in range(len(model["layers"])):
             model["layers"][i]["parameters"] = parse_parameters(
@@ -144,6 +146,7 @@ def train_model(user_id: int, model_id: int):
         response = requests.get(
             current_app.config["CPP_SERVER"] + "/train", json=model, timeout=3
         )
+        sql_worker.train_model(model_id)
         return response.text, response.status_code
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, str(e))
@@ -160,6 +163,8 @@ def predict(user_id: int, model_id: int):
     if not json:
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
+        if not sql_worker.is_model_trained(model_id):
+            error(HTTPStatus.PRECONDITION_FAILED, "Not trained")
         response = requests.get(
             current_app.config["CPP_SERVER"] + "/predict",
             json={"input": [[json["x"], json["y"]]]},
@@ -170,5 +175,3 @@ def predict(user_id: int, model_id: int):
         error(HTTPStatus.BAD_REQUEST, str(e))
     except TimeoutError as e:
         error(HTTPStatus.REQUEST_TIMEOUT, "Time limit exceeded")
-    except Exception as e:
-        error(HTTPStatus.BAD_REQUEST, str(e))

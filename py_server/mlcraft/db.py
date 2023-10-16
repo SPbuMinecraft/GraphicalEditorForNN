@@ -70,6 +70,7 @@ class SQLWorker:
             }  # Should be refactored?
             model_items["layers"].append(new_layer)
             model.content = json.dumps(model_items)
+            model.is_trained = False
             db.session.add(model)
             db.session.commit()
             return new_id
@@ -94,6 +95,7 @@ class SQLWorker:
             }
             model_items["connections"].append(new_connection)
             model.content = json.dumps(model_items)
+            model.is_trained = False
             db.session.add(model)
             db.session.commit()
             return new_id
@@ -105,8 +107,8 @@ class SQLWorker:
                 return DeleteStatus.ModelNotExist
             model_items = json.loads(model.content)
             if any(
-                conn["layer_from"] == layer_id or conn["layer_to"] == id
-                for conn in model_items["connection"]
+                conn["layer_from"] == layer_id or conn["layer_to"] == layer_id
+                for conn in model_items["connections"]
             ):
                 return DeleteStatus.LayerNotFree
 
@@ -117,6 +119,7 @@ class SQLWorker:
                 return DeleteStatus.ElementNotExist
             model_items["layers"] = new_layers_list
             model.content = json.dumps(model_items)
+            model.is_trained = False
             db.session.add(model)
             db.session.commit()
             return DeleteStatus.OK
@@ -137,6 +140,7 @@ class SQLWorker:
                 return DeleteStatus.ElementNotExist
             model_items["connections"] = new_connections_list
             model.content = json.dumps(model_items)
+            model.is_trained = False
             db.session.add(model)
             db.session.commit()
             return DeleteStatus.OK
@@ -175,6 +179,23 @@ class SQLWorker:
                 return -1
             model_items = json.loads(model.content)
             return model_items
+
+    def train_model(self, model_id: int):
+        with current_app.app_context():
+            model = Model.query.filter(Model.id == model_id).first()
+            if not model:
+                return -1
+            model.is_trained = True
+            db.session.add(model)
+            db.session.commit()
+            return 1
+
+    def is_model_trained(self, model_id: int):
+        with current_app.app_context():
+            model = Model.query.filter(Model.id == model_id).first()
+            if not model:
+                return False
+            return model.is_trained
 
 
 sql_worker: SQLWorker = None  # type: ignore
