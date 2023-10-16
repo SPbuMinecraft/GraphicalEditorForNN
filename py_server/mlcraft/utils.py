@@ -62,7 +62,7 @@ def is_valid_model(model_dict):
             continue
         for layer_to in edges[layer]:
             if int(inputs[layer_to]) != int(outputs[layer]):
-                return False
+                return False  # Maybe can be removed
             if distance[layer_to] == -1:
                 distance[layer_to] = distance[layer] + 1
                 layers_queue.append(layer_to)
