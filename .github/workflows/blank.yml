@@ -44,6 +44,6 @@ jobs:
         uses: jpetrucciani/mypy-check@1.0.0
         with:
           path: "py_server"
-          requirements: "flask flask-sqlalchemy requests pytest types-requests"
+          requirements: "flask flask-sqlalchemy requests pytest types-requests Flask-Cors types-Flask-Cors"
           mypy_flags: '--config-file py_server/pyproject.toml'
           python_version: "3.10"
