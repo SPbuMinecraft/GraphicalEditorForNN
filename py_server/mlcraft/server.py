@@ -117,8 +117,8 @@ def delete_connection(user_id: int, model_id: int):
     return "done", HTTPStatus.OK
 
 
-@app.route("/train/<int:user_id>/<int:model_id>", methods=["POST"])
-def train_model(user_id: int, model_id: int):
+@app.route("/train/<int:user_id>/<int:model_id>/<int:safe>", methods=["POST"])
+def train_model(user_id: int, model_id: int, safe: int):  # Unfortunately, flask don't have convertor for bool
     # checks belonging of the model to user
     allowed = sql_worker.verify_access(user_id, model_id)
     if not allowed:
@@ -127,7 +127,7 @@ def train_model(user_id: int, model_id: int):
     if not json:
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
-        if sql_worker.is_model_trained(model_id):
+        if sql_worker.is_model_trained(model_id) and safe:
             error(HTTPStatus.PRECONDITION_FAILED, "Already trained")
         model = sql_worker.get_graph_elements(model_id)
         for i in range(len(model["layers"])):
