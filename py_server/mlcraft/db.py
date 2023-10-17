@@ -1,7 +1,7 @@
 import json
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
-from .utils import LayersConnectionStatus, DeleteStatus, parse_parameters, is_path_exist
+from .utils import LayersConnectionStatus, DeleteStatus, parse_parameters, check_paths_exist
 
 db = SQLAlchemy()  # Has to be global by Flask documentation
 
@@ -173,7 +173,7 @@ class SQLWorker:
                 return LayersConnectionStatus.DimensionsMismatch
             if layer2["layer_type"] == "Data" or layer1["layer_type"] == "Output":
                 return LayersConnectionStatus.WrongDirection
-            if is_path_exist([layer_to], [layer_from], model_items):
+            if check_paths_exist([layer_to], [layer_from], model_items):
                 return LayersConnectionStatus.Cycle
             return LayersConnectionStatus.OK
 

@@ -36,6 +36,8 @@ def add_model(user_id: int):
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
         inserted_id = sql_worker.add_model(user_id, json["name"])
+        if inserted_id == -1:
+            error(HTTPStatus.BAD_REQUEST, message="No user with that id")
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
     return str(inserted_id), HTTPStatus.CREATED

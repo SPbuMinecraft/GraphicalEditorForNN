@@ -1,6 +1,7 @@
 import re
 import typing as tp
 from enum import Enum
+from collections import deque
 
 from flask import Response, abort
 
@@ -47,22 +48,20 @@ def is_valid_model(model_dict):
         return False
     start_ids = list(map(lambda layer: layer["id"], start_candidates))
     stop_ids = list(map(lambda layer: layer["id"], stop_candidates))
-    return is_path_exist(start_ids, stop_ids, model_dict)
+    return check_paths_exist(start_ids, stop_ids, model_dict)
 
 
-def is_path_exist(start_ids: list, stop_ids: list, model_dict: dict):
+def check_paths_exist(start_ids: list, stop_ids: list, model_dict: dict):
     edges = get_edges_from_model(model_dict)
     # BFS realisation
     distance = dict()
     for layer in model_dict["layers"]:
         distance[layer["id"]] = 0 if layer["id"] in start_ids else -1
-    layers_queue = start_ids
+    layers_queue = deque(start_ids)
     while layers_queue:
         layer = layers_queue[0]
-        layers_queue.pop(0)
-        if layer not in edges.keys():
-            continue
-        for layer_to in edges[layer]:
+        layers_queue.popleft()
+        for layer_to in edges.get(layer, []):
             if distance[layer_to] == -1:
                 distance[layer_to] = distance[layer] + 1
                 layers_queue.append(layer_to)
