@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 
+#include "Allocator.h"
 #include "Tensor.h"
 #include "RandomInit.h"
 #include "Layer.h"
@@ -18,7 +19,7 @@ float input[] = {
 
 float output[] = { 0, 1, 1, 0 };
 
-void print(Blob a) {
+void print(const Blob &a) {
     cout << a << endl;
 }
 
@@ -27,6 +28,18 @@ static const BiasSum sumOperation;
 static const ReLU reluOperation;
 
 int main() {
+    Allocator::start({
+        {{4, 2}, 40},
+        {{2, 1}, 10},
+        {{4, 1}, 40},
+        {{1, 1}, 30},
+        {{1, 4}, 10},
+        {{2, 4}, 10},
+        {{2, 2}, 20},
+        {{1, 2}, 20}
+    });
+    {
+
     std::unordered_map<std::string, float> layer1Params = {};
     layer1Params["h"] = 2;
     layer1Params["w"] = 2;
@@ -36,11 +49,9 @@ int main() {
     layer2Params["h"] = 2;
     layer2Params["w"] = 1;
 
-    Blob x {4, 2, input};
-    auto inputNode = Tensor(x);
-    Blob out {4, 1, output};
+    auto inputNode = Tensor({4, 2, input});
 
-    auto trueNode = Tensor(out);
+    auto trueNode = Tensor({4, 1, output});
 
     RandomObject initObject(0, 1, 42);
     OptimizerBase SGD = OptimizerBase(0.1);
@@ -59,24 +70,27 @@ int main() {
 
     MSELoss mseLoss {{}, {res, trueNode}};
 
-    auto lastNode = mseLoss.result.value();
-    
+    auto &lastNode = mseLoss.result.value();
+
     // Blob grad_1 {1, 1, (float) 1};
     // lastNode.gradient = grad_1;
 
-    Blob result {1, 1};
-
-
-    for (int j = 0; j < 100; ++j) {
-        result = lastNode.forward();
+    lastNode.clear();
+    for (int j = 0; j < 1000; ++j) {
+        auto &result = lastNode.forward();
         printf("%d: %f\n", j, result[0][0]);
         // lastNode.gradient = result;
         lastNode.gradient.value()[0][0] = 1;
         lastNode.backward();
         SGD.step();
+        Allocator::endSession();
         lastNode.clear();
     }
-    Blob result2 = res.get().forward();
+    auto &result2 = res.get().forward();
     print(result2);
+
+    }
+
+    Allocator::end();
     return 0;
 }

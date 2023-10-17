@@ -1,3 +1,4 @@
+#include "Allocator.h"
 #include "Operation.h"
 
 using namespace std;
@@ -6,127 +7,123 @@ const Operation& Operation::operator=(const Operation& other) const {
     return other;
 }
 
-void OpNone::compute(const vector<BlobRef>& args, Blob& res) const {
+#define args1(a) auto &a = args[0].get()
+#define args2(a, b) auto &a = args[0].get(); auto &b = args[1].get()
+
+Blob Noop::compute(const vector<LazyBlobRef>& args) const {
+    (void)args;
+    throw runtime_error("Unreachable");
 }
-void OpNone::grad(Blob& gradient, const vector<BlobRef>& args, std::vector<BlobRef>& res) const {
+vector<LazyBlobRef> Noop::grad(const Blob& gradient, const vector<LazyBlobRef>& args) const {
+    (void)gradient;
+    (void)args;
+    throw runtime_error("Unreachable");
+}
+Shape Noop::computeDim(const vector<LazyBlobRef>& args) const {
+    (void)args;
+    throw runtime_error("Unreachable");
 }
 
-std::vector<size_t> OpNone::computeDim(const std::vector<BlobRef>& args) const {return {};}
-
-void Sum::compute(const vector<BlobRef>& args, Blob& res) const {
-    res += args[0].get();
-    res += args[1].get();
+Blob Sum::compute(const vector<LazyBlobRef>& args) const {
+    args2(a, b);
+    return a + b;
 }
-void Sum::grad(Blob& grad, const vector<BlobRef>& args, std::vector<BlobRef>& res) const {
-    res[0].get() += grad;
-    res[1].get() += grad;
+vector<LazyBlobRef> Sum::grad(const Blob& grad, const vector<LazyBlobRef>& args) const {
+    (void)args;
+    return {grad, grad};
 }
-
-std::vector<size_t> Sum::computeDim(const std::vector<BlobRef>& args) const {
-    return {args[0].get().rows, args[0].get().cols};
+Shape Sum::computeDim(const std::vector<LazyBlobRef>& args) const {
+    args2(a, b);
+    return {a.rows(), b.cols()};
 }
 
-void Multiply::compute(const vector<BlobRef>& args, Blob& res) const {
-    for (int i = 0; i < args[0].get().rows; ++i)
-        for (int j = 0; j < args[1].get().cols; ++j)
-            for (int k = 0; k < args[0].get().cols; ++k)
-                res[i][j] += args[0].get()[i][k] * args[1].get()[k][j];
+Blob Multiply::compute(const vector<LazyBlobRef>& args) const {
+    args2(a, b);
+    return a & b;
 }
-void Multiply::grad(Blob& grad, const vector<BlobRef>& args, std::vector<BlobRef>& res) const {
+vector<LazyBlobRef> Multiply::grad(const Blob& grad, const vector<LazyBlobRef>& args) const {
+    args2(a, b);
+    return {grad & b.transposed(), a.transposed() & grad};
+}
+Shape Multiply::computeDim(const vector<LazyBlobRef>& args) const {
+    args2(a, b);
+    return {a.rows(), b.cols()};
+}
+
+Blob ReLU::compute(const vector<LazyBlobRef>& args) const {
+    args1(a);
+    return a.applying([](float x) { return x >= 0 ? x : 0; });
+}
+vector<LazyBlobRef> ReLU::grad(const Blob& grad, const vector<LazyBlobRef>& args) const {
+    args1(a);
+    return {combine(a, grad, [](float x, float g) { return x >= 0 ? g : 0; })};
+}
+Shape ReLU::computeDim(const vector<LazyBlobRef>& args) const {
+    args1(a);
+    return {a.rows(), a.cols()};
+}
+
+Blob BiasSum::compute(const vector<LazyBlobRef>& args) const {
+    args2(a, b);
+    return a + b;
+}
+vector<LazyBlobRef> BiasSum::grad(const Blob& grad, const vector<LazyBlobRef>& args) const {
+    args2(a, b);
+    (void)a;
+
+    Blob *bgrad = Allocator::allocateBlob(1, grad.cols);
+
     for (int i = 0; i < grad.rows; ++i)
-        for (int j = 0; j < args[1].get().rows; ++j)
-            for (int k = 0; k < grad.cols; ++k)
-                res[0].get()[i][j] += grad[i][k] * args[1].get()[j][k];
-
-    for (int i = 0; i < args[0].get().cols; ++i)
         for (int j = 0; j < grad.cols; ++j)
-            for (int k = 0; k < grad.rows; ++k)
-                res[1].get()[i][j] += args[0].get()[k][i] * grad[k][j];
+            (*bgrad)[0][j] = b(0, j) + grad(i, j);
+
+    return {grad, *bgrad};
+}
+Shape BiasSum::computeDim(const vector<LazyBlobRef>& args) const {
+    args2(a, b);
+    return {a.rows(), b.cols()};
 }
 
-std::vector<size_t> Multiply::computeDim(const std::vector<BlobRef>& args) const {
-    return {args[0].get().rows, args[1].get().cols};
+Blob Square::compute(const vector<LazyBlobRef>& args) const {
+    args1(a);
+    return a * a;
+}
+vector<LazyBlobRef> Square::grad(const Blob& grad, const vector<LazyBlobRef>& args) const {
+    args1(a);
+    return {2 * grad * a};
+}
+Shape Square::computeDim(const std::vector<LazyBlobRef>& args) const {
+    args1(a);
+    return {a.rows(), a.cols()};
 }
 
-void ReLU::compute(const vector<BlobRef>& args, Blob& res) const {
-    for (int i = 0; i < args[0].get().rows; i++)
-        for (int j = 0; j < args[0].get().cols; j++)
-            res[i][j] += args[0].get()[i][j] > 0 ? args[0].get()[i][j] : 0;
+Blob Mean::compute(const vector<LazyBlobRef>& args) const {
+    args1(a);
+    float sum = 0;
+    for (int i = 0; i < a.rows(); ++i)
+        for (int j = 0; j < a.cols(); ++j)
+            sum += a(i, j);
+    return sum / (a.rows() * a.cols());
 }
-void ReLU::grad(Blob& grad, const vector<BlobRef>& args, std::vector<BlobRef>& res) const {
-
-    for (int i = 0; i < args[0].get().rows; i++)
-        for (int j = 0; j < args[0].get().cols; j++)
-            res[0].get()[i][j] += args[0].get()[i][j] >= 0 ? grad[i][j] : 0;
+vector<LazyBlobRef> Mean::grad(const Blob& grad, const vector<LazyBlobRef>& args) const {
+    args1(a);
+    return { grad / (a.rows() * a.cols()) };
 }
-
-std::vector<size_t> ReLU::computeDim(const std::vector<BlobRef>& args) const {
-    return {args[0].get().rows, args[0].get().cols};
-}
-
-void BiasSum::compute(const vector<BlobRef>& args, Blob& res) const {
-    for (int i = 0; i < args[0].get().rows; i++) {
-        for (int j = 0; j < args[0].get().cols; j++) {
-            res[i][j] += (args[1].get()[0][j] + args[0].get()[i][j]);
-        }
-    }
-}
-void BiasSum::grad(Blob& grad, const vector<BlobRef>& args, std::vector<BlobRef>& res) const {
-    res[0].get() += grad;
-
-    for (int i = 0; i < grad.cols; ++i)
-        for (int j = 0; j < grad.rows; ++j)
-            res[1].get()[0][i] += grad[j][i];
-
-}
-
-std::vector<size_t> BiasSum::computeDim(const std::vector<BlobRef>& args) const {
-    return {args[0].get().rows, args[0].get().cols};
-}
-
-void Square::compute(const vector<BlobRef>& args, Blob& res) const {
-    for (int i = 0; i < args[0].get().cols; ++i)
-        for (int j = 0; j < args[0].get().rows; ++j)
-            res[i][j] += args[0].get()[i][j] * args[0].get()[i][j];
-}
-void Square::grad(Blob& grad, const vector<BlobRef>& args, std::vector<BlobRef>& res) const {
-    for (int i = 0; i < args[0].get().cols; ++i)
-        for (int j = 0; j < args[0].get().rows; ++j)
-            res[0].get()[i][j] += 2 * args[0].get()[i][j] * grad[i][j];
-}
-
-std::vector<size_t> Square::computeDim(const std::vector<BlobRef>& args) const {
-    return {args[0].get().rows, args[0].get().cols};
-}
-
-void Mean::compute(const vector<BlobRef>& args, Blob& res) const {
-    for (int i = 0; i < args[0].get().rows; i++) 
-        for (int j = 0; j < args[0].get().cols; j++)
-            res[0][0] += args[0].get()[i][j];
-    res *= (1.0f / (args[0].get().rows * args[0].get().cols));
-}
-void Mean::grad(Blob& grad, const vector<BlobRef>& args, std::vector<BlobRef>& res) const {
-    float number = grad[0][0] * (1.0f / (args[0].get().rows * args[0].get().cols));
-    for (int i = 0; i < args[0].get().rows; i++) 
-        for (int j = 0; j < args[0].get().cols; j++)
-            res[0].get()[i][j] += number;
-}
-
-std::vector<size_t> Mean::computeDim(const std::vector<BlobRef>& args) const {
+Shape Mean::computeDim(const vector<LazyBlobRef>& args) const {
+    (void)args;
     return {1, 1};
 }
 
-void Substract::compute(const vector<BlobRef>& args, Blob& res) const {
-    for (int i = 0; i < args[0].get().rows; i++) 
-        for (int j = 0; j < args[0].get().cols; j++)
-            res[i][j] += (args[0].get()[i][j] - args[1].get()[i][j]);
+Blob Substract::compute(const vector<LazyBlobRef>& args) const {
+    args2(a, b);
+    return a - b;
 }
-void Substract::grad(Blob& grad, const vector<BlobRef>& args, std::vector<BlobRef>& res) const {
-    res[0].get() += grad;
-    res[1].get() += grad;
-    res[1].get() *= -1;
+vector<LazyBlobRef> Substract::grad(const Blob& grad, const vector<LazyBlobRef>& args) const {
+    (void)args;
+    return {grad, -grad.lazy()};
 }
-
-std::vector<size_t> Substract::computeDim(const std::vector<BlobRef>& args) const {
-    return {args[0].get().rows, args[0].get().cols};
+Shape Substract::computeDim(const vector<LazyBlobRef>& args) const {
+    args2(a, b);
+    (void)b;
+    return {a.rows(), a.cols()};
 }

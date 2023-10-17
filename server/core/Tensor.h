@@ -1,7 +1,5 @@
 #pragma once
 
-#include <optional>
-
 #include "Operation.h"
 #include <optional>
 
@@ -11,26 +9,30 @@ typedef std::reference_wrapper<Tensor> TensorRef;
 
 class Tensor {
 private:
-    bool outputIsNull = true;
     int childrenCount = 0;
     int childrenGradReady = 0;
     const Operation& operation;
     std::vector<TensorRef> parents;
 
-    void getParentsData(std::vector<BlobRef> &datas);
-    void getParentsGrads(std::vector<BlobRef> &grads);
+    void getParentsData(std::vector<LazyBlobRef> &datas);
+    void getParentsGrads(std::vector<LazyBlobRef> &grads);
 public:
     std::optional<Blob> output;
     std::optional<Blob> gradient;
 
-    Tensor(const Operation& operation, const std::vector<TensorRef>& parents);
-    Tensor(const Blob& data);
+    Tensor(Operation& operation, const std::vector<TensorRef>& parents);
+    /// Carefull, Blob is moved here to Tensor's ownership
+    Tensor(const Blob data);
 
-    Tensor operator=(const Tensor & other);
+    Tensor(const Tensor& other) = delete;
+    Tensor(Tensor&& other) noexcept;
 
-    BlobRef forward();
+    Tensor& operator = (Tensor&& other) noexcept;
+//    Tensor& operator=(const Tensor & other);
+
+    const Blob& forward();
     void backward();
-    void accumulate();
+    void accumulate(const LazyBlob& gradient);
 
     void clear();
 };

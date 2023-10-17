@@ -18,7 +18,7 @@ LinearLayer::LinearLayer(std::unordered_map<std::string, float> params,
     layerOperationParams.push_back(b);
     
     Tensor multNode (mul, {args[0], W});
-    pipeline.push_back(multNode);
+    pipeline.push_back(std::move(multNode));
 
     result = Tensor(sum, {pipeline[0], b});
 }
@@ -33,10 +33,10 @@ MSELoss::MSELoss(std::unordered_map<std::string, float> params,
     pipeline.reserve(2);
 
     Tensor diff(sub, {args[0], args[1]});
-    pipeline.push_back(diff);
+    pipeline.push_back(std::move(diff));
 
     Tensor square(sqr, {pipeline[0]});
-    pipeline.push_back(square);
+    pipeline.push_back(std::move(square));
 
     result = Tensor(mean, {pipeline[1]});
 }
