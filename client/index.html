@@ -167,6 +167,38 @@
 <script>
     var id = document.getElementById("drawflow");
     const editor = new Drawflow(id);
+
+    var user_id = null
+    var model_id = null
+    const py_server_port = "localhost:3000"
+
+    // Функция, позволяющая вызывать другю функцию через ms времени
+    const delay = async (ms) => await new Promise(resolve => setTimeout(resolve, ms));
+
+    setup()
+
+    async function setup() {
+
+        try {
+            const actionWithDelay = delay(2500).then(() => addUser());
+            const actionWithDelay2 = delay(4500).then(() => addModel());
+
+            let ObjData = {
+                type: "Data",
+                parameters: "useful data"
+            };
+
+            let add_data_response = sendJson(ObjData, `http://${py_server_port}/add_layer/100/1`)
+
+            const actionWithDelay3 = delay(5500).then(() => console.log(`Setup completed successfully. \nUser ID: ${user_id} \nModel ID: ${model_id}`))
+        }
+        catch (err) {
+            console.log(`Something went wrong during setup :( Error: ${err}`)
+        }
+
+    }
+
+
     editor.reroute = true;
     editor.drawflow = {
         drawflow: {
@@ -235,7 +267,7 @@
             layer_to: connection.input_id
         };
 
-        sendJson(layers_connection, "http://localhost:2000/add_connection/100/1")
+        sendJson(layers_connection, `http://${py_server_port}/add_connection/100/1`)
 
         console.log(connection);
     });
@@ -371,7 +403,7 @@
                     parameters: "input_1=0 output_1=1"
                 };
 
-                sendJson(Obj1, "http://localhost:2000/add_layer/100/1")
+                sendJson(Obj1, `http://${py_server_port}/add_layer/100/1`)
 
 
                 break;
@@ -390,7 +422,7 @@
                     parameters: "input_1=0 output_1=1"
                 };
 
-                sendJson(Obj2, "http://localhost:2000/add_layer/100/1")
+                sendJson(Obj2, `http://${py_server_port}/add_layer/100/1`)
 
 
                 break;
@@ -421,7 +453,7 @@
                     parameters: "input_1=0 output_1=1"
                 };
 
-                sendJson(Obj3, "http://localhost:2000/add_layer/100/1")
+                sendJson(Obj3, `http://${py_server_port}/add_layer/100/1`)
 
 
                 break;
@@ -457,7 +489,7 @@
                     parameters: "input_1=0 output_1=1"
                 };
 
-                sendJson(Obj4, "http://localhost:2000/add_layer/100/1")
+                sendJson(Obj4, `http://${py_server_port}/add_layer/100/1`)
 
 
                 break;
@@ -489,7 +521,7 @@
                     parameters: "input_1=0 output_1=1"
                 };
 
-                sendJson(Obj5, "http://localhost:2000/add_layer/100/1")
+                sendJson(Obj5, `http://${py_server_port}/add_layer/100/1`)
 
                 break;
             case "log":
@@ -652,19 +684,36 @@
 
     /* JSON requests handling */
 
-    function sendJson(sending_object, url) {
+    async function sendJson(sending_object, url) {
 
-        //let url = `http://localhost:2000/add_layer/100/${node_id}`;     // Test user_id = 100
-        fetch(url, {
+        const resp = await fetch(url, {
             method: 'POST',
             mode: 'cors',
             headers: {'content-type': 'application/json'},
             body: JSON.stringify(sending_object)
         })
-            .then(response => response.text())
-            .then((response) => {
-                console.log(`RESPONSE: ${response}`)})
+
+        const responseData = await resp.text();
+        return responseData
     }
+
+    function addUser() {
+        let temp_json = {
+            type: "Not empty JSON"
+        };
+
+        (async() => { user_id = await sendJson(temp_json, `http://${py_server_port}/add_user`) } )()
+    }
+
+    function addModel() {
+        let temp_json = {
+            name: "test_post_model_1"           // Здесь нужно будет указывать имя модели
+        };
+
+        (async() => { model_id = await sendJson(temp_json, `http://${py_server_port}/add_model/${user_id}`) })()
+
+    }
+
 
     function buildJsonFormData(form) {
         const jsonFormData = {}
@@ -684,7 +733,7 @@
 
         const jsonFormData = buildJsonFormData(form)
         const headers = buildHeaders()
-        const response = await performPostHttpRequest('http://localhost:2000/predict/1/1/', headers, jsonFormData)
+        const response = await performPostHttpRequest(`http://${py_server_port}/predict/1/1`, headers, jsonFormData)
 
         if (response) {
             console.log("Success request")
