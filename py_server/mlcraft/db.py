@@ -1,7 +1,7 @@
 import json
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
-from .utils import LayersConnectionStatus, DeleteStatus, parse_parameters
+from .utils import LayersConnectionStatus, DeleteStatus, parse_parameters, is_path_exist
 
 db = SQLAlchemy()  # Has to be global by Flask documentation
 
@@ -159,14 +159,22 @@ class SQLWorker:
             model = Model.query.get(model_id)
             model_items = json.loads(model.content)
             layers = model_items["layers"]
-            layer1 = list(filter(lambda layer: layer["id"] == layer_from, layers))
-            layer2 = list(filter(lambda layer: layer["id"] == layer_to, layers))
-            if not layer1 or not layer2:
+            layer1_candidates = list(
+                filter(lambda layer: layer["id"] == layer_from, layers)
+            )
+            layer2_candidates = list(
+                filter(lambda layer: layer["id"] == layer_to, layers)
+            )
+            if not layer1_candidates or not layer2_candidates:
                 return LayersConnectionStatus.DoNotExist
-            if not self.check_dimensions(layer1[0], layer2[0]):
+            layer1 = layer1_candidates[0]
+            layer2 = layer2_candidates[0]
+            if not self.check_dimensions(layer1, layer2):
                 return LayersConnectionStatus.DimensionsMismatch
-            if layer2[0]["layer_type"] == "Data" or layer1[0]["layer_type"] == "Output":
+            if layer2["layer_type"] == "Data" or layer1["layer_type"] == "Output":
                 return LayersConnectionStatus.WrongDirection
+            if is_path_exist([layer_to], [layer_from], model_items):
+                return LayersConnectionStatus.Cycle
             return LayersConnectionStatus.OK
 
     def verify_access(self, user_id, model_id):

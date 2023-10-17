@@ -11,6 +11,7 @@ class LayersConnectionStatus(Enum):
     AccessDenied = 2
     DimensionsMismatch = 3
     WrongDirection = 4
+    Cycle = 5
 
 
 class DeleteStatus(Enum):
@@ -36,7 +37,6 @@ def get_edges_from_model(model_dict):
 
 
 def is_valid_model(model_dict):
-    edges = get_edges_from_model(model_dict)
     start_candidates = list(
         filter(lambda x: x["layer_type"] == "Data", model_dict["layers"])
     )
@@ -47,14 +47,15 @@ def is_valid_model(model_dict):
         return False
     start_ids = list(map(lambda layer: layer["id"], start_candidates))
     stop_ids = list(map(lambda layer: layer["id"], stop_candidates))
+    return is_path_exist(start_ids, stop_ids, model_dict)
+
+
+def is_path_exist(start_ids: list, stop_ids: list, model_dict: dict):
+    edges = get_edges_from_model(model_dict)
     # BFS realisation
     distance = dict()
-    inputs = dict()
-    outputs = dict()
     for layer in model_dict["layers"]:
         distance[layer["id"]] = 0 if layer["id"] in start_ids else -1
-        inputs[layer["id"]] = layer["parameters"]["inputs"]
-        outputs[layer["id"]] = layer["parameters"]["outputs"]
     layers_queue = start_ids
     while layers_queue:
         layer = layers_queue[0]
@@ -62,8 +63,6 @@ def is_valid_model(model_dict):
         if layer not in edges.keys():
             continue
         for layer_to in edges[layer]:
-            if int(inputs[layer_to]) != int(outputs[layer]):
-                return False  # Maybe can be removed
             if distance[layer_to] == -1:
                 distance[layer_to] = distance[layer] + 1
                 layers_queue.append(layer_to)
@@ -82,5 +81,5 @@ def parse_parameters(layer_string: str) -> dict[str, tp.Any]:
         if re.match(r"^\[[^,]+(,[^,]+)*\]$", param_value) is not None:
             params_dict[param_name] = list(param_value[1:-1].split(","))
         else:
-            params_dict[param_name] = param_value # type: ignore
+            params_dict[param_name] = param_value  # type: ignore
     return params_dict
