@@ -73,6 +73,8 @@ def add_connection(user_id: int, model_id: int):
             error(HTTPStatus.FORBIDDEN, "You have no rights for changing this model")
         if allowed == LayersConnectionStatus.DimensionsMismatch:
             error(HTTPStatus.PRECONDITION_FAILED, message="Dimensions do not match")
+        if allowed == LayersConnectionStatus.WrongDirection:
+            error(HTTPStatus.PRECONDITION_FAILED, message="Wrong direction in data or output layer")
         inserted_id = sql_worker.add_connection(layer_from_id, layer_to_id, model_id)
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))

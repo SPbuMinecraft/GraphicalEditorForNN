@@ -1,7 +1,7 @@
 import json
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
-from .utils import LayersConnectionStatus, DeleteStatus
+from .utils import LayersConnectionStatus, DeleteStatus, parse_parameters
 
 db = SQLAlchemy()  # Has to be global by Flask documentation
 
@@ -146,7 +146,9 @@ class SQLWorker:
             return DeleteStatus.OK
 
     def check_dimensions(self, layer_from: dict, layer_to: dict):
-        return True
+        parameters_from = parse_parameters(layer_from["parameters"])
+        parameters_to = parse_parameters(layer_to["parameters"])
+        return int(parameters_from["outputs"]) == int(parameters_to["inputs"])
 
     def verify_connection(
         self, user_id: int, model_id: int, layer_from: int, layer_to: int
@@ -163,6 +165,8 @@ class SQLWorker:
                 return LayersConnectionStatus.DoNotExist
             if not self.check_dimensions(layer1[0], layer2[0]):
                 return LayersConnectionStatus.DimensionsMismatch
+            if layer2[0]["layer_type"] == "Data" or layer1[0]["layer_type"] == "Output":
+                return LayersConnectionStatus.WrongDirection
             return LayersConnectionStatus.OK
 
     def verify_access(self, user_id, model_id):
