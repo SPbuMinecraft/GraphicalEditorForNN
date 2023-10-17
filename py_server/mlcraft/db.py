@@ -37,7 +37,7 @@ class SQLWorker:
 
     def add_model(self, user_id: int, name: str):
         with current_app.app_context():
-            model_owner = User.query.filter(User.id == user_id).first()
+            model_owner = User.query.get(user_id)
             if not model_owner:
                 return -1
             new_model = Model(
@@ -52,7 +52,7 @@ class SQLWorker:
 
     def add_layer(self, layer_type: str, parameters: str, model_id: int):
         with current_app.app_context():
-            model = Model.query.filter(Model.id == model_id).first()
+            model = Model.query.get(model_id)
             if not model:
                 return -1
             model_items = json.loads(
@@ -79,7 +79,7 @@ class SQLWorker:
         self, layer_from: int, layer_to: int, model_id: int
     ):  # When we sure, that adding is correct
         with current_app.app_context():
-            model = Model.query.filter(Model.id == model_id).first()
+            model = Model.query.get(model_id)
             if not model:
                 return -1
             model_items = json.loads(model.content)
@@ -102,7 +102,7 @@ class SQLWorker:
 
     def delete_layer(self, layer_id: int, model_id: int):
         with current_app.app_context():
-            model = Model.query.filter(Model.id == model_id).first()
+            model = Model.query.get(model_id)
             if not model:
                 return DeleteStatus.ModelNotExist
             model_items = json.loads(model.content)
@@ -126,7 +126,7 @@ class SQLWorker:
 
     def delete_connection(self, connection_id: int, model_id: int):
         with current_app.app_context():
-            model = Model.query.filter(Model.id == model_id).first()
+            model = Model.query.get(model_id)
             if not model:
                 return DeleteStatus.ModelNotExist
             model_items = json.loads(model.content)
@@ -156,7 +156,7 @@ class SQLWorker:
         with current_app.app_context():
             if not self.verify_access(user_id, model_id):
                 return LayersConnectionStatus.AccessDenied
-            model = Model.query.filter(Model.id == model_id).first()
+            model = Model.query.get(model_id)
             model_items = json.loads(model.content)
             layers = model_items["layers"]
             layer1 = list(filter(lambda layer: layer["id"] == layer_from, layers))
@@ -171,14 +171,14 @@ class SQLWorker:
 
     def verify_access(self, user_id, model_id):
         with current_app.app_context():
-            model_passport = Model.query.filter(Model.id == model_id).first()
+            model_passport = Model.query.get(model_id)
             if not model_passport or model_passport.owner != user_id:
                 return False
             return True
 
     def get_graph_elements(self, model_id):
         with current_app.app_context():
-            model = Model.query.filter(Model.id == model_id).first()
+            model = Model.query.get(model_id)
             if not model:
                 return -1
             model_items = json.loads(model.content)
@@ -186,7 +186,7 @@ class SQLWorker:
 
     def train_model(self, model_id: int):
         with current_app.app_context():
-            model = Model.query.filter(Model.id == model_id).first()
+            model = Model.query.get(model_id)
             if not model:
                 return -1
             model.is_trained = True
@@ -196,7 +196,7 @@ class SQLWorker:
 
     def is_model_trained(self, model_id: int):
         with current_app.app_context():
-            model = Model.query.filter(Model.id == model_id).first()
+            model = Model.query.get(model_id)
             if not model:
                 return False
             return model.is_trained
