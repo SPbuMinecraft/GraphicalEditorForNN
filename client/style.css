@@ -3,21 +3,25 @@
     --border-color: #000000;
     --background-color: #ffffff;
     --background-box-title: #d0d0d0;
-    --blue0: #ccfcff;
-    --blue1: #b2f9fd;
-    --blue2: #00f4ff;
-    --blue3: #25c6ce;
-    --blue4: #18989f;
-    --grey0: #e0e0e0;
-    --grey1: #c2c2c2;
-    --grey2: #9d9d9d;
-    --grey3: #525252;
-    --grey4: #333333;
+    --gradient-color: #aebcd2;
+    --text-color: #000000;
+    --color0: #ccfcff; /* #ccfcff */
+    --color1: #b2f9fd; /* #b2f9fd */
+    --color2: #00f4ff; /* #00f4ff */
+    --color3: #25c6ce; /* #25c6ce */
+    --color4: #20b6be; /* #18989f */
+    --background0: #e1e1e1; /* #e0e0e0 */
+    --background1: #b5bdc4; /* #c2c2c2 */
+    --background2: #62738c; /* #9d9d9d */
+    --background3: #303744; /* #525252 */
+    --background4: #282828; /* #333333 */
     --border-width: 3px;
     --header-height: 65px;
 }
 
 html, body {
+    color: var(--text-color);
+    background-color: var(--background-color);
     margin: 0;
     padding: 0;
     width: 100vw;
@@ -34,21 +38,22 @@ html, body {
 /*элементы верхней части окна*/
 header {
     height: var(--header-height);
-    border-bottom: var(--border-width) solid var(--grey3);
-    background-color: var(--grey2);
+    border-bottom: var(--border-width) solid var(--background3);
+    background-color: var(--background2);
     padding-left: 100px;
     display: block;
+    color: var(--text-color);
 }
 .github-link {
     position: absolute;
     top: 10px;
     right: 20px;
-    color: black;
+    color: var(--text-color);
 }
 .menu {
     position: absolute;
     top: 0;
-    left: 900px;
+    right: 100px;
     width: 500px;
     height: var(--header-height);
     display: block;
@@ -63,17 +68,18 @@ header {
     padding-left: 10px;
     cursor: pointer;
     font-size: 20px;
+    background-color: var(--background2);
 }
 .menu ul li:hover {
     border-radius: 15px;
     font-weight: bold;
-    background-color: var(--grey1);
+    background-color: var(--background1);
     transition: background-color .125s ease-in;
 }
 .menu ul li.selected {
     border-radius: 15px;
     font-weight: bold;
-    background-color: var(--grey1);
+    background-color: var(--background1);
 }
 
 
@@ -89,11 +95,12 @@ header .button-wrapper {
     left: 20px;
     overflow: hidden;
     border-radius: 50%;
+    color: var(--text-color);
 }
 .profile-icon:hover {
-    background-color: var(--blue2);
+    background-color: var(--color2);
     transition: background-color .125s ease-in;
-    border-color: var(--grey4);
+    border-color: var(--background4);
 }
 
 .profile-icon .profile-check {
@@ -104,14 +111,15 @@ header .button-wrapper {
     position: absolute;
     height: calc(100vh - var(--header-height) - 2 * var(--border-width));
     top: var(--header-height);
+    color: var(--text-color);
     left: 0;
     width: 330px;
-    background-color: var(--grey0);
+    background-color: var(--background0);
     display: none;
     z-index: 1;
-    border-top: var(--border-width) solid var(--grey3);
-    border-right: var(--border-width) solid var(--grey3);
-    border-bottom: var(--border-width) solid var(--grey3);
+    border-top: var(--border-width) solid var(--background3);
+    border-right: var(--border-width) solid var(--background3);
+    border-bottom: var(--border-width) solid var(--background3);
     border-bottom-right-radius: 30px;
 }
 /*потом прикручу функциональность*/
@@ -124,16 +132,16 @@ header .button-wrapper {
     font-size: 11px;
     height: 25px;
     width: 50px;
-    border: var(--border-width) solid var(--grey3);
+    border: var(--border-width) solid var(--background3);
     border-radius: 50px;
 
     .day-night-checkbox {
         display: none;
     }
     & input:checked ~ .control {
-        background-color: var(--blue4);
+        background-color: var(--color4);
         &::before {
-            background: var(--blue4);
+            background: var(--color4);
             left: calc(50px - (20px * 1.4) - 2px);
             transform: scale(1);
         }
@@ -149,7 +157,7 @@ header .button-wrapper {
         height: 25px;
         width: 50px;
         border-radius: 50px;
-        background-color: var(--blue1);
+        background-color: var(--color1);
         transition: background-color .125s ease-in;
 
         &::before {
@@ -161,7 +169,7 @@ header .button-wrapper {
             top: 0;
             border-radius: 50%;
             transform: scale(0);
-            background: var(--grey3);
+            background: var(--background3);
             z-index: 5;
             transition: all .125s ease-in;
         }
@@ -220,6 +228,7 @@ header .button-wrapper {
 
 /*Constructor screen*/
 .constructor {
+    color: var(--text-color);
     width: 100%;
     height: calc(100vh - var(--header-height));
     display: flex;
@@ -230,12 +239,12 @@ header .button-wrapper {
     width: 300px;
     top: var(--header-height);
     right: 0px;
-    background-color: var(--grey0);
+    background-color: var(--background0);
     display: none;
     z-index: 1;
-    border-top: var(--border-width) solid var(--grey3);
-    border-left: var(--border-width) solid var(--grey3);
-    border-bottom: var(--border-width) solid var(--grey3);
+    border-top: var(--border-width) solid var(--background3);
+    border-left: var(--border-width) solid var(--background3);
+    border-bottom: var(--border-width) solid var(--background3);
     border-bottom-left-radius: 30px;
 }
 
@@ -246,16 +255,16 @@ header .button-wrapper {
     left: 0;
     width: 300px;
     height: 100%;
-    border-right: var(--border-width) solid var(--grey3);
-    background-color: var(--grey1);
+    border-right: var(--border-width) solid var(--background3);
+    background-color: var(--background1);
 }
 
 .button-wrapper{
     text-align: center;
-    background-color: var(--blue1);
-    color: black;
+    background-color: var(--color4);
+    color: var(--text-color);
     cursor: pointer;
-    border: var(--border-width) solid var(--grey3);
+    border: var(--border-width) solid var(--background3);
     border-radius: 30px;
     & input{
         display: none;
@@ -263,9 +272,9 @@ header .button-wrapper {
 }
 .button-wrapper:hover{
     font-weight: bold;
-    background-color: var(--blue2);
+    background-color: var(--color1);
     transition: background-color .125s ease-in;
-    border-color: var(--grey4);
+    border-color: var(--background4);
 }
 
 .col .button-wrapper{
@@ -278,66 +287,91 @@ header .button-wrapper {
     width: 80px;
     font-size: 18px;
 }
-.predict-interface {
+
+.predict-train-interface{
     position: relative;
+    left: calc((300px - 250px - var(--border-width) * 2) / 2);
+    top: 10px;
+    width: 250px;
+    .button-wrapper{
+        display: block;
+        position: relative;
+        align-self: center;
+        left: calc((250px - 80px)/2);
+        height: 30px;
+        width: 80px;
+        font-size: 18px;
+    }
+    &#train{
+        display: block;
+    }
+    &#predict {
+        display: none;
+    }
+}
+
+.predict-train-form {
     text-align: center;
     padding: 10px;
-    height: 105px;
-    width: 200px;
-    left: calc((300px - 200px - var(--border-width) * 2 - 20px) / 2);
-    top: 10px;
-    background-color: white;
-    border: var(--border-width) solid var(--grey3);
+    height: fit-content;
+    width: calc(230px - var(--border-width) * 2);
+    background-color: var(--background-color);
+    border: var(--border-width) solid var(--background3);
     border-radius: 15px;
-    display: none;
     margin: 10px 0;
-}
-.predict-interface .button-wrapper{
-    display: block;
-    position: relative;
-    padding-top: 10px;
-    top: 15px;
-    left: 58px;
-    height: 30px;
-    width: 80px;
-    font-size: 18px;
-}
 
-.x-val-label {
-    padding-right: 5px;
-}
+    font-size: 23px;
+    .x-val-label {
+        padding-right: 5px;
+    }
+    .form-control-x {
+        width: 30px;
+        position: relative;
+        left: 0;
+    }
+    .y-val-label {
+        padding-left: 10px;
+    }
+    .form-control-y {
+        width: 30px;
+        position: relative;
+        left: 5px;
+    }
+    .res-val-label {
+        padding-left: 10px;
+    }
+    .form-control-res {
+        width: 30px;
+        position: relative;
+        left: 5px;
+    }
 
-.form-control-x {
-    width: 50px;
-    position: relative;
-    left: 0;
-    display: inline-block;
-}
-
-.y-val-label {
-    padding-left: 10px;
-}
-
-.form-control-y {
-    width: 50px;
-    position: relative;
-    left: 5px;
-    display: inline-block;
+    & input{
+        background-color: var(--background-color);
+        border: 1px solid var(--text-color);
+        color: var(--text-color);
+    }
 }
 
 .predict-result-wrapper{
     position: relative;
-    text-align: center;
     padding: 10px;
-    height: 105px;
+    height: fit-content;
     width: 200px;
-    left: calc((300px - 200px - var(--border-width) * 2 - 20px) / 2);
-    top: 85px;
-    background-color: white;
-    border: var(--border-width) solid var(--grey3);
+    overflow: hidden;
+    left: calc((300px - 250px - var(--border-width) * 2 - 10px) / 2);
+    background-color: var(--background-color);
+    border: var(--border-width) solid var(--background3);
     border-radius: 15px;
     display: none;
     margin: 10px 0;
+    font-size: 23px;
+    .form-control-res {
+        width: 200px;
+        position: relative;
+        display: inline-block;
+        overflow-x: scroll;
+    }
 }
 
 
@@ -352,8 +386,9 @@ header .button-wrapper {
     margin-right: 50px;
     line-height: 50px;
     text-align: center;
-    border: var(--border-width) solid var(--grey3);
-    background-color: var(--grey0);
+    font-size: 20px;
+    border: var(--border-width) solid var(--background3);
+    background-color: var(--background0);
     border-radius: 15px;
     left: 20px;
     top: 10%;
@@ -426,8 +461,8 @@ header .button-wrapper {
     top: 0px;
     background: var(--background-color);
     background-size: 25px 25px;
-    background-image: linear-gradient(to right, #f1f1f1 1px, transparent 1px),
-    linear-gradient(to bottom, #f1f1f1 1px, transparent 1px);
+    background-image: linear-gradient(to right, var(--gradient-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--gradient-color) 1px, transparent 1px);
 }
 
 @media only screen and (max-width: 768px) {
@@ -443,26 +478,28 @@ header .button-wrapper {
 }
 
 .drawflow .drawflow-node {
-    background: var(--grey0);
-    border: var(--border-width) solid var(--grey2);
+    color: var(--text-color);
+    background: var(--background0);
+    border: var(--border-width) solid var(--background3);
     border-radius: 15px;
     text-align: center;
-    -webkit-box-shadow: 0 2px 15px 2px var(--blue4);
-    box-shadow: 0 2px 15px 2px var(--blue4);
+    font-size: 20px;
+    -webkit-box-shadow: 0 2px 15px 2px var(--color4);
+    box-shadow: 0 2px 15px 2px var(--color4);
     padding: 0px;
     width: 200px;
     height: 50px;
 }
 
 .drawflow .drawflow-node.selected {
-    background: var(--blue0);
-    border: var(--border-width) solid var(--grey2);
-    -webkit-box-shadow: 0 2px 20px 2px var(--blue3);
-    box-shadow: 0 2px 20px 2px var(--blue3);
+    background: var(--color0);
+    border: var(--border-width) solid var(--background2);
+    -webkit-box-shadow: 0 2px 20px 2px var(--color3);
+    box-shadow: 0 2px 20px 2px var(--color3);
 }
 
 .drawflow .connection .main-path {
-    stroke: var(--blue2);
+    stroke: var(--color2);
     stroke-width: 3px;
 }
 
@@ -473,7 +510,7 @@ header .button-wrapper {
 }
 
 .drawflow .drawflow-node .input:hover, .drawflow .drawflow-node .output:hover {
-    background: var(--blue4);
+    background: var(--color4);
 }
 
 .drawflow .drawflow-node .output {
