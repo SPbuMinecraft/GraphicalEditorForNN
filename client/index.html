@@ -40,6 +40,9 @@
 
 
 <!-- HTML parts -->
+<div class="notification" id="error"> Error</div>
+<div class="notification" id="success"> Success</div>
+
 
 <header>
     <label class="button-wrapper">
@@ -260,21 +263,16 @@
         else
             prf.style.display = 'grid'
     }
-    function checkIfTrained(){
-        //todo
-        return true
-    }
-    function onTrainShowPredict(){
-        if(!checkIfTrained()){
-            document.getElementById("predict").style.display = 'none'
-            return
-        }
-        document.getElementById("predict").style.display = 'block'
+    function onTrainShowPredict(training_successful){
+        training_successful ? document.getElementById("predict").style.display = 'block'
+            : document.getElementById("predict").style.display = 'none'
     }
     function train(){
         //todo
         //Проверить, что соединено с output и data
-        onTrainShowPredict()
+        var training_status = true
+        showBuildNotification(training_status)
+        onTrainShowPredict(training_status)
     }
     function onPredictShowResult(res){
         //todo
@@ -306,7 +304,7 @@
         if(checkbox.checked){
             root.setProperty('--color0', '#00a1b0')
             root.setProperty('--color1', '#01606c')
-            root.setProperty('--color2', '#00c7cb')
+            root.setProperty('--color2', '#00f4ff')
             root.setProperty('--color3', '#00a7ab')
             root.setProperty('--color4', '#1e838a')
             root.setProperty('--background0', '#3d3d42')
@@ -319,11 +317,15 @@
             root.setProperty('--background-box-title', '#424242')
             root.setProperty('--gradient-color', '#2b2f34')
             root.setProperty('--text-color', '#ffffff')
+            root.setProperty('--notification-color-success', '#156532')
+            root.setProperty('--notification-color-success-border', '#3fd778')
+            root.setProperty('--notification-color-fail', '#702626')
+            root.setProperty('--notification-color-fail-border', '#f66262')
         }
         else{
             root.setProperty('--color0', '#ccfcff')
             root.setProperty('--color1', '#b2f9fd')
-            root.setProperty('--color2', '#00f4ff')
+            root.setProperty('--color2', '#009ba2')
             root.setProperty('--color3', '#25c6ce')
             root.setProperty('--color4', '#20b6be')
             root.setProperty('--background0', '#e1e1e1')
@@ -336,7 +338,32 @@
             root.setProperty('--background-box-title', '#d0d0d0')
             root.setProperty('--gradient-color', '#aebcd2')
             root.setProperty('--text-color', '#000000')
+            root.setProperty('--notification-color-success', '#3fd778')
+            root.setProperty('--notification-color-success-border', '#156532')
+            root.setProperty('--notification-color-fail', '#f66262')
+            root.setProperty('--notification-color-fail-border', '#702626')
         }
+    }
+
+    // Notifications
+    const buildSuccessful = () => {
+        const success = document.getElementById('success');
+        success.style.display = 'block';
+        success.innerHTML = '<div style="font-weight: bold; font-size: 23px">Success!</div>Successfully built and trained the neural network';
+        setTimeout(() => {
+            success.style.display = 'none';
+        }, 3 * 1000);
+    };
+    const buildUnsuccessful = () => {
+        const error = document.getElementById('error');
+        error.style.display = 'block';
+        error.innerHTML = '<div style="font-weight: bold; font-size: 23px">Error!</div>Failed to build the neural network';
+        setTimeout(() => {
+            error.style.display = 'none';
+        }, 3 * 1000);
+    }
+    const showBuildNotification = (build_status) => {
+        build_status ? buildSuccessful() : buildUnsuccessful();
     }
 </script>
 

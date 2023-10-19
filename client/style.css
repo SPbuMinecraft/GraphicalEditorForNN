@@ -5,9 +5,13 @@
     --background-box-title: #d0d0d0;
     --gradient-color: #aebcd2;
     --text-color: #000000;
+    --notification-color-success: #3fd778;
+    --notification-color-success-border: #156532;
+    --notification-color-fail: #f66262;
+    --notification-color-fail-border: #702626;
     --color0: #ccfcff; /* #ccfcff */
     --color1: #b2f9fd; /* #b2f9fd */
-    --color2: #00f4ff; /* #00f4ff */
+    --color2: #009ba2; /* #00f4ff */
     --color3: #25c6ce; /* #25c6ce */
     --color4: #20b6be; /* #18989f */
     --background0: #e1e1e1; /* #e0e0e0 */
@@ -16,6 +20,7 @@
     --background3: #303744; /* #525252 */
     --background4: #282828; /* #333333 */
     --border-width: 3px;
+    --connection-width: 4px;
     --header-height: 65px;
 }
 
@@ -31,6 +36,33 @@ html, body {
     font-family: 'Roboto', sans-serif;
 }
 
+
+
+
+
+/* Уведомления */
+.notification {
+    display: none;
+    position: absolute;
+    text-align: center;
+    top: calc(var(--header-height) + 50px);
+    right: 50px;
+    width: fit-content;
+    height: fit-content;
+    padding: 5px;
+    z-index: 2;
+    color: var(--text-color);
+    font-size: 20px;
+    border-radius: 15px;
+    &#success{
+        background-color: var(--notification-color-success);
+        border: var(--border-width) solid var(--notification-color-success-border);
+    }
+    &#error{
+        background-color: var(--notification-color-fail);
+        border: var(--border-width) solid var(--notification-color-fail-border);;
+    }
+}
 
 
 
@@ -500,7 +532,7 @@ header .button-wrapper {
 
 .drawflow .connection .main-path {
     stroke: var(--color2);
-    stroke-width: 3px;
+    stroke-width: var(--connection-width);
 }
 
 .drawflow .drawflow-node .input, .drawflow .drawflow-node .output {
