@@ -454,6 +454,7 @@
 
     });
     editor.on("connectionCreated", function (connection) {
+        /*
         const nodeInfoIn = editor.getNodeFromId(connection.input_id);
         if(nodeInfoIn.inputs[connection.input_class].connections.length > 1) {
             const removeConnectionInfo = nodeInfoIn.inputs[connection.input_class].connections[0];
@@ -464,6 +465,7 @@
             const removeConnectionInfo = nodeInfoOut.outputs[connection.output_class].connections[0];
             editor.removeSingleConnection(connection.output_id, removeConnectionInfo.node, connection.output_class, removeConnectionInfo.output);
         }
+         */
         console.log("Connection created");
         let layers_connection = {
             layer_from: connection.output_id,
