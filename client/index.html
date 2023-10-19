@@ -4,153 +4,191 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Demo constructor | Simple Flow program libray</title>
+    <title>MLCraft </title>
     <meta
             name="description"
-            content="Simple library for flow programming. Drawflow allows you to create data flows easily and quickly."
-    />
+            content="none yet"/>
+    <script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"></script>
+    <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js"
+            integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs="
+            crossorigin="anonymous"
+    ></script>
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.css"/>
+    <link
+            rel="stylesheet"
+            type="text/css"
+            href="./style.css"/>
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
+            integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ="
+            crossorigin="anonymous"/>
+    <link
+            href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
+            rel="stylesheet"/>
+    <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+            rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+    <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
 </head>
 <body>
-<script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"></script>
-<script
-        src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js"
-        integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs="
-        crossorigin="anonymous"
-></script>
-
-
-<link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.css"
-/>
-
-
-<link
-        rel="stylesheet"
-        type="text/css"
-        href="./style.css"
-/>
-
-
-<link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
-        integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ="
-        crossorigin="anonymous"
-/>
-
-
-<link
-        href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
-        rel="stylesheet"
-/>
-
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
-<script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
 
 
 
 <!-- HTML parts -->
+<div class="notification" id="error"> Error</div>
+<div class="notification" id="success"> Success</div>
+
 
 <header>
-    <h2>Demo constructor</h2>
+    <label class="button-wrapper">
+        <input type="button" class="profile-check" onclick=showProfile()>
+        <i class="material-icons" style="font-size:65px; position: relative; left:-7px; bottom: 2px" onmousedown="return false">person</i>
+    </label>
+    <h2 onmousedown="return false">MLCraft</h2>
     <div class="github-link">
         <a href="https://github.com/SPbuMinecraft/GraphicalEditorForNN" target="_blank"
-        ><i class="fab fa-Module C fa-3x"></i
+        ><i class="fab fa-Module C fa-3x" style="color: var(--background3)"></i
         ></a>
     </div>
+    <div class="menu" onmousedown="return false">
+        <ul>
+            <li id ="select-home" onclick="showMode(event); ">
+                Home
+            </li>
+            <li id ="select-constructor" onclick="showMode(event);"
+                class="selected">
+                Constructor
+            </li>
+            <li id ="select-terminal" onclick="showMode(event);">
+                Terminal
+            </li>
+            <li id ="select-metrics" onclick="showMode(event);">
+                Metrics
+            </li>
+        </ul>
+    </div>
 </header>
-<div class="wrapper">
+
+<div class="profile" id="profile">
+    Coming soon!
+    <label class="day-night-mode-label">
+        <input type="checkbox" id = "day-night-checkbox-id" class="day-night-checkbox" value="day" onclick=changeTheme()>
+        <span class="control"></span>
+    </label>
+</div>
+
+<div class="home" id="home">
+    Coming soon!
+</div>
+
+<div class="constructor" id ="constructor">
     <div class="col">
         <div
                 class="drag-drawflow"
                 draggable="true"
                 ondragstart="drag(event)"
-                data-node="moduleA"
-        >
-            <i class="fab moduleA"></i><span> Module A</span>
+                data-node="linear">
+            <span> Linear</span>
         </div>
         <div
                 class="drag-drawflow"
                 draggable="true"
                 ondragstart="drag(event)"
-                data-node="moduleA"
-        >
-            <i class="fab fa-google-drive"></i><span> Module G</span>
+                data-node="relu">
+            <span> Relu</span>
         </div>
         <div
                 class="drag-drawflow"
                 draggable="true"
                 ondragstart="drag(event)"
-                data-node="email"
-        >
-            <i class="fas fa-mouse"></i><span> Module Y</span>
+                data-node="sigmoid">
+            <span> Sigmoid</span>
 
+        </div>
+        <div
+                class="drag-drawflow"
+                draggable="false"
+                onmousedown="return false">
+            <span> Coming soon</span>
         </div> <br>
 
-        <div style = "position:relative; left:45px; top:2px; background-color:white;">
-            <form id="xy_form">
-                <div class="input-group">
-                    <label for="x_value">X</label><br>
-                    <input type="text" id="x_value" name="x_value"><br>
+        <div class="predict-train-interface" id="train">
+            <form class="predict-train-form" id="xy-form-train">
+                <label for="x-value1" class="x-val-label"> x </label>
+                <input type="text" class="form-control-x" id="x-value1" name="x-value">
+                <label for="y-value1" class="y-val-label"> y </label>
+                <input type="text" class="form-control-y" id="y-value1" name="y-value">
+                <label for="res-value1" class="res-val-label"> = </label>
+                <input type="text" class="form-control-res" id="res-value1" name="res-value"><br>
 
-                    <label for="y_value">Y</label><br>
-                    <input type="text" class="form-control" id="y_value" name="y_value"> <br> <br>
+                <label for="x-value2" class="x-val-label"> x </label>
+                <input type="text" class="form-control-x" id="x-value2" name="x-value">
+                <label for="y-value2" class="y-val-label"> y </label>
+                <input type="text" class="form-control-y" id="y-value2" name="y-value">
+                <label for="res-value2" class="res-val-label"> =</label>
+                <input type="text" class="form-control-res" id="res-value2" name="res-value"><br>
 
-                    <button type="submit" value="Submit" id="btnSubmit">
-                        Submit
-                    </button>
-                </div>
+                <label for="x-value3" class="x-val-label"> x </label>
+                <input type="text" class="form-control-x" id="x-value3" name="x-value">
+                <label for="y-value3" class="y-val-label"> y </label>
+                <input type="text" class="form-control-y" id="y-value3" name="y-value">
+                <label for="res-value3" class="res-val-label"> =</label>
+                <input type="text" class="form-control-res" id="res-value3" name="res-value"><br>
+
+                <label for="x-value4" class="x-val-label"> x </label>
+                <input type="text" class="form-control-x" id="x-value4" name="x-value">
+                <label for="y-value4" class="y-val-label"> y </label>
+                <input type="text" class="form-control-y" id="y-value4" name="y-value">
+                <label for="res-value4" class="res-val-label"> =</label>
+                <input type="text" class="form-control-res" id="res-value4" name="res-value"><br>
+
+                <label for="x-value5" class="x-val-label"> x </label>
+                <input type="text" class="form-control-x" id="x-value5" name="x-value">
+                <label for="y-value5" class="y-val-label"> y </label>
+                <input type="text" class="form-control-y" id="y-value5" name="y-value">
+                <label for="res-value5" class="res-val-label"> =</label>
+                <input type="text" class="form-control-res" id="res-value5" name="res-value"><br>
             </form>
+            <label class="button-wrapper" id="train-button">
+                Train
+                <input type="button" onclick=train()>
+            </label>
         </div>
+        <div class="predict-train-interface" id="predict">
+            <form class="predict-train-form" id="xy-form-predict">
+                <label for="x-value" class="x-val-label"> x </label>
+                <input type="text" class="form-control-x" id="x-value" name="x-value">
+
+                <label for="y-value" class="y-val-label"> y </label>
+                <input type="text" class="form-control-y" id="y-value" name="y-value">
+            </form>
+            <label class="button-wrapper" id="submit-button">
+                Predict
+                <input type="submit" onclick=predict()>
+            </label>
+            <div class ="predict-result-wrapper" id ="predict-result-wrapper">
+                =
+                <output class="form-control-res" id="res-value-out" name="res-value" for="x-value y-value"></output>
+            </div>
+        </div>
+
+
 
     </div>
-    <div class="col-right">
-        <div class="menu">
-            <ul>
-                <li
-                        onclick="editor.changeModule('Home'); changeModule(event);"
-                        class="selected"
-                >
-                    Constructor
-                </li>
-                <li onclick="editor.changeModule('Other'); changeModule(event);">
-                    Layers
-                </li>
-                <li onclick="editor.changeModule('Metrics'); changeModule(event);">
-                    Terminal
-                </li>
-                <li onclick="editor.changeModule('Metrics'); changeModule(event);">
-                    Metrics
-                </li>
-            </ul>
-        </div>
-        <div id="drawflow" ondrop="drop(event)" ondragover="allowDrop(event)">
-            <div
-                    class="btn-export"
-                    onclick="Swal.fire({ title: 'Export',
-        html: '<pre><code>'+JSON.stringify(editor.export(), null,4)+'</code></pre>'
-        })"
-            >
-                Export
-            </div>
 
-            <div class="btn-clear" onclick="editor.clearModuleSelected()">
+    <div class="col-right">
+        <div id="drawflow" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <div class="btn-clear" onclick="editor.clear()">
                 Clear
             </div>
             <div class="btn-lock">
-                <i
-                        id="lock"
-                        class="fas fa-lock"
-                        onclick="editor.editor_mode='fixed'; changeMode('lock');"
-                ></i>
-                <i
-                        id="unlock"
-                        class="fas fa-lock-open"
-                        onclick="editor.editor_mode='edit'; changeMode('unlock');"
-                        style="display: none;"
-                ></i>
+                <i id="lock" class="fas fa-lock" onclick="editor.editor_mode='fixed'; changeMode('lock');"></i>
+                <i id="unlock" class="fas fa-lock-open" onclick="editor.editor_mode='edit'; changeMode('unlock');" style="display: none;"></i>
             </div>
             <div class="bar-zoom">
                 <i class="fas fa-search-minus" onclick="editor.zoom_out()"></i>
@@ -159,169 +197,323 @@
             </div>
         </div>
     </div>
+
+    <div class="layer-data" id="layer-data">
+        Coming soon!
+    </div>
+</div>
+
+<div class="terminal" id="terminal">
+    Coming soon!
+</div>
+
+<div class="metrics" id="metrics">
+    Coming soon!
 </div>
 
 
+
+
+
 <!-- JS scripts -->
-
 <script>
-    var id = document.getElementById("drawflow");
-    const editor = new Drawflow(id);
-
     var user_id = null
     var model_id = null
     const py_server_port = "localhost:3000"
-
     // Функция, позволяющая вызывать другю функцию через ms времени
     const delay = async (ms) => await new Promise(resolve => setTimeout(resolve, ms));
-
     setup()
-
     async function setup() {
-
         try {
             const actionWithDelay = delay(2500).then(() => addUser());
             const actionWithDelay2 = delay(4500).then(() => addModel());
-
             let ObjData = {
                 type: "Data",
                 parameters: "useful data"
             };
-
             let add_data_response = sendJson(ObjData, `http://${py_server_port}/add_layer/100/1`)
-
             const actionWithDelay3 = delay(5500).then(() => console.log(`Setup completed successfully. \nUser ID: ${user_id} \nModel ID: ${model_id}`))
         }
         catch (err) {
             console.log(`Something went wrong during setup :( Error: ${err}`)
         }
+    }
+</script>
+
+
+
+
+
+<!--Взаимодействие html и js-->
+<script>
+    function showMode(event){
+        var all = document.querySelectorAll(".menu ul li");
+        var modes = document.querySelectorAll("div.home, div.constructor, div.terminal, div.metrics")
+        for (var i = 0; i < all.length; i++) {
+            all[i].classList.remove("selected");
+            modes[i].style.display = 'none';
+        }
+        event.target.classList.add("selected");
+        document.getElementById(event.target.id.split("-")[1]).style.display = 'flex'
+    }
+    function showProfile(){
+        var prf = document.getElementById("profile")
+        if(prf.style.display == 'grid')
+            prf.style.display = 'none'
+        else
+            prf.style.display = 'grid'
+    }
+    function onTrainShowPredict(training_successful){
+        training_successful ? document.getElementById("predict").style.display = 'block'
+            : document.getElementById("predict").style.display = 'none'
+    }
+    function train(){
+        //todo
+        //Проверить, что соединено с output и data
+        var training_status = true
+        showBuildNotification(training_status)
+        onTrainShowPredict(training_status)
+    }
+    function onPredictShowResult(res){
+        //todo
+        document.getElementById("res-value-out").innerHTML = res
+        document.getElementById("predict-result-wrapper").style.textAlign = 'center'
+        document.getElementById("predict-result-wrapper").style.display = 'block'
+
 
     }
+    function predict(){
+        //todo
+        var res = 0
+        onPredictShowResult(res)
+    }
+    function getLayerInfoFromDB(id){
+        //todo
+        //взаимодействие с сервером, бд
+    }
+    function showLayerInfo(id){
+        const data = getLayerInfoFromDB(id);
+        document.getElementById("layer-data").style.display = 'block'
+    }
+    function hideLayerInfo(){
+        document.getElementById("layer-data").style.display = 'none'
+    }
+    function changeTheme(){
+        var checkbox = document.getElementById("day-night-checkbox-id")
+        var root = document.documentElement.style
+        if(checkbox.checked){
+            root.setProperty('--color0', '#00a1b0')
+            root.setProperty('--color1', '#01606c')
+            root.setProperty('--color2', '#00f4ff')
+            root.setProperty('--color3', '#00a7ab')
+            root.setProperty('--color4', '#1e838a')
+            root.setProperty('--background0', '#3d3d42')
+            root.setProperty('--background1', '#4b5760')
+            root.setProperty('--background2', '#343e4f')
+            root.setProperty('--background3', '#959daf')
+            root.setProperty('--background4', '#dedede')
+            root.setProperty('--border-color', '#ffffff')
+            root.setProperty('--background-color', '#0c1017')
+            root.setProperty('--background-box-title', '#424242')
+            root.setProperty('--gradient-color', '#2b2f34')
+            root.setProperty('--text-color', '#ffffff')
+            root.setProperty('--notification-color-success', '#156532')
+            root.setProperty('--notification-color-success-border', '#3fd778')
+            root.setProperty('--notification-color-fail', '#702626')
+            root.setProperty('--notification-color-fail-border', '#f66262')
+        }
+        else{
+            root.setProperty('--color0', '#ccfcff')
+            root.setProperty('--color1', '#b2f9fd')
+            root.setProperty('--color2', '#009ba2')
+            root.setProperty('--color3', '#25c6ce')
+            root.setProperty('--color4', '#20b6be')
+            root.setProperty('--background0', '#e1e1e1')
+            root.setProperty('--background1', '#b5bdc4')
+            root.setProperty('--background2', '#62738c')
+            root.setProperty('--background3', '#303744')
+            root.setProperty('--background4', '#282828')
+            root.setProperty('--border-color', '#000000')
+            root.setProperty('--background-color', '#ffffff')
+            root.setProperty('--background-box-title', '#d0d0d0')
+            root.setProperty('--gradient-color', '#aebcd2')
+            root.setProperty('--text-color', '#000000')
+            root.setProperty('--notification-color-success', '#3fd778')
+            root.setProperty('--notification-color-success-border', '#156532')
+            root.setProperty('--notification-color-fail', '#f66262')
+            root.setProperty('--notification-color-fail-border', '#702626')
+        }
+    }
+
+    // Notifications
+    const buildSuccessful = () => {
+        const success = document.getElementById('success');
+        success.style.display = 'block';
+        success.innerHTML = '<div style="font-weight: bold; font-size: 23px">Success!</div>Successfully built and trained the neural network';
+        setTimeout(() => {
+            success.style.display = 'none';
+        }, 3 * 1000);
+    };
+    const buildUnsuccessful = () => {
+        const error = document.getElementById('error');
+        error.style.display = 'block';
+        error.innerHTML = '<div style="font-weight: bold; font-size: 23px">Error!</div>Failed to build the neural network';
+        setTimeout(() => {
+            error.style.display = 'none';
+        }, 3 * 1000);
+    }
+    const showBuildNotification = (build_status) => {
+        build_status ? buildSuccessful() : buildUnsuccessful();
+    }
+</script>
 
 
-    editor.reroute = true;
-    editor.drawflow = {
+
+
+
+<!--Работа с Drawflow-->
+<script>
+    class CustomDrawflow extends Drawflow {
+        constructor(id) {
+            super(id);
+        }
+        removeNodeId(id) {
+            var nodeClassFromId = this.getNodeFromId(id.slice(5)).class;
+            if(nodeClassFromId === "special"){
+                return
+            }
+            var r = confirm("Delete this layer?");
+            if (r === true) {
+                super.removeNodeId(id)
+            }
+        }
+        clear() {
+            super.clear()
+            //очистить бд?
+            this.addNode("Data", 0, 1, 300, 363, "special", {}, '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>')
+            this.addNode("Output", 1, 0, 700, 363, "special", {}, '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>')
+        }
+        contextmenu(e){
+            if(this.node_selected)
+                showLayerInfo(this.node_selected.id)
+            super.contextmenu(e)
+        }
+        click(e){
+            hideLayerInfo()
+            super.click(e)
+        }
+    }
+
+    var id = document.getElementById("drawflow");
+    const editor = new CustomDrawflow(id);
+    editor.start();
+    editor.addNode("Data", 0, 1, 300, 363, "special", {}, '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>')
+    editor.addNode("Output", 1, 0, 700, 363, "special", {}, '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>')
+    /*editor.drawflow = {
         drawflow: {
             Home: {
                 data: {
                     "1": {
-                        id: 1,
-                        name: "Data",
-                        data: {name: "Data data data"},
-                        class: "ModuleB",
-                        html:
-                            '\n            <div>\n              <div class="title-box"><i class="fas fa-file-signature"></i> Data </div>\n            </div>\n            ',
+                        id: 1, name: "Data", data: {}, class: "special",
+                        html: '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>',
                         typenode: false,
-                        inputs: {
-                            //input_1: {
-                            //    connections: [
-                            //        { node: "5", input: "output_1" },
-                            //    ]
-
-                        },
-                        outputs: {
-                            output_1: {
-                                connections: [
-                                    { node: "4", output: "input_1" }
-                                ]
-                            }
-                        },
-                        pos_x: 700,
-                        pos_y: 363
+                        inputs: {},
+                        outputs: { output_1: {connections: []}},
+                        pos_x: 300, pos_y: 363
+                    },
+                    "2": {
+                        id: 2, name: "Output", data: {}, class: "special",
+                        html: '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>',
+                        typenode: false,
+                        inputs: { input_1: {connections: []}},
+                        outputs: { },
+                        pos_x: 700, pos_y: 363
                     }
-                }
+                },
             },
-
-
-
         }
-    };
-    editor.start();
+    };*/
 
     // Events!
     editor.on("nodeCreated", function (id) {      // Добавление нового слоя (блока)
         console.log("Node created " + id);
     });
-
     editor.on("nodeRemoved", function (id) {
         console.log("Node removed " + id);
     });
-
     editor.on("nodeSelected", function (id) {
         console.log("Node selected " + id);
     });
-
     editor.on("moduleCreated", function (name) {
         console.log("Module Created " + name);
     });
-
     editor.on("moduleChanged", function (name) {
         console.log("Module Changed " + name);
     });
+    editor.on("connectionCreated", function(info) {
 
+    });
     editor.on("connectionCreated", function (connection) {
+        /*
+        const nodeInfoIn = editor.getNodeFromId(connection.input_id);
+        if(nodeInfoIn.inputs[connection.input_class].connections.length > 1) {
+            const removeConnectionInfo = nodeInfoIn.inputs[connection.input_class].connections[0];
+            editor.removeSingleConnection(removeConnectionInfo.node, connection.input_id, removeConnectionInfo.input, connection.input_class);
+        }
+        const nodeInfoOut = editor.getNodeFromId(connection.output_id);
+        if(nodeInfoOut.outputs[connection.output_class].connections.length > 1) {
+            const removeConnectionInfo = nodeInfoOut.outputs[connection.output_class].connections[0];
+            editor.removeSingleConnection(connection.output_id, removeConnectionInfo.node, connection.output_class, removeConnectionInfo.output);
+        }
+         */
         console.log("Connection created");
-
         let layers_connection = {
             layer_from: connection.output_id,
             layer_to: connection.input_id
         };
-
         sendJson(layers_connection, `http://${py_server_port}/add_connection/100/1`)
-
         console.log(connection);
     });
-
     editor.on("connectionRemoved", function (connection) {
         console.log("Connection removed");
         console.log(connection);
     });
-
     editor.on("mouseMove", function (position) {
         //console.log("Position mouse x:" + position.x + " y:" + position.y);
     });
-
     editor.on("nodeMoved", function (id) {
         console.log("Node moved " + id);
     });
-
     editor.on("zoom", function (zoom) {
         console.log("Zoom level " + zoom);
     });
-
     editor.on("translate", function (position) {
         console.log("Translate x:" + position.x + " y:" + position.y);
     });
-
     editor.on("addReroute", function (id) {
         console.log("Reroute added " + id);
     });
-
     editor.on("removeReroute", function (id) {
         console.log("Reroute removed " + id);
     });
 
+
     /* DRAG EVENT */
-
     /* Mouse and Touch Actions */
-
     var elements = document.getElementsByClassName("drag-drawflow");
     for (var i = 0; i < elements.length; i++) {
         elements[i].addEventListener("touchend", drop, false);
         elements[i].addEventListener("touchmove", positionMobile, false);
         elements[i].addEventListener("touchstart", drag, false);
     }
-
     var mobile_item_selec = "";
     var mobile_last_move = null;
     function positionMobile(ev) {
         mobile_last_move = ev;
     }
-
     function allowDrop(ev) {
         ev.preventDefault();
     }
-
     function drag(ev) {
         if (ev.type === "touchstart") {
             mobile_item_selec = ev.target
@@ -331,7 +523,6 @@
             ev.dataTransfer.setData("node", ev.target.getAttribute("data-node"));
         }
     }
-
     function drop(ev) {
         if (ev.type === "touchend") {
             var parentdrawflow = document
@@ -359,10 +550,8 @@
     function addNodeToConstructor(name, pos_x, pos_y) {
         console.log("added node")
 
-        if (editor.editor_mode === "fixed") {
+        if (editor.editor_mode === "fixed")
             return false;
-        }
-
         pos_x =
             pos_x *
             (editor.precanvas.clientWidth /
@@ -379,263 +568,35 @@
                 (editor.precanvas.clientHeight * editor.zoom));
 
         switch (name) {
-            case "moduleA":
-
-                var moduleA = `
-        <div>
-          <div class="title-box"><i class="fab moduleA"></i> Module 2</div>
-        </div>
-
-        `;
-                editor.addNode(
-                    "moduleA",
-                    1,
-                    1,
-                    pos_x,
-                    pos_y,
-                    "moduleA",
-                    {},
-                    moduleA
-                );
-
+            case "linear":
+                var linear = `<div class="layer"><i class="fab moduleA"></i> Linear</div>`;
+                editor.addNode("linear", 1, 1, pos_x, pos_y, "linear", {}, linear);
                 let Obj1 = {
-                    type: "Module A",
-                    parameters: "input_1=0 output_1=1"
+                    type: "Linear",
+                    parameters: "input_1=1 output_1=1"
                 };
-
                 sendJson(Obj1, `http://${py_server_port}/add_layer/100/1`)
-
-
                 break;
 
-
-            case "moduleA":
-                var moduleA = `
-          <div>
-            <div class="title-box"><i class="fab moduleA"></i> Module A</div>
-          </div>
-          `;
-                editor.addNode("moduleA", 2, 0, pos_x, pos_y, "moduleA", {}, moduleA);
-
+            case "relu":
+                var relu = `<div class="layer"><i class="fab moduleA"></i> Relu</div>`;
+                editor.addNode("relu", 1, 1, pos_x, pos_y, "relu", {}, relu);
                 let Obj2 = {
-                    type: "Module A",
-                    parameters: "input_1=0 output_1=1"
+                    type: "Relu",
+                    parameters: "input_1=1 output_1=1"
                 };
-
                 sendJson(Obj2, `http://${py_server_port}/add_layer/100/1`)
-
-
                 break;
 
-            case "Module C":
-                var ModuleC = `
-          <div>
-            <div class="title-box"><i class="fab Module C "></i> Module C</div>
-            <div class="box">
-              <p>Enter repository url</p>
-            <input type="text" df-name>
-            </div>
-          </div>
-          `;
-                editor.addNode(
-                    "Module C",
-                    1,
-                    2,
-                    pos_x,
-                    pos_y,
-                    "Module C",
-                    { name: "" },
-                    ModuleC
-                );
-
+            case "sigmoid":
+                var sigmoid = `<div class="layer"><i class="fab Module C "></i> Sigmoid</div>`;
+                editor.addNode("Sigmoid", 1, 1, pos_x, pos_y, "Sigmoid", {}, sigmoid);
                 let Obj3 = {
-                    type: "Module C",
-                    parameters: "input_1=0 output_1=1"
+                    type: "Sigmoid",
+                    parameters: "input_1=1 output_1=1"
                 };
-
                 sendJson(Obj3, `http://${py_server_port}/add_layer/100/1`)
-
-
                 break;
-            case "Module D":
-                var ModuleD = `
-          <div>
-            <div class="title-box"><i class="fab Module D"></i> Module D</div>
-            <div class="box">
-              <p>Send to telegram</p>
-              <p>select channel</p>
-              <select df-channel>
-                <option value="channel_1">Channel 1</option>
-                <option value="channel_2">Channel 2</option>
-                <option value="channel_3">Channel 3</option>
-                <option value="channel_4">Channel 4</option>
-              </select>
-            </div>
-          </div>
-          `;
-                editor.addNode(
-                    "Module D",
-                    1,
-                    0,
-                    pos_x,
-                    pos_y,
-                    "Module D",
-                    { channel: "channel_3" },
-                    ModuleD
-                );
-
-                let Obj4 = {
-                    type: "Module D",
-                    parameters: "input_1=0 output_1=1"
-                };
-
-                sendJson(Obj4, `http://${py_server_port}/add_layer/100/1`)
-
-
-                break;
-            case "aws":
-                var aws = `
-          <div>
-            <div class="title-box"><i class="fab fa-aws"></i> Aws Save </div>
-            <div class="box">
-              <p>Save in aws</p>
-              <input type="text" df-db-dbname placeholder="DB name"><br><br>
-              <input type="text" df-db-key placeholder="DB key">
-              <p>Output Log</p>
-            </div>
-          </div>
-          `;
-                editor.addNode(
-                    "aws",
-                    1,
-                    1,
-                    pos_x,
-                    pos_y,
-                    "aws",
-                    { db: { dbname: "", key: "" } },
-                    aws
-                );
-
-                let Obj5 = {
-                    type: "aws",
-                    parameters: "input_1=0 output_1=1"
-                };
-
-                sendJson(Obj5, `http://${py_server_port}/add_layer/100/1`)
-
-                break;
-            case "log":
-                var log = `
-            <div>
-              <div class="title-box"><i class="fas fa-file-signature"></i> Save log file </div>
-            </div>
-            `;
-                editor.addNode("log", 1, 0, pos_x, pos_y, "log", {}, log);
-                break;
-            case "google":
-                var google = `
-            <div>
-              <div class="title-box"><i class="fab fa-google-drive"></i> Google Drive save </div>
-            </div>
-            `;
-                editor.addNode("google", 1, 0, pos_x, pos_y, "google", {}, google);
-                break;
-            case "email":
-                var email = `
-            <div>
-              <div class="title-box"><i class="fas fa-at"></i> Module 1 </div>
-            </div>
-            `;
-                editor.addNode("email", 1, 0, pos_x, pos_y, "email", {}, email);
-                break;
-
-            case "template":
-                var template = `
-            <div>
-              <div class="title-box"><i class="fas fa-code"></i> Template</div>
-              <div class="box">
-                Ger Vars
-                <textarea df-template></textarea>
-                Output template with vars
-              </div>
-            </div>
-            `;
-                editor.addNode(
-                    "template",
-                    1,
-                    1,
-                    pos_x,
-                    pos_y,
-                    "template",
-                    { template: "Write your template" },
-                    template
-                );
-                break;
-            case "multiple":
-                var multiple = `
-            <div>
-              <div class="box">
-                Multiple!
-              </div>
-            </div>
-            `;
-                editor.addNode(
-                    "multiple",
-                    3,
-                    4,
-                    pos_x,
-                    pos_y,
-                    "multiple",
-                    {},
-                    multiple
-                );
-                break;
-            case "personalized":
-                var personalized = `
-            <div>
-              Personalized
-            </div>
-            `;
-                editor.addNode(
-                    "personalized",
-                    1,
-                    1,
-                    pos_x,
-                    pos_y,
-                    "personalized",
-                    {},
-                    personalized
-                );
-                break;
-            case "dbclick":
-                var dbclick = `
-            <div>
-            <div class="title-box"><i class="fas fa-mouse"></i> Db Click</div>
-              <div class="box dbclickbox" ondblclick="showpopup(event)">
-                Db Click here
-                <div class="modal" style="display:none">
-                  <div class="modal-content">
-                    <span class="close" onclick="closemodal(event)">&times;</span>
-                    Change your variable {name} !
-                    <input type="text" df-name>
-                  </div>
-
-                </div>
-              </div>
-            </div>
-            `;
-                editor.addNode(
-                    "dbclick",
-                    1,
-                    1,
-                    pos_x,
-                    pos_y,
-                    "dbclick",
-                    { name: "" },
-                    dbclick
-                );
-                break;
-
             default:
         }
     }
@@ -662,14 +623,6 @@
         editor.editor_mode = "edit";
     }
 
-    function changeModule(event) {
-        var all = document.querySelectorAll(".menu ul li");
-        for (var i = 0; i < all.length; i++) {
-            all[i].classList.remove("selected");
-        }
-        event.target.classList.add("selected");
-    }
-
     function changeMode(option) {
         //console.log(lock.id);
         if (option == "lock") {
@@ -680,10 +633,14 @@
             unlock.style.display = "none";
         }
     }
+</script>
 
 
-    /* JSON requests handling */
 
+
+
+<!--JSON requests handling-->
+<script>
     async function sendJson(sending_object, url) {
 
         const resp = await fetch(url, {
@@ -693,8 +650,7 @@
             body: JSON.stringify(sending_object)
         })
 
-        const responseData = await resp.text();
-        return responseData
+        return await resp.text()
     }
 
     function addUser() {
@@ -714,7 +670,6 @@
 
     }
 
-
     function buildJsonFormData(form) {
         const jsonFormData = {}
         for (const pair of new FormData(form)) {
@@ -725,7 +680,6 @@
 
     async function submitForm(e, form) {
         e.preventDefault()
-
 
         const btnSubmit = document.getElementById("btnSubmit")
         btnSubmit.disabled = true
@@ -742,7 +696,6 @@
         }
     }
 
-
     // event listener
     const xy_form = document.querySelector("#xy_form");
     if (xy_form) {
@@ -750,9 +703,7 @@
             submitForm(e, this);
         });
     }
-
-
-
 </script>
+
 </body>
 </html>
