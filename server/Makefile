@@ -4,7 +4,10 @@ CC = g++
 # Compiler flags
 RELEASE_FLAGS = -O3
 
-FLAGS = -g -Wall -std=c++17 -isystemapi -isystemcore -isystem$(BOOST_ROOT)/include -L$(BOOST_ROOT)/lib
+FLAGS = -g -Wall -std=c++17
+FLAGS += -isystem api -I core
+FLAGS += -isystem$(BOOST_ROOT)/include -L$(BOOST_ROOT)/lib
+FLAGS += -Wno-unused-command-line-argument
 BIN = bin
 
 SRC = $(wildcard api/*.cpp) $(wildcard core/*.cpp)
@@ -60,5 +63,5 @@ clean:
 	@rm -f $(OBJ)
 	@rm -f $(RELEASE_OBJ)
 	@rm -f $(TEST_OBJ)
-	@rm -f $(RELEASE_TARGET) $(DEBUG_TARGET) $(TEST_TARGET)
+	@rm -fr $(BIN)
 	@rm -f test

@@ -9,9 +9,10 @@ static Blob dataInit(size_t h, size_t w, RandomObject* randomInit) {
     return Blob {h, w, randomInit};
 }
 
-LinearLayer::LinearLayer(std::unordered_map<std::string, float> params, const std::vector<const TensorRef>& args, RandomObject* const randomInit) :
-    W (dataInit((size_t) params["h"], (size_t) params["w"], randomInit)), 
-    b (dataInit(1, (size_t) params["w"], randomInit)) {
+LinearLayer::LinearLayer(std::unordered_map<std::string, float> params,
+                         const std::vector<TensorRef>& args, RandomObject* const randomInit) :
+    W(dataInit((size_t)params["h"], (size_t)params["w"], randomInit)),
+    b(dataInit(1, (size_t)params["w"], randomInit)) {
 
     layerOperationParams.push_back(W);
     layerOperationParams.push_back(b);
@@ -22,11 +23,13 @@ LinearLayer::LinearLayer(std::unordered_map<std::string, float> params, const st
     result = Tensor(sum, {pipeline[0], b});
 }
 
-ReLULayer::ReLULayer(std::unordered_map<std::string, float> params, const std::vector<const TensorRef>& args, RandomObject* randomInit) {
+ReLULayer::ReLULayer(std::unordered_map<std::string, float> params,
+                     const std::vector<TensorRef>& args, RandomObject* randomInit) {
     result = Tensor(relu, {args[0]});
 }
 
-MSELoss::MSELoss(std::unordered_map<std::string, float> params, const std::vector<const TensorRef>& args, RandomObject* randomInit) {
+MSELoss::MSELoss(std::unordered_map<std::string, float> params,
+                 const std::vector<TensorRef>& args, RandomObject* randomInit) {
     pipeline.reserve(2);
 
     Tensor diff(sub, {args[0], args[1]});
@@ -38,7 +41,8 @@ MSELoss::MSELoss(std::unordered_map<std::string, float> params, const std::vecto
     result = Tensor(mean, {pipeline[1]});
 }
 
-MultLayer::MultLayer(std::unordered_map<std::string, float> params, const std::vector<const TensorRef>& args, RandomObject* randomInit) {
+MultLayer::MultLayer(std::unordered_map<std::string, float> params,
+                     const std::vector<TensorRef>& args, RandomObject* randomInit) {
     result = Tensor(mult, {args[0].get(), args[1].get()});
 }
 
