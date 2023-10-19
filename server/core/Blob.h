@@ -4,19 +4,25 @@
 #include <cstddef>
 #include <functional>
 
+#include "RandomInit.h"
+
 typedef float (*UnaryTransform)(float x);
 
 class Blob {
+private:
     float* data;
 public:
     const std::size_t rows;
     const std::size_t cols;
 
     Blob(std::size_t rows, std::size_t cols, const float* data);
-    Blob(std::size_t rows, std::size_t cols);
+    Blob(std::size_t rows, std::size_t cols, const float value);
+    Blob(std::size_t rows, std::size_t cols, RandomObject* const object = nullptr);
     Blob();
     Blob(const Blob& other);
     ~Blob();
+
+    float* getData() const;
 
     float at(std::size_t i, std::size_t j) const;
     const float* operator[](std::size_t index) const;
@@ -36,6 +42,8 @@ public:
 
     friend Blob operator*(float x, const Blob& b);
     friend Blob operator*(const Blob& b, float x);
+
+    Blob& operator*=(const float t);
 
     friend void swap(Blob& first, Blob& second);
     Blob& operator=(const Blob& t);

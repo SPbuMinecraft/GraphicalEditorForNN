@@ -1,7 +1,9 @@
-#include "Blob.h"
 #include <cassert>
 #include <algorithm>
 #include <cstring>
+
+#include "Blob.h"
+#include "RandomInit.h"
 
 using namespace std;
 
@@ -10,9 +12,17 @@ Blob::Blob(size_t rows, size_t cols, const float* data): rows(rows), cols(cols) 
     copy_n(data, rows * cols, this->data);
 }
 
-Blob::Blob(size_t rows, size_t cols): rows(rows), cols(cols) {
+Blob::Blob(size_t rows, size_t cols, const float value): rows(rows), cols(cols) {
     this->data = new float[rows * cols];
-    clear();
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
+            data[i * cols + j] = value;
+}
+
+Blob::Blob(size_t rows, size_t cols, RandomObject* const object): rows(rows), cols(cols) {
+    this->data = new float[rows * cols];
+    if (object == nullptr) clear();
+    else object->simpleInit(this->data, rows * cols);
 }
 
 Blob::Blob(const Blob& other): Blob(other.rows, other.cols, other.data) {}
@@ -21,6 +31,10 @@ Blob::Blob(): data(nullptr), rows(0), cols(0) {}
 
 Blob::~Blob() {
     delete[] data;
+}
+
+float* Blob::getData() const {
+    return data;
 }
 
 float Blob::at(size_t i, size_t j) const {
@@ -115,8 +129,7 @@ void swap(Blob& first, Blob& second) {
 Blob& Blob::operator=(const Blob& t) {
     if (this == &t) return *this;
 
-    Blob tmp(t);
-    swap(*this, tmp);
+    memcpy(this->data, t.data, sizeof(float) * t.cols * t.rows);
     return *this;
 }
 
@@ -130,6 +143,14 @@ Blob& Blob::operator+=(const Blob& t) {
                       data + r * cols + c,
                       data + r * cols + c,
                       [](float x, float y) { return x + y; });
+    return *this;
+}
+
+Blob& Blob::operator*=(const float t) {
+    for (int r = 0; r < rows; ++r)
+        for (int c = 0; c < cols; ++c)
+            data[r * cols + c] *= t;
+            
     return *this;
 }
 
