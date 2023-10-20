@@ -176,7 +176,7 @@ def predict(user_id: int, model_id: int):
             error(HTTPStatus.PRECONDITION_FAILED, "Not trained")
         response = requests.post(
             current_app.config["CPP_SERVER"] + "/predict",
-            json={"input": [[json["x"], json["y"]]]},
+            json={"0": [json["x"], json["y"]]},
             timeout=3,
         )
         return response.text, response.status_code
