@@ -45,3 +45,4 @@ dmypy.json
 # Makefile
 install
 bin
+*.patch

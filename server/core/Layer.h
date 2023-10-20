@@ -25,7 +25,7 @@ public:
     
     LinearLayer(
         std::unordered_map<std::string, float> params, 
-        const std::vector<const TensorRef>& args,
+        const std::vector<TensorRef>& args,
         RandomObject* const randomInit = nullptr
     );
 };
@@ -35,7 +35,7 @@ public:
     ReLU relu;
     ReLULayer(
         std::unordered_map<std::string, float> params, 
-        const std::vector<const TensorRef>& args,
+        const std::vector<TensorRef>& args,
         RandomObject* const randomInit = nullptr
     );
 };
@@ -47,7 +47,7 @@ public:
     Mean mean;
     MSELoss(
         std::unordered_map<std::string, float> params, 
-        const std::vector<const TensorRef>& args,
+        const std::vector<TensorRef>& args,
         RandomObject* const randomInit = nullptr
     );
 };
@@ -57,7 +57,7 @@ public:
     Multiply mult;
     MultLayer(
         std::unordered_map<std::string, float> params, 
-        const std::vector<const TensorRef>& args,
+        const std::vector<TensorRef>& args,
         RandomObject* const randomInit = nullptr
     );
 };
