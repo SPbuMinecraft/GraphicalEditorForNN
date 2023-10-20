@@ -2,12 +2,16 @@
 # Compiler
 CC = g++
 # Compiler flags
-RELEASE_FLAGS = -O3
-
-FLAGS = -g -Wall -std=c++17
+FLAGS = -Wall -std=c++17
 FLAGS += -isystem api -I core
 FLAGS += -isystem$(BOOST_ROOT)/include -L$(BOOST_ROOT)/lib
 FLAGS += -Wno-unused-command-line-argument
+FLAGS += -Wno-sign-compare
+
+RELEASE_FLAGS = $(FLAGS)
+RELEASE_FLAGS += -O3
+
+FLAGS += -g
 BIN = bin
 
 SRC = $(wildcard api/*.cpp) $(wildcard core/*.cpp)
@@ -39,10 +43,10 @@ release: $(RELEASE_TARGET)
 build: $(DEBUG_TARGET)
 
 $(RELEASE_TARGET): $(RELEASE_OBJ) $(BIN)
-	$(CC) $(FLAGS) $(RELEASE_FLAGS) $(RELEASE_OBJ) -o $(RELEASE_TARGET)
+	$(CC) $(RELEASE_FLAGS) $(RELEASE_OBJ) -o $(RELEASE_TARGET)
 
 %_release.o: %.cpp
-	$(CC) $(FLAGS) $(RELEASE_FLAGS) -c $< -o $@
+	$(CC) $(RELEASE_FLAGS) -c $< -o $@
 
 %.o: %.cpp
 	$(CC) $(FLAGS) -c $< -o $@
