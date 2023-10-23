@@ -225,11 +225,12 @@
     var model_id = null
     const address = "localhost:3000"
 
-    let temp_layer_id = null
     let last_selected_layer_id = null      // db id последнего выбранного слоя
-    let temp_connection_id = null
     let last_selected_connection_id = null
     let train_status = null
+
+    var layers_id_queue = new Array();           // Queue for layer's id from DB
+    var connections_id_queue = new Array();      // Same queue for connection's id
 
     // Функция, позволяющая вызывать другю функцию через ms времени
     const delay = async (ms) => await new Promise(resolve => setTimeout(resolve, ms));
@@ -254,9 +255,9 @@
             //TODO добавить output'y id и параметры
 
             const add_data_response = delay(900).then(() => addLayer(ObjData));
-            const add_data_id = delay(1600).then(() => editor.updateNodeDataFromId(1, { DBID: temp_layer_id }));
+            const add_data_id = delay(1600).then(() => editor.updateNodeDataFromId(1, { DBID: layers_id_queue.pop() }));
             const add_output_response = delay(2100).then(() => addLayer(ObjOutput));
-            const add_output_id = delay(2500).then(() => editor.updateNodeDataFromId(2, { DBID: temp_layer_id }));
+            const add_output_id = delay(2500).then(() => editor.updateNodeDataFromId(2, { DBID: layers_id_queue.pop() }));
 
             const actionWithDelay3 = delay(2000).then(() => console.log(`Setup completed successfully. \nUser ID: ${user_id} \nModel ID: ${model_id}`))
 
@@ -462,7 +463,8 @@
     // Events!
     editor.on("nodeCreated", function (id) {      // Добавление нового слоя (блока)
         console.log("Node created " + id);
-        let delay_test = delay(500).then(() => editor.updateNodeDataFromId(id, { DBID: temp_layer_id }))
+        let delay_test = delay(500).then(() => editor.updateNodeDataFromId(id, { DBID: layers_id_queue.pop() }))
+        let delayed_log = delay(700).then(() => console.log(Object.values(editor.getNodeFromId(id)['data'])[0]))
 
     });
     editor.on("nodeRemoved", function (id) {
@@ -499,7 +501,7 @@
         addConnection(layers_connection)
 
         let connection_id = null;   // "<connection ID in database>;<connected layer ID in database>"
-        let delayed_assign = delay(300).then(() => connection_id = `${temp_connection_id};${dbid_to}`)
+        let delayed_assign = delay(300).then(() => connection_id = `${connections_id_queue.pop()};${dbid_to}`)
         let delayed_log = delay(550).then(() => console.log(`new connection id: ${connection_id}`))
 
         if (Object.values(editor.getNodeFromId(connection.output_id)['data'])[1] == undefined) {
@@ -546,6 +548,7 @@
                     id: parsed_connection[0]
                 }
                 deleteConnection(connection_id)
+                break;
             }
 
             i++;
@@ -734,13 +737,11 @@
     }
 
     function addLayer(sending_obj) {
-        (async() => { temp_layer_id = await sendJson(sending_obj, `http://${address}/add_layer/${user_id}/${model_id}`) } )()
-        const delay_log = delay(800).then(() => console.log(`Layer ID in database: ${temp_layer_id}`))
+        (async() => { layers_id_queue.unshift(await sendJson(sending_obj, `http://${address}/add_layer/${user_id}/${model_id}`)) } )()
     }
 
     function addConnection(layers_connection) {
-        (async() => { temp_connection_id = await sendJson(layers_connection, `http://${address}/add_connection/${user_id}/${model_id}`) } )()
-        const delay_log = delay(800).then(() => console.log(`Connection ID in database: ${temp_connection_id}`))
+        (async() => { connections_id_queue.unshift(await sendJson(layers_connection, `http://${address}/add_connection/${user_id}/${model_id}`)) } )()
     }
 
     function addUser() {
@@ -760,8 +761,7 @@
     }
 
     function deleteLayer(sending_object) {
-        (async() => { temp_layer_id = await sendJson(sending_object, `http://${address}/delete_layer/${user_id}/${model_id}`) } )()
-        const delayed_log = delay(2000).then(() => console.log(`Deleted layer with DBID: ${temp_layer_id}`))
+        (async() => { await sendJson(sending_object, `http://${address}/delete_layer/${user_id}/${model_id}`) } )()
     }
 
     function deleteConnection(sending_object) {
