@@ -51,7 +51,7 @@ Some json formats to use for requests
 
 [Schedule table](https://docs.google.com/spreadsheets/d/1BtKyKgk-_1t9loRz4vYTFROSOF-8Fd3Q9gN2qE21gpA/edit?usp=sharing)
 
-[Sprint 1 Retrospective](https://docs.google.com/spreadsheets/d/1N3NUDa-gbqLRaJE3SnSPSLX4hekyoULw-SIBjqRFItg/edit?usp=sharing)
+[Retrospectives table](https://docs.google.com/spreadsheets/d/1N3NUDa-gbqLRaJE3SnSPSLX4hekyoULw-SIBjqRFItg/edit?usp=sharing)
 
 ## Technology stack
 
