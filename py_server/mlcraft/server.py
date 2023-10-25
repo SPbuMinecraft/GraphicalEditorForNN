@@ -1,7 +1,6 @@
 import requests
 from http import HTTPStatus
 from flask import Blueprint, request, current_app
-from flask_cors import CORS
 
 from .utils import (
     error,
@@ -14,7 +13,6 @@ from .db import sql_worker
 
 
 app = Blueprint("make a better name", __name__)
-CORS(app)
 
 
 @app.route("/add_user", methods=["POST"])
@@ -150,7 +148,9 @@ def delete_connection(user_id: int, model_id: int):
 
 
 @app.route("/train/<int:user_id>/<int:model_id>/<int:safe>", methods=["POST"])
-def train_model(user_id: int, model_id: int, safe: int):  # Unfortunately, flask don't have convertor for bool
+def train_model(
+    user_id: int, model_id: int, safe: int
+):  # Unfortunately, flask don't have convertor for bool
     # checks belonging of the model to user
     allowed = sql_worker.verify_access(user_id, model_id)
     if not allowed:

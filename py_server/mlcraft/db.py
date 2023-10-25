@@ -1,7 +1,12 @@
 import json
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
-from .utils import LayersConnectionStatus, DeleteStatus, parse_parameters, check_paths_exist
+from .utils import (
+    LayersConnectionStatus,
+    DeleteStatus,
+    parse_parameters,
+    check_paths_exist,
+)
 
 db = SQLAlchemy()  # Has to be global by Flask documentation
 
@@ -37,7 +42,7 @@ class SQLWorker:
 
     def add_model(self, user_id: int, name: str):
         with current_app.app_context():
-            model_owner = User.query.get(user_id)
+            model_owner = db.session.get(User, user_id)
             if not model_owner:
                 return -1
             new_model = Model(

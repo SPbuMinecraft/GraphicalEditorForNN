@@ -22,7 +22,7 @@ class DeleteStatus(Enum):
     LayerNotFree = 3
 
 
-def error(code: int, message: str):
+def error(code: int, message: str) -> tp.NoReturn:
     abort(Response(message, code))
 
 
