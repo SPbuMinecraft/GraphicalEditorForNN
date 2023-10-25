@@ -52,7 +52,7 @@
     <h2 onmousedown="return false">MLCraft</h2>
     <div class="github-link">
         <a href="https://github.com/SPbuMinecraft/GraphicalEditorForNN" target="_blank"
-        ><i class="fab fa-Module C fa-3x" style="color: var(--background3)"></i
+        ><i class="fab fa-github fa-3x" style="color: var(--background3)"></i
         ></a>
     </div>
     <div class="menu" onmousedown="return false">
@@ -100,8 +100,10 @@
                 draggable="true"
                 ondragstart="drag(event)"
                 data-node="relu">
-            <span> Relu</span>
+            <span> ReLU</span>
         </div>
+
+        <!--
         <div
                 class="drag-drawflow"
                 draggable="true"
@@ -110,6 +112,8 @@
             <span> Sigmoid</span>
 
         </div>
+        -->
+
         <div
                 class="drag-drawflow"
                 draggable="false"
@@ -120,56 +124,56 @@
         <div class="predict-train-interface" id="train">
             <form class="predict-train-form" id="xy-form-train">
                 <label for="x-value1" class="x-val-label"> x </label>
-                <input type="text" class="form-control-x" id="x-value1" name="x-value">
+                <input type="text" class="form-control-x" id="x-value1" name="x">
                 <label for="y-value1" class="y-val-label"> y </label>
-                <input type="text" class="form-control-y" id="y-value1" name="y-value">
+                <input type="text" class="form-control-y" id="y-value1" name="y">
                 <label for="res-value1" class="res-val-label"> = </label>
-                <input type="text" class="form-control-res" id="res-value1" name="res-value"><br>
+                <input type="text" class="form-control-res" id="res-value1" name="res"><br>
 
                 <label for="x-value2" class="x-val-label"> x </label>
-                <input type="text" class="form-control-x" id="x-value2" name="x-value">
+                <input type="text" class="form-control-x" id="x-value2" name="x">
                 <label for="y-value2" class="y-val-label"> y </label>
-                <input type="text" class="form-control-y" id="y-value2" name="y-value">
+                <input type="text" class="form-control-y" id="y-value2" name="y">
                 <label for="res-value2" class="res-val-label"> =</label>
-                <input type="text" class="form-control-res" id="res-value2" name="res-value"><br>
+                <input type="text" class="form-control-res" id="res-value2" name="res"><br>
 
                 <label for="x-value3" class="x-val-label"> x </label>
-                <input type="text" class="form-control-x" id="x-value3" name="x-value">
+                <input type="text" class="form-control-x" id="x-value3" name="x">
                 <label for="y-value3" class="y-val-label"> y </label>
-                <input type="text" class="form-control-y" id="y-value3" name="y-value">
+                <input type="text" class="form-control-y" id="y-value3" name="y">
                 <label for="res-value3" class="res-val-label"> =</label>
-                <input type="text" class="form-control-res" id="res-value3" name="res-value"><br>
+                <input type="text" class="form-control-res" id="res-value3" name="res"><br>
 
                 <label for="x-value4" class="x-val-label"> x </label>
-                <input type="text" class="form-control-x" id="x-value4" name="x-value">
+                <input type="text" class="form-control-x" id="x-value4" name="x">
                 <label for="y-value4" class="y-val-label"> y </label>
-                <input type="text" class="form-control-y" id="y-value4" name="y-value">
+                <input type="text" class="form-control-y" id="y-value4" name="y">
                 <label for="res-value4" class="res-val-label"> =</label>
-                <input type="text" class="form-control-res" id="res-value4" name="res-value"><br>
+                <input type="text" class="form-control-res" id="res-value4" name="res"><br>
 
                 <label for="x-value5" class="x-val-label"> x </label>
-                <input type="text" class="form-control-x" id="x-value5" name="x-value">
+                <input type="text" class="form-control-x" id="x-value5" name="x">
                 <label for="y-value5" class="y-val-label"> y </label>
-                <input type="text" class="form-control-y" id="y-value5" name="y-value">
+                <input type="text" class="form-control-y" id="y-value5" name="y">
                 <label for="res-value5" class="res-val-label"> =</label>
-                <input type="text" class="form-control-res" id="res-value5" name="res-value"><br>
+                <input type="text" class="form-control-res" id="res-value5" name="res"><br>
             </form>
             <label class="button-wrapper" id="train-button">
                 Train
-                <input type="button" onclick=train()>
+                <input type="button" onclick=trainRequest()>
             </label>
         </div>
         <div class="predict-train-interface" id="predict">
             <form class="predict-train-form" id="xy-form-predict">
                 <label for="x-value" class="x-val-label"> x </label>
-                <input type="text" class="form-control-x" id="x-value" name="x-value">
+                <input type="text" class="form-control-x" id="x-value" name="x">
 
                 <label for="y-value" class="y-val-label"> y </label>
-                <input type="text" class="form-control-y" id="y-value" name="y-value">
+                <input type="text" class="form-control-y" id="y-value" name="y">
             </form>
             <label class="button-wrapper" id="submit-button">
                 Predict
-                <input type="submit" onclick=predict()>
+                <input type="submit" onclick=predictRequest()>
             </label>
             <div class ="predict-result-wrapper" id ="predict-result-wrapper">
                 =
@@ -213,35 +217,54 @@
 
 
 
-
-
 <!-- JS scripts -->
 <script>
     var user_id = null
     var model_id = null
-    const py_server_port = "localhost:3000"
+    const address = "localhost:3000"
+
+    let last_selected_layer_id = null      // db id последнего выбранного слоя
+    let train_status = null
+
+    var layers_id_queue = new Array();           // Queue for layer's id from DB
+    var connections_id_queue = new Array();      // Same queue for connection's id
+
     // Функция, позволяющая вызывать другю функцию через ms времени
     const delay = async (ms) => await new Promise(resolve => setTimeout(resolve, ms));
     setup()
+
     async function setup() {
+
         try {
-            const actionWithDelay = delay(2500).then(() => addUser());
-            const actionWithDelay2 = delay(4500).then(() => addModel());
+            const actionWithDelay = delay(300).then(() => addUser());
+            const actionWithDelay2 = delay(500).then(() => addModel());
+
             let ObjData = {
                 type: "Data",
-                parameters: "useful data"
+                parameters: "inputs=0;outputs=1;width=2;height=4"
             };
-            let add_data_response = sendJson(ObjData, `http://${py_server_port}/add_layer/100/1`)
-            const actionWithDelay3 = delay(5500).then(() => console.log(`Setup completed successfully. \nUser ID: ${user_id} \nModel ID: ${model_id}`))
+
+            let ObjOutput = {
+                type: "Output",
+                parameters: "inputs=1;outputs=0;width=1;height=4"
+            }
+
+            //TODO добавить параметры
+
+            const add_data_response = delay(900).then(() => addLayer(ObjData));
+            const add_data_id = delay(1600).then(() => editor.updateNodeDataFromId(1, { DBID: layers_id_queue.pop(), Connections: [] }));
+            const add_output_response = delay(2100).then(() => addLayer(ObjOutput));
+            const add_output_id = delay(2500).then(() => editor.updateNodeDataFromId(2, { DBID: layers_id_queue.pop(), Connections: [] }));
+
+            const actionWithDelay3 = delay(2000).then(() => console.log(`Setup completed successfully. \nUser ID: ${user_id} \nModel ID: ${model_id}`))
+
         }
         catch (err) {
-            console.log(`Something went wrong during setup :( Error: ${err}`)
+            console.log(`Something went wrong during setup :( \nError: ${err}`)
         }
+
     }
 </script>
-
-
-
 
 
 <!--Взаимодействие html и js-->
@@ -437,12 +460,20 @@
     // Events!
     editor.on("nodeCreated", function (id) {      // Добавление нового слоя (блока)
         console.log("Node created " + id);
+        let delay_test = delay(500).then(() => editor.updateNodeDataFromId(id, { DBID: layers_id_queue.pop(), Connections: [] }))
+        let delayed_log = delay(700).then(() => console.log(Object.values(editor.getNodeFromId(id)['data'])[0]))
+
     });
     editor.on("nodeRemoved", function (id) {
         console.log("Node removed " + id);
+        let layer_to_delete = {
+            id: last_selected_layer_id
+        };
+        deleteLayer(layer_to_delete)
     });
     editor.on("nodeSelected", function (id) {
-        console.log("Node selected " + id);
+        console.log("selected layer DBID: " + Object.values(editor.getNodeFromId(id)['data'])[0]); // DBID -- database id
+        last_selected_layer_id = Object.values(editor.getNodeFromId(id)['data'])[0];               // database id of last selected layer
     });
     editor.on("moduleCreated", function (name) {
         console.log("Module Created " + name);
@@ -454,6 +485,30 @@
 
     });
     editor.on("connectionCreated", function (connection) {
+        console.log("Connection created");
+
+        let dbid_from = Object.values(editor.getNodeFromId(connection.output_id)['data'])[0];  // id from database
+        let dbid_to = Object.values(editor.getNodeFromId(connection.input_id)['data'])[0];
+
+        let layers_connection = {
+            layer_from: dbid_from,  // id from database
+            layer_to: dbid_to
+        };
+
+        addConnection(layers_connection)
+
+        let connection_data = new Array();   // "<connection ID in database>;<connected layer ID in database>"
+        connection_data.push(dbid_to)
+        //let delayed_assign = delay(300).then(() => connection_id = `${connections_id_queue.pop()};${dbid_to}`)
+        let delayed_assign = delay(300).then(() =>  connection_data.unshift(connections_id_queue.pop()))
+        let delayed_log = delay(550).then(() => console.log(`new connection id: ${connection_data[0]},${connection_data[1]}`))
+
+        let current_connections =  Object.values(editor.getNodeFromId(connection.output_id)['data'])[1]
+        let delayed_push = delay(500).then(() => current_connections.push(connection_data))
+        let delayed_update = delay(750).then(() => editor.updateNodeDataFromId(connection.output_id, { DBID: dbid_from, Connections: current_connections})) // Good
+
+        let delayed_log2 = delay(1000).then(() => console.log(Object.values(editor.getNodeFromId(connection.output_id)['data'])[1]))
+
         /*
         const nodeInfoIn = editor.getNodeFromId(connection.input_id);
         if(nodeInfoIn.inputs[connection.input_class].connections.length > 1) {
@@ -466,17 +521,37 @@
             editor.removeSingleConnection(connection.output_id, removeConnectionInfo.node, connection.output_class, removeConnectionInfo.output);
         }
          */
-        console.log("Connection created");
-        let layers_connection = {
-            layer_from: connection.output_id,
-            layer_to: connection.input_id
-        };
-        sendJson(layers_connection, `http://${py_server_port}/add_connection/100/1`)
-        console.log(connection);
     });
     editor.on("connectionRemoved", function (connection) {
         console.log("Connection removed");
-        console.log(connection);
+
+        let layer_to_db_id = Object.values(editor.getNodeFromId(connection.input_id)['data'])[0]
+        let layer_from_db_id = Object.values(editor.getNodeFromId(connection.output_id)['data'])[0]
+        let list_of_connections = Object.values(editor.getNodeFromId(connection.output_id)['data'])[1]
+
+        let parsed_connection = null
+        let i = 0;
+        let connection_id = {      // id of connection we are deleting
+            id : null
+        }
+        let cur_elem_index = null
+
+        while (i < list_of_connections.length) {
+            parsed_connection = list_of_connections[i]
+            if (parsed_connection[1] == layer_to_db_id) {
+                connection_id.id = parsed_connection[0];
+                cur_elem_index = i;
+                break;
+            }
+            i++;
+        }
+
+        list_of_connections.splice(cur_elem_index, 1) // deletes connection from list
+        editor.updateNodeDataFromId(connection.output_id, { DBID: layer_from_db_id, Connections: list_of_connections})
+        console.log("Layer id " + layer_from_db_id + " connections: " + list_of_connections)
+
+        let delayed_deletion = delay(300).then(() => deleteConnection(connection_id));
+
     });
     editor.on("mouseMove", function (position) {
         //console.log("Position mouse x:" + position.x + " y:" + position.y);
@@ -488,7 +563,7 @@
         console.log("Zoom level " + zoom);
     });
     editor.on("translate", function (position) {
-        console.log("Translate x:" + position.x + " y:" + position.y);
+        //console.log("Translate x:" + position.x + " y:" + position.y);
     });
     editor.on("addReroute", function (id) {
         console.log("Reroute added " + id);
@@ -546,7 +621,6 @@
         }
     }
 
-    // Добавление слоя (блока)
     function addNodeToConstructor(name, pos_x, pos_y) {
         console.log("added node")
 
@@ -573,21 +647,22 @@
                 editor.addNode("linear", 1, 1, pos_x, pos_y, "linear", {}, linear);
                 let Obj1 = {
                     type: "Linear",
-                    parameters: "input_1=1 output_1=1"
+                    parameters: "inputs=1;outputs=1;inFeatures=2;outFeatures=2" //TODO
                 };
-                sendJson(Obj1, `http://${py_server_port}/add_layer/100/1`)
+                addLayer(Obj1)
                 break;
 
             case "relu":
-                var relu = `<div class="layer"><i class="fab moduleA"></i> Relu</div>`;
+                var relu = `<div class="layer"><i class="fab moduleA"></i> ReLU</div>`;
                 editor.addNode("relu", 1, 1, pos_x, pos_y, "relu", {}, relu);
                 let Obj2 = {
                     type: "Relu",
-                    parameters: "input_1=1 output_1=1"
+                    parameters: "inputs=1;outputs=1" //TODO
                 };
-                sendJson(Obj2, `http://${py_server_port}/add_layer/100/1`)
+                addLayer(Obj2)
                 break;
 
+                /*
             case "sigmoid":
                 var sigmoid = `<div class="layer"><i class="fab Module C "></i> Sigmoid</div>`;
                 editor.addNode("Sigmoid", 1, 1, pos_x, pos_y, "Sigmoid", {}, sigmoid);
@@ -595,8 +670,10 @@
                     type: "Sigmoid",
                     parameters: "input_1=1 output_1=1"
                 };
-                sendJson(Obj3, `http://${py_server_port}/add_layer/100/1`)
+                addLayer(Obj3)
                 break;
+                 */
+
             default:
         }
     }
@@ -653,21 +730,70 @@
         return await resp.text()
     }
 
+    function addLayer(sending_obj) {
+        (async() => { layers_id_queue.unshift(await sendJson(sending_obj, `http://${address}/add_layer/${user_id}/${model_id}`)) } )()
+    }
+
+    function addConnection(layers_connection) {
+        (async() => { connections_id_queue.unshift(await sendJson(layers_connection, `http://${address}/add_connection/${user_id}/${model_id}`)) } )()
+    }
+
     function addUser() {
         let temp_json = {
             type: "Not empty JSON"
         };
 
-        (async() => { user_id = await sendJson(temp_json, `http://${py_server_port}/add_user`) } )()
+        (async() => { user_id = await sendJson(temp_json, `http://${address}/add_user`) } )()
     }
 
     function addModel() {
         let temp_json = {
-            name: "test_post_model_1"           // Здесь нужно будет указывать имя модели
+            name: "test_post_model_1"             // custom model name ... coming soon
         };
 
-        (async() => { model_id = await sendJson(temp_json, `http://${py_server_port}/add_model/${user_id}`) })()
+        (async() => { model_id = await sendJson(temp_json, `http://${address}/add_model/${user_id}`) })()
+    }
 
+    function deleteLayer(sending_object) {
+        (async() => { await sendJson(sending_object, `http://${address}/delete_layer/${user_id}/${model_id}`) } )()
+    }
+
+    function deleteConnection(sending_object) {
+        (async() => { await sendJson(sending_object, `http://${address}/delete_connection/${user_id}/${model_id}`) } )()
+        console.log(`Deleted connection with DBID: ${sending_object.id}`)
+    }
+
+    function trainRequest() {
+        /*
+        const obj = {
+            "0" : [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            "1" : [1, 1, 1, 1, 1]
+        };
+         */
+        var form_data = buildTrainData(document.querySelector("#xy-form-train"));
+
+        (async() => { train_status = await sendJson(form_data, `http://${address}/train/${user_id}/${model_id}/0`) } )()
+
+        let delayed_train_result = delay(2000).then(() => {
+            showBuildNotification(train_status)
+            onTrainShowPredict(train_status)
+        })
+
+    }
+
+    function predictRequest() {
+        const form_data = buildJsonFormData(document.querySelector("#xy-form-predict"))
+        console.log(form_data)
+
+        for(let i = 0; i < form_data.length; i++) {
+            let obj = form_data[i];
+
+            console.log(obj);
+        }
+
+        var result
+        (async() => { result = await sendJson(form_data, `http://${address}/predict/${user_id}/${model_id}`) } )()
+        let delayed_result = delay(1000).then(() => onPredictShowResult(result))
     }
 
     function buildJsonFormData(form) {
@@ -675,6 +801,26 @@
         for (const pair of new FormData(form)) {
             jsonFormData[pair[0]] = pair[1]
         }
+        return jsonFormData
+    }
+
+    function buildTrainData(form) {
+        let input = []
+        let output = []
+        const jsonFormData = {}
+
+        for (const pair of new FormData(form)) {
+            if (pair[0] == "res") {
+                output.push(pair[1])
+            }
+            else {
+                input.push(pair[1])
+            }
+        }
+
+        jsonFormData["0"] = input;       // 0 - id Data layer
+        jsonFormData["1"] = output;      // 1 - id Output layer
+        console.log(jsonFormData)
         return jsonFormData
     }
 
@@ -687,7 +833,7 @@
 
         const jsonFormData = buildJsonFormData(form)
         const headers = buildHeaders()
-        const response = await performPostHttpRequest(`http://${py_server_port}/predict/1/1`, headers, jsonFormData)
+        const response = await performPostHttpRequest(`http://${address}/predict/1/1`, headers, jsonFormData)
 
         if (response) {
             console.log("Success request")
@@ -697,7 +843,7 @@
     }
 
     // event listener
-    const xy_form = document.querySelector("#xy_form");
+    const xy_form = document.querySelector("#xy-form-predict");
     if (xy_form) {
         xy_form.addEventListener("submit", function (e) {
             submitForm(e, this);
