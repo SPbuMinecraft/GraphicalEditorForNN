@@ -121,6 +121,11 @@
             <span> Coming soon</span>
         </div> <br>
 
+        <label class="button-wrapper">
+                Upload
+                <input type="file" id="csv-upload-button" accept=".csv" hidden/>
+        </label>
+
         <div class="predict-train-interface" id="train">
             <form class="predict-train-form" id="xy-form-train">
                 <label for="x-value1" class="x-val-label"> x </label>
@@ -313,6 +318,15 @@
         else
             prf.style.display = 'grid'
     }
+    async function csvUploaded(){ 
+        const file = csv_upload.files[0]
+        const text = await file.text()
+        // do whatever with the `text` 
+        console.log(`Got goods: ${text}`)
+    }
+    const csv_upload = document.getElementById("csv-upload-button")
+    csv_upload.addEventListener("change", csvUploaded)
+
     function onTrainShowPredict(training_successful){
         training_successful ? document.getElementById("predict").style.display = 'block'
             : document.getElementById("predict").style.display = 'none'
