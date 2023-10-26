@@ -70,6 +70,8 @@ def update_layer(user_id: int, model_id: int):
         sql_worker.update_layer(json["parameters"], int(json["id"]), model_id)
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, f"Key error: {e}")
+    except StopIteration as e:
+        error(HTTPStatus.BAD_REQUEST, f"No such id: {json['id']}")
     return "done", HTTPStatus.OK
 
 
