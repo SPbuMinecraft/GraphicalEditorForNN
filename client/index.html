@@ -202,8 +202,28 @@
         </div>
     </div>
 
-    <div class="layer-data" id="layer-data">
-        Coming soon!
+    <div class="layer-data" id="layer-data" >
+        <h2>Layer parameters</h2>
+
+        <div class="linear-layer-parameters" id="linear-layer-parameters" style="display: none">
+            <label for="bias-parameter">Bias</label>
+                <select id="bias-parameter">
+                    <option value="true">true</option>
+                    <option value="false">false</option>
+                </select>
+            <h3></h3>
+            <label for="linear-inFeatures-parameter">inFeatures</label>
+                <input id="linear-inFeatures-parameter" type="number" value="1" size="4">
+            <h3></h3>
+            <label for="linear-outFeatures-parameter">outFeatures</label>
+                <input id="linear-outFeatures-parameter" type="number" value="1" size="4">
+        </div>
+
+        <div class="special-layer-parameters" id="special-layer-parameters" style="display: none">
+            <label for="special-width-parameter">Width</label>
+                <input id="special-width-parameter" type="number" value="1" size="4">
+        </div>
+
     </div>
 </div>
 
@@ -223,11 +243,13 @@
     var model_id = null
     const address = "localhost:3000"
 
-    let last_selected_layer_id = null      // db id последнего выбранного слоя
+    let last_selected_layer_id = null      // layer's db id
     let train_status = null
+    var last_selected_node_id = null       // not db id
 
     var layers_id_queue = new Array();           // Queue for layer's id from DB
     var connections_id_queue = new Array();      // Same queue for connection's id
+    var layer_parameters_queue = new Array();    // Queue for layer parameters string
 
     // Функция, позволяющая вызывать другю функцию через ms времени
     const delay = async (ms) => await new Promise(resolve => setTimeout(resolve, ms));
@@ -241,22 +263,27 @@
 
             let ObjData = {
                 type: "Data",
-                parameters: "inputs=0;outputs=1;width=2;height=4"
+                parameters: "inputs=0;outputs=1;width=256"
             };
 
             let ObjOutput = {
                 type: "Output",
-                parameters: "inputs=1;outputs=0;width=1;height=4"
+                parameters: "inputs=1;outputs=0;width=154"
             }
 
             //TODO добавить параметры
 
             const add_data_response = delay(900).then(() => addLayer(ObjData));
-            const add_data_id = delay(1600).then(() => editor.updateNodeDataFromId(1, { DBID: layers_id_queue.pop(), Connections: [] }));
-            const add_output_response = delay(2100).then(() => addLayer(ObjOutput));
-            const add_output_id = delay(2500).then(() => editor.updateNodeDataFromId(2, { DBID: layers_id_queue.pop(), Connections: [] }));
+            const add_data_id = delay(1600).then(() => editor.updateNodeDataFromId(1, { DBID: layers_id_queue.pop(),
+                                                                                        Connections: [],
+                                                                                        Parameters: ObjData.parameters }));
 
-            const actionWithDelay3 = delay(2000).then(() => console.log(`Setup completed successfully. \nUser ID: ${user_id} \nModel ID: ${model_id}`))
+            const add_output_response = delay(1500).then(() => addLayer(ObjOutput));
+            const add_output_id = delay(1900).then(() => editor.updateNodeDataFromId(2, { DBID: layers_id_queue.pop(),
+                                                                                          Connections: [],
+                                                                                          Parameters: ObjOutput.parameters }));
+
+            const actionWithDelay3 = delay(1200).then(() => console.log(`Setup completed successfully. \nUser ID: ${user_id} \nModel ID: ${model_id}`))
 
         }
         catch (err) {
@@ -314,12 +341,49 @@
         //todo
         //взаимодействие с сервером, бд
     }
-    function showLayerInfo(id){
-        const data = getLayerInfoFromDB(id);
+    function showLayerInfo(id){                  // id format "node-<id>"
+        const correct_id = id.split("-")[1];
+        const node = editor.getNodeFromId(correct_id);
+
         document.getElementById("layer-data").style.display = 'block'
+        var layer_parameters = getParametersFromNode(correct_id)
+
+        if (node.class == "linear") {
+            document.querySelector("#linear-layer-parameters").style.display = 'block';
+
+            for (i in layer_parameters) {
+                if (layer_parameters[i][0] == "bias") {
+                    document.querySelector("#bias-parameter").value = layer_parameters[i][1] == "1";
+                }
+                if (layer_parameters[i][0] == "inFeatures") {
+                    document.querySelector("#linear-inFeatures-parameter").value = layer_parameters[i][1]
+                }
+                if (layer_parameters[i][0] == "outFeatures") {
+                    document.querySelector("#linear-outFeatures-parameter").value = layer_parameters[i][1]
+                }
+            }
+
+        }
+        else if (node.class = "special") {
+            document.querySelector("#special-layer-parameters").style.display = 'block';
+
+            for (i in layer_parameters) {
+                if (layer_parameters[i][0] == "width") {
+                    document.querySelector("#special-width-parameter").value = layer_parameters[i][1];
+                }
+            }
+        }
+
+
+        const data = getLayerInfoFromDB(id);
+
+
     }
     function hideLayerInfo(){
         document.getElementById("layer-data").style.display = 'none'
+
+        document.querySelector("#linear-layer-parameters").style.display = 'none';
+        document.querySelector("#special-layer-parameters").style.display = 'none';
     }
     function changeTheme(){
         var checkbox = document.getElementById("day-night-checkbox-id")
@@ -460,8 +524,11 @@
     // Events!
     editor.on("nodeCreated", function (id) {      // Добавление нового слоя (блока)
         console.log("Node created " + id);
-        let delay_test = delay(500).then(() => editor.updateNodeDataFromId(id, { DBID: layers_id_queue.pop(), Connections: [] }))
+        let delay_test = delay(500).then(() => editor.updateNodeDataFromId(id, { DBID: layers_id_queue.pop(),
+                                                                                 Connections: [],
+                                                                                 Parameters: layer_parameters_queue.pop()}))
         let delayed_log = delay(700).then(() => console.log(Object.values(editor.getNodeFromId(id)['data'])[0]))
+
 
     });
     editor.on("nodeRemoved", function (id) {
@@ -472,8 +539,10 @@
         deleteLayer(layer_to_delete)
     });
     editor.on("nodeSelected", function (id) {
+        last_selected_node_id = id;
         console.log("selected layer DBID: " + Object.values(editor.getNodeFromId(id)['data'])[0]); // DBID -- database id
         last_selected_layer_id = Object.values(editor.getNodeFromId(id)['data'])[0];               // database id of last selected layer
+        console.log("layer parameters: " + Object.values(editor.getNodeFromId(id)['data'])[2]);
     });
     editor.on("moduleCreated", function (name) {
         console.log("Module Created " + name);
@@ -489,6 +558,7 @@
 
         let dbid_from = Object.values(editor.getNodeFromId(connection.output_id)['data'])[0];  // id from database
         let dbid_to = Object.values(editor.getNodeFromId(connection.input_id)['data'])[0];
+        let layer_parameters = Object.values(editor.getNodeFromId(connection.output_id)['data'])[2]; // string with layer parameters
 
         let layers_connection = {
             layer_from: dbid_from,  // id from database
@@ -505,7 +575,9 @@
 
         let current_connections =  Object.values(editor.getNodeFromId(connection.output_id)['data'])[1]
         let delayed_push = delay(500).then(() => current_connections.push(connection_data))
-        let delayed_update = delay(750).then(() => editor.updateNodeDataFromId(connection.output_id, { DBID: dbid_from, Connections: current_connections})) // Good
+        let delayed_update = delay(750).then(() => editor.updateNodeDataFromId(connection.output_id, { DBID: dbid_from,
+                                                                                                       Connections: current_connections,
+                                                                                                       Parameters: layer_parameters }))
 
         let delayed_log2 = delay(1000).then(() => console.log(Object.values(editor.getNodeFromId(connection.output_id)['data'])[1]))
 
@@ -528,6 +600,7 @@
         let layer_to_db_id = Object.values(editor.getNodeFromId(connection.input_id)['data'])[0]
         let layer_from_db_id = Object.values(editor.getNodeFromId(connection.output_id)['data'])[0]
         let list_of_connections = Object.values(editor.getNodeFromId(connection.output_id)['data'])[1]
+        let layer_parameters = Object.values(editor.getNodeFromId(connection.output_id)['data'])[2]
 
         let parsed_connection = null
         let i = 0;
@@ -547,7 +620,9 @@
         }
 
         list_of_connections.splice(cur_elem_index, 1) // deletes connection from list
-        editor.updateNodeDataFromId(connection.output_id, { DBID: layer_from_db_id, Connections: list_of_connections})
+        editor.updateNodeDataFromId(connection.output_id, { DBID: layer_from_db_id,
+                                                            Connections: list_of_connections,
+                                                            Parameters: layer_parameters})
         console.log("Layer id " + layer_from_db_id + " connections: " + list_of_connections)
 
         let delayed_deletion = delay(300).then(() => deleteConnection(connection_id));
@@ -572,6 +647,72 @@
         console.log("Reroute removed " + id);
     });
 
+    const linear_bias_selector = document.getElementById("bias-parameter")
+    linear_bias_selector.addEventListener("change", function() {
+        var parameters = getParametersFromNode(last_selected_node_id);
+        console.log("last id: " + last_selected_layer_id);
+        var new_value = document.getElementById("bias-parameter").value
+
+        for (i in parameters) {
+            if (parameters[i][0] == "bias") {
+                if (new_value == "true") {
+                    console.log("bias true")
+                    parameters[i][1] = "1";
+                }
+                else {
+                    console.log("bias false")
+                    parameters[i][1] = "0";
+                }
+                joinUpdatedLayerParameters(parameters, last_selected_node_id);
+                break;
+            }
+        }
+    });
+
+    const linear_inFeatures_input = document.getElementById("linear-inFeatures-parameter")
+    linear_inFeatures_input.addEventListener("change", function() {
+        var parameters = getParametersFromNode(last_selected_node_id);
+        console.log("last id: " + last_selected_layer_id);
+        var new_value = document.getElementById("linear-inFeatures-parameter").value
+
+        for (i in parameters) {
+            if (parameters[i][0] == "inFeatures") {
+                parameters[i][1] = new_value;
+                joinUpdatedLayerParameters(parameters, last_selected_node_id);
+                break;
+            }
+        }
+    });
+
+    const linear_outFeatures_input = document.getElementById("linear-outFeatures-parameter")
+    linear_outFeatures_input.addEventListener("change", function() {
+        var parameters = getParametersFromNode(last_selected_node_id);
+        console.log("last id: " + last_selected_layer_id);
+        var new_value = document.getElementById("linear-outFeatures-parameter").value
+
+        for (i in parameters) {
+            if (parameters[i][0] == "outFeatures") {
+                parameters[i][1] = new_value;
+                joinUpdatedLayerParameters(parameters, last_selected_node_id);
+                break;
+            }
+        }
+    });
+
+    const special_width_input = document.getElementById("special-width-parameter")
+    special_width_input.addEventListener("change", function() {
+        var parameters = getParametersFromNode(last_selected_node_id);
+        console.log("last id: " + last_selected_layer_id);
+        var new_value = document.getElementById("special-width-parameter").value
+
+        for (i in parameters) {
+            if (parameters[i][0] == "width") {
+                parameters[i][1] = new_value;
+                joinUpdatedLayerParameters(parameters, last_selected_node_id);
+                break;
+            }
+        }
+    });
 
     /* DRAG EVENT */
     /* Mouse and Touch Actions */
@@ -621,6 +762,42 @@
         }
     }
 
+    function getParametersFromNode(id) {
+        var layer_parameters = Object.values(editor.getNodeFromId(id)['data'])[2]
+        var splited_parameters = layer_parameters.split(';');
+        var parameters_array = new Array()
+
+        for (i in splited_parameters) {
+            parameters_array.push(splited_parameters[i].split('='));
+        }
+        return parameters_array;
+    }
+
+    function joinUpdatedLayerParameters(new_parameters, id) {
+        var temp_array = []
+        var new_parameters_string = null
+
+        for (i in new_parameters) {
+            temp_array.push(new_parameters[i].join("="));
+        }
+        new_parameters_string = temp_array.join(";");
+        console.log("new parameters string: " + new_parameters_string);
+
+        var dbid = Object.values(editor.getNodeFromId(id)['data'])[0]
+        var connections = Object.values(editor.getNodeFromId(id)['data'])[1]
+
+        editor.updateNodeDataFromId(id, { DBID: dbid,
+                                          Connections: connections,
+                                          Parameters: new_parameters_string });
+
+        let parameters_to_send = {
+            id: dbid,
+            parameters: new_parameters_string
+        };
+        updateLayerParameter(parameters_to_send);
+
+    }
+
     function addNodeToConstructor(name, pos_x, pos_y) {
         console.log("added node")
 
@@ -647,8 +824,9 @@
                 editor.addNode("linear", 1, 1, pos_x, pos_y, "linear", {}, linear);
                 let Obj1 = {
                     type: "Linear",
-                    parameters: "inputs=1;outputs=1;inFeatures=2;outFeatures=2" //TODO
+                    parameters: "inputs=1;outputs=1;bias=0;inFeatures=100;outFeatures=500"
                 };
+                layer_parameters_queue.unshift(Obj1.parameters);
                 addLayer(Obj1)
                 break;
 
@@ -659,20 +837,21 @@
                     type: "Relu",
                     parameters: "inputs=1;outputs=1" //TODO
                 };
+                layer_parameters_queue.unshift(Obj2.parameters)
                 addLayer(Obj2)
                 break;
 
-                /*
-            case "sigmoid":
-                var sigmoid = `<div class="layer"><i class="fab Module C "></i> Sigmoid</div>`;
-                editor.addNode("Sigmoid", 1, 1, pos_x, pos_y, "Sigmoid", {}, sigmoid);
-                let Obj3 = {
-                    type: "Sigmoid",
-                    parameters: "input_1=1 output_1=1"
-                };
-                addLayer(Obj3)
-                break;
-                 */
+            /*
+        case "sigmoid":
+            var sigmoid = `<div class="layer"><i class="fab Module C "></i> Sigmoid</div>`;
+            editor.addNode("Sigmoid", 1, 1, pos_x, pos_y, "Sigmoid", {}, sigmoid);
+            let Obj3 = {
+                type: "Sigmoid",
+                parameters: "input_1=1 output_1=1"
+            };
+            addLayer(Obj3)
+            break;
+             */
 
             default:
         }
@@ -736,6 +915,10 @@
 
     function addConnection(layers_connection) {
         (async() => { connections_id_queue.unshift(await sendJson(layers_connection, `http://${address}/add_connection/${user_id}/${model_id}`)) } )()
+    }
+
+    function updateLayerParameter(sending_obj) {
+        (async() => { console.log("Server response for updating parameter: " + await sendJson(sending_obj, `http://${address}/update_layer/${user_id}/${model_id}`)) } )()
     }
 
     function addUser() {
