@@ -59,6 +59,22 @@ def add_layer(user_id: int, model_id: int):
     return str(inserted_id), HTTPStatus.CREATED
 
 
+@app.route("/update_layer/<int:user_id>/<int:model_id>", methods=["PUT"])
+def update_layer(user_id: int, model_id: int):
+    if not sql_worker.verify_access(user_id, model_id):
+        error(HTTPStatus.FORBIDDEN, "You have no rights for changing this model")
+    json = request.json
+    if json is None:
+        error(HTTPStatus.BAD_REQUEST, message="No json provided")
+    try:
+        sql_worker.update_layer(json["parameters"], int(json["id"]), model_id)
+    except KeyError as e:
+        error(HTTPStatus.BAD_REQUEST, f"Key error: {e}")
+    except StopIteration as e:
+        error(HTTPStatus.BAD_REQUEST, f"No such id: {json['id']}")
+    return "done", HTTPStatus.OK
+
+
 @app.route("/add_connection/<int:user_id>/<int:model_id>", methods=["POST"])
 def add_connection(user_id: int, model_id: int):
     json = request.json
