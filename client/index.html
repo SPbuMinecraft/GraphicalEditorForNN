@@ -790,27 +790,29 @@
     function joinUpdatedLayerParameters(new_parameters, id) {
         var temp_array = []
         var new_parameters_string = null
+        var dbid = Object.values(editor.getNodeFromId(id)['data'])[0]
+        var connections = Object.values(editor.getNodeFromId(id)['data'])[1]
+
+        let parameters_to_send = {
+            id: dbid,
+            parameters: null
+        };
 
         for (i in new_parameters) {
             temp_array.push(new_parameters[i].join("="));
         }
         new_parameters_string = temp_array.join(";");
-        console.log("new parameters string: " + new_parameters_string);
-
-        var dbid = Object.values(editor.getNodeFromId(id)['data'])[0]
-        var connections = Object.values(editor.getNodeFromId(id)['data'])[1]
 
         editor.updateNodeDataFromId(id, { DBID: dbid,
-                                          Connections: connections,
-                                          Parameters: new_parameters_string });
+            Connections: connections,
+            Parameters: new_parameters_string });
+        parameters_to_send["parameters"] = new_parameters_string
+        console.log(parameters_to_send)
 
-        let parameters_to_send = {
-            id: dbid,
-            parameters: new_parameters_string
-        };
         updateLayerParameter(parameters_to_send);
 
     }
+
 
     function addNodeToConstructor(name, pos_x, pos_y) {
         console.log("added node")
@@ -838,7 +840,7 @@
                 editor.addNode("linear", 1, 1, pos_x, pos_y, "linear", {}, linear);
                 let Obj1 = {
                     type: "Linear",
-                    parameters: "inputs=1;outputs=1;bias=0;inFeatures=100;outFeatures=500"
+                    parameters: "inputs=1;outputs=1;bias=0;inFeatures=1;outFeatures=2"
                 };
                 layer_parameters_queue.unshift(Obj1.parameters);
                 addLayer(Obj1)
@@ -911,10 +913,10 @@
 
 <!--JSON requests handling-->
 <script>
-    async function sendJson(sending_object, url) {
+    async function sendJson(sending_object, url, method) {
 
         const resp = await fetch(url, {
-            method: 'POST',
+            method: method,
             mode: 'cors',
             headers: {'content-type': 'application/json'},
             body: JSON.stringify(sending_object)
@@ -924,15 +926,15 @@
     }
 
     function addLayer(sending_obj) {
-        (async() => { layers_id_queue.unshift(await sendJson(sending_obj, `http://${address}/add_layer/${user_id}/${model_id}`)) } )()
+        (async() => { layers_id_queue.unshift(await sendJson(sending_obj, `http://${address}/add_layer/${user_id}/${model_id}`, 'POST')) } )()
     }
 
     function addConnection(layers_connection) {
-        (async() => { connections_id_queue.unshift(await sendJson(layers_connection, `http://${address}/add_connection/${user_id}/${model_id}`)) } )()
+        (async() => { connections_id_queue.unshift(await sendJson(layers_connection, `http://${address}/add_connection/${user_id}/${model_id}`, 'POST')) } )()
     }
 
     function updateLayerParameter(sending_obj) {
-        (async() => { console.log("Server response for updating parameter: " + await sendJson(sending_obj, `http://${address}/update_layer/${user_id}/${model_id}`)) } )()
+        (async() => { console.log("Server response for updating parameter: " + await sendJson(sending_obj, `http://${address}/update_layer/${user_id}/${model_id}`, 'PUT')) } )()
     }
 
     function addUser() {
@@ -940,7 +942,7 @@
             type: "Not empty JSON"
         };
 
-        (async() => { user_id = await sendJson(temp_json, `http://${address}/add_user`) } )()
+        (async() => { user_id = await sendJson(temp_json, `http://${address}/add_user`, 'POST') } )()
     }
 
     function addModel() {
@@ -948,15 +950,15 @@
             name: "test_post_model_1"             // custom model name ... coming soon
         };
 
-        (async() => { model_id = await sendJson(temp_json, `http://${address}/add_model/${user_id}`) })()
+        (async() => { model_id = await sendJson(temp_json, `http://${address}/add_model/${user_id}`, 'POST') })()
     }
 
     function deleteLayer(sending_object) {
-        (async() => { await sendJson(sending_object, `http://${address}/delete_layer/${user_id}/${model_id}`) } )()
+        (async() => { await sendJson(sending_object, `http://${address}/delete_layer/${user_id}/${model_id}`, 'POST') } )()
     }
 
     function deleteConnection(sending_object) {
-        (async() => { await sendJson(sending_object, `http://${address}/delete_connection/${user_id}/${model_id}`) } )()
+        (async() => { await sendJson(sending_object, `http://${address}/delete_connection/${user_id}/${model_id}`, 'POST') } )()
         console.log(`Deleted connection with DBID: ${sending_object.id}`)
     }
 
@@ -969,7 +971,7 @@
          */
         var form_data = buildTrainData(document.querySelector("#xy-form-train"));
 
-        (async() => { train_status = await sendJson(form_data, `http://${address}/train/${user_id}/${model_id}/0`) } )()
+        (async() => { train_status = await sendJson(form_data, `http://${address}/train/${user_id}/${model_id}/0`, 'POST') } )()
 
         let delayed_train_result = delay(2000).then(() => {
             showBuildNotification(train_status)
@@ -989,7 +991,7 @@
         }
 
         var result
-        (async() => { result = await sendJson(form_data, `http://${address}/predict/${user_id}/${model_id}`) } )()
+        (async() => { result = await sendJson(form_data, `http://${address}/predict/${user_id}/${model_id}`, 'POST') } )()
         let delayed_result = delay(1000).then(() => onPredictShowResult(result))
     }
 
