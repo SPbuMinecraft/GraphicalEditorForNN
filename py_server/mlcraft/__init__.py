@@ -36,9 +36,9 @@ def make_app(config=None):
     if config is not None:
         app.config.update(config)
 
-    CORS(app, origins=app.config["CLIENT"])
+    # CORS(app, origins=app.config["CLIENT"])
     # uncomment this and comment line above if you want to make it simple
-    # CORS(app)
+    CORS(app)
 
     from . import db  # this is ok, but only for professional programmers
 

@@ -1,0 +1,85 @@
+{
+    "graph": {
+        "connections": [
+            {
+                "layer_from": 0,
+                "layer_to": 1
+            },
+            {
+                "layer_from": 1,
+                "layer_to": 2
+            },
+            {
+                "layer_from": 2,
+                "layer_to": 3
+            },
+	    {
+		"layer_from": 3,
+		"layer_to": 5
+	    },
+	    {
+		"layer_from": 4,
+		"layer_to": 5
+	    },
+	    {
+		"layer_from": 3,
+		"layer_to": 6
+	    }
+        ],
+        "layers": [
+            {
+                "id": 0,
+                "type": "Data",
+                "parameters": {
+                    "width": 2
+                }
+            },
+            {
+                "id": 1,
+                "type": "Linear",
+                "parameters": {
+                    "inFeatures": 2,
+                    "outFeatures": 2
+                }
+            },
+	    {
+		"id": 2,
+		"type": "ReLU",
+		"parameters": {
+		}
+	    },
+            {
+                "id": 3,
+                "type": "Linear",
+                "parameters": {
+                    "inFeatures": 2,
+                    "outFeatures": 1
+                }
+            },
+            {
+                "id": 4,
+                "type": "Target",
+                "parameters": {
+                    "width": 1
+                }
+            },
+	    {
+		"id": 5,
+		"type": "MSELoss",
+		"parameters": {
+		}
+	    },
+	    {
+		"id": 6,
+		"type": "Output",
+		"parameters": {
+		}
+	    }
+        ]
+    },
+
+    "dataset": {
+        "0": [0, 0, 0, 1, 1, 0, 1, 1],
+        "4": [0, 0, 0, 1]
+    }
+}

@@ -70,6 +70,7 @@ async function loginUser() {
     } catch (error) {
         console.error("Произошла ошибка при отправке запроса:", error);
     }
+    window.location.href = "../index.html";
 }
 
 async function registerUser() {
@@ -117,4 +118,5 @@ async function registerUser() {
     } catch (error) {
         console.error("Произошла ошибка при отправке запроса:", error);
     }
+    window.location.href = "../index.html";
 }
