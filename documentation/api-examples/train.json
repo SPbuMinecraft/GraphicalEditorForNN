@@ -12,58 +12,51 @@
             {
                 "layer_from": 2,
                 "layer_to": 3
-            },
-    	    {
-        		"layer_from": 3,
-        		"layer_to": 4
-    	    }
+            }
         ],
         "layers": [
             {
                 "id": 0,
-                "type": "Data",
+                "type": "input",
                 "parameters": {
-                    "width": 2,
-        		    "height": 4
+                    "outputSize": 2
                 }
             },
             {
                 "id": 1,
-                "type": "Linear",
+                "type": "linear",
                 "parameters": {
-                    "inFeatures": 2,
-                    "outFeatures": 2
+                    "inputSize": 2,
+                    "outputSize": 2
                 }
             },
             {
                 "id": 2,
-                "type": "Linear",
+                "type": "linear",
                 "parameters": {
-                    "inFeatures": 2,
-                    "outFeatures": 1
+                    "inputSize": 2,
+                    "outputSize": 1
                 }
             },
             {
                 "id": 3,
-                "type": "Output",
+                "type": "output",
                 "parameters": {
-                    "width": 1,
-        		    "height": 4
+                    "inputSize": 1
                 }
-            },
-    	    {
-        		"id": 4,
-        		"type": "MSELoss",
-        		"parameters": {}
-    	    }
+            }
         ]
     },
 
-    // format:
-    //  "<Data layer id>": [examples]
-    //  "<Output layer id>": [answers]
     "dataset": {
-        "0": [0, 0, 0, 1, 1, 0, 1, 1],
-        "3": [0, 0, 0, 1]
+        "input": [
+            [ 0, 0 ],
+            [ 0, 1 ],
+            [ 1, 0 ],
+            [ 1, 1 ]
+        ],
+        "output": [
+            [ 0, 0, 0, 1 ]
+        ]
     }
 }

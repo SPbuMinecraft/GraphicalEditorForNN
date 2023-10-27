@@ -10,6 +10,9 @@ class User(db.Model):  # type: ignore
     __tablename__ = "users_table"
 
     id = db.Column(db.Integer, primary_key=True)
+    login = db.Column(db.Text)
+    password = db.Column(db.Text)
+    mail = db.Column(db.Text)
     model = db.relationship("Model", backref="user_id")
 
 
@@ -29,8 +32,12 @@ class SQLWorker:
             db.create_all()
 
     def add_user(self, user_parameters: dict):
+        print(user_parameters)
         with current_app.app_context():
             new_user = User()
+            new_user.login = user_parameters["login"]
+            new_user.password = user_parameters["password"]
+            new_user.mail = user_parameters["mail"]
             db.session.add(new_user)
             db.session.commit()
             return new_user.id
@@ -74,20 +81,6 @@ class SQLWorker:
             db.session.add(model)
             db.session.commit()
             return new_id
-
-    def update_layer(self, new_params: dict, layer_id: int, model_id: int):
-        with current_app.app_context():
-            model = db.session.get(Model, model_id)
-        if model is None:
-            # change later for suitable Error type
-            raise KeyError(f"No model with id {model_id}")
-        items = json.loads(model.content)
-        layer = next(l for l in items["layers"] if l["id"] == layer_id)
-        layer["parameters"].update(new_params)
-        model.content = json.dumps(items)
-        with current_app.app_context():
-            db.session.add(model)
-            db.session.commit()
 
     def add_connection(
         self, layer_from: int, layer_to: int, model_id: int
