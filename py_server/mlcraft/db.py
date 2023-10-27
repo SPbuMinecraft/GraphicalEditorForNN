@@ -1,4 +1,5 @@
 import json
+from sqlite3 import IntegrityError
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
 from .utils import (
@@ -7,6 +8,7 @@ from .utils import (
     parse_parameters,
     check_paths_exist,
 )
+from . import errors
 
 db = SQLAlchemy()  # Has to be global by Flask documentation
 
@@ -15,6 +17,9 @@ class User(db.Model):  # type: ignore
     __tablename__ = "users_table"
 
     id = db.Column(db.Integer, primary_key=True)
+    login = db.Column(db.Text)
+    password = db.Column(db.Text)
+    mail = db.Column(db.Text)
     model = db.relationship("Model", backref="user_id")
 
 
@@ -35,10 +40,41 @@ class SQLWorker:
 
     def add_user(self, user_parameters: dict):
         with current_app.app_context():
+            # Не очень хорошее решение по обработке ошибок... А если ошибок станет 10, 100?
+            existing_user = User.query.filter_by(login=user_parameters["login"]).first()
+            if existing_user is not None:
+                raise errors.UserAlreadyExistsError(
+                    "There's already an account with this username"
+                )
+
+            existing_mail = User.query.filter_by(mail=user_parameters["mail"]).first()
+            if existing_mail is not None:
+                raise errors.MailAlreadyExistsError(
+                    "There's already an account with this email."
+                )
+
             new_user = User()
-            db.session.add(new_user)
-            db.session.commit()
-            return new_user.id
+            new_user.login = user_parameters["login"]
+            new_user.password = user_parameters["password"]
+            new_user.mail = user_parameters["mail"]
+
+            try:
+                db.session.add(new_user)
+                db.session.commit()
+                return new_user.id
+            except IntegrityError as e:
+                db.session.rollback()
+                raise IntegrityError(
+                    "Failed to add the user due to a uniqueness violation"
+                )
+
+    def get_user(self, user_parameters: dict):
+        existing_user = User.query.filter_by(login=user_parameters["login"]).first()
+        if existing_user is None:
+            raise errors.UserNotFoundError("User not found")
+        if existing_user.password != user_parameters["password"]:
+            raise errors.WrongPasswordError("Wrong password")
+        return existing_user.id
 
     def add_model(self, user_id: int, name: str):
         with current_app.app_context():

@@ -17,14 +17,44 @@ app = Blueprint("make a better name", __name__)
 
 @app.route("/add_user", methods=["POST"])
 def add_user():
-    json = request.json
-    if not json:
-        error(HTTPStatus.BAD_REQUEST, message="No json provided")
+    json_data = request.get_json()
+    if not json_data:
+        return jsonify({"error": "No JSON data provided"}), HTTPStatus.BAD_REQUEST
     try:
-        inserted_id = sql_worker.add_user(json)
-    except KeyError as e:
-        error(HTTPStatus.BAD_REQUEST, message=str(e))
-    return str(inserted_id), HTTPStatus.CREATED
+        user_id = sql_worker.add_user(json_data)
+        return jsonify({"user_id": user_id}), HTTPStatus.CREATED
+    except errors.UserAlreadyExistsError as e:
+        return (
+            {"error": str(e), "problemPart": "username"},
+            HTTPStatus.CONFLICT,
+        )  # HTTP 409 Conflict\
+    except errors.MailAlreadyExistsError as e:
+        return {"error": str(e), "problemPart": "mail"}, HTTPStatus.CONFLICT
+    except IntegrityError as e:
+        return (
+           {"error": str(e)},
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+        )  # HTTP 500 Internal Server Error
+
+
+@app.route("/login_user", methods=["POST"])
+def login_user():
+    json_data = request.get_json()
+    if not json_data:
+        return jsonify({"error": "No JSON data provided"}), HTTPStatus.BAD_REQUEST
+    try:
+        user_id = sql_worker.get_user(json_data)
+        return jsonify({"user_id": user_id}), HTTPStatus.OK
+    except errors.UserNotFoundError as e:
+        return (
+            {"error": str(e), "problemPart": "username"},
+            HTTPStatus.UNAUTHORIZED,
+        )
+    except errors.WrongPasswordError as e:
+        return (
+            {"error": str(e), "problemPart": "password"},
+            HTTPStatus.UNAUTHORIZED,
+        )
 
 
 @app.route("/add_model/<int:user_id>", methods=["POST"])
