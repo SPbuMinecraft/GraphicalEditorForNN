@@ -159,17 +159,22 @@ def train_model(user_id: int, model_id: int, safe: int):  # Unfortunately, flask
             )
         if not is_valid_model(model):
             error(HTTPStatus.NOT_ACCEPTABLE, "Invalid model found")
-        # Convert json to another format for C++
+        # Convert json to another format for C++ by deleting connsetcions ids and rename layers_type
         model["connections"] = list(
             map(
-                lambda connection: [connection["layer_from"], connection["layer_to"]],
+                lambda connection: {"layer_from": connection["layer_from"], "layer_to": connection["layer_to"]},
                 model["connections"],
             )
         )
-        model["dataset"] = json["dataset"]
-
+        model["layers"] = list(
+            map(
+                lambda layer: {"id": layer["id"], "type": layer["layer_type"], "parameters": layer["parameters"]},
+                model["layers"]
+            )
+        )
+        model_to_send = {"graph": model, "dataset": json["dataset"]}
         response = requests.post(
-            current_app.config["CPP_SERVER"] + "/train", json=model, timeout=3
+            current_app.config["CPP_SERVER"] + "/train", json=model_to_send, timeout=3
         )
         sql_worker.train_model(model_id)
         return response.text, response.status_code
