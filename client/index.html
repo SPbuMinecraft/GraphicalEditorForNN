@@ -278,13 +278,13 @@
 
             const add_data_response = delay(900).then(() => addLayer(ObjData));
             const add_data_id = delay(1600).then(() => editor.updateNodeDataFromId(1, { DBID: layers_id_queue.pop(),
-                Connections: [],
-                Parameters: ObjData.parameters }));
+                                                                                        Connections: [],
+                                                                                        Parameters: ObjData.parameters }));
 
             const add_output_response = delay(1500).then(() => addLayer(ObjOutput));
             const add_output_id = delay(1900).then(() => editor.updateNodeDataFromId(2, { DBID: layers_id_queue.pop(),
-                Connections: [],
-                Parameters: ObjOutput.parameters }));
+                                                                                          Connections: [],
+                                                                                          Parameters: ObjOutput.parameters }));
 
             const actionWithDelay3 = delay(1200).then(() => console.log(`Setup completed successfully. \nUser ID: ${user_id} \nModel ID: ${model_id}`))
 
@@ -537,8 +537,8 @@
     editor.on("nodeCreated", function (id) {      // Добавление нового слоя (блока)
         console.log("Node created " + id);
         let delay_test = delay(500).then(() => editor.updateNodeDataFromId(id, { DBID: layers_id_queue.pop(),
-            Connections: [],
-            Parameters: layer_parameters_queue.pop()}))
+                                                                                 Connections: [],
+                                                                                 Parameters: layer_parameters_queue.pop()}))
         let delayed_log = delay(700).then(() => console.log(Object.values(editor.getNodeFromId(id)['data'])[0]))
 
 
@@ -588,8 +588,8 @@
         let current_connections =  Object.values(editor.getNodeFromId(connection.output_id)['data'])[1]
         let delayed_push = delay(500).then(() => current_connections.push(connection_data))
         let delayed_update = delay(750).then(() => editor.updateNodeDataFromId(connection.output_id, { DBID: dbid_from,
-            Connections: current_connections,
-            Parameters: layer_parameters }))
+                                                                                                       Connections: current_connections,
+                                                                                                       Parameters: layer_parameters }))
 
         let delayed_log2 = delay(1000).then(() => console.log(Object.values(editor.getNodeFromId(connection.output_id)['data'])[1]))
 
@@ -633,8 +633,8 @@
 
         list_of_connections.splice(cur_elem_index, 1) // deletes connection from list
         editor.updateNodeDataFromId(connection.output_id, { DBID: layer_from_db_id,
-            Connections: list_of_connections,
-            Parameters: layer_parameters})
+                                                            Connections: list_of_connections,
+                                                            Parameters: layer_parameters})
         console.log("Layer id " + layer_from_db_id + " connections: " + list_of_connections)
 
         let delayed_deletion = delay(300).then(() => deleteConnection(connection_id));
@@ -796,8 +796,8 @@
         new_parameters_string = temp_array.join(";");
 
         editor.updateNodeDataFromId(id, { DBID: dbid,
-            Connections: connections,
-            Parameters: new_parameters_string });
+                                          Connections: connections,
+                                          Parameters: new_parameters_string });
         parameters_to_send["parameters"] = new_parameters_string
         console.log(parameters_to_send)
 
