@@ -81,9 +81,7 @@ def clear_model(user_id: int, model_id: int):
     try:
         sql_worker.clear_model(model_id)
     except KeyError as e:
-        error(HTTPStatus.BAD_REQUEST, f"Key error: {e}")
-    except StopIteration as e:
-        error(HTTPStatus.BAD_REQUEST, f"No such id: {json['id']}")
+        error(HTTPStatus.BAD_REQUEST, message=str(e))
     return "done", HTTPStatus.OK
 
 @app.route("/add_connection/<int:user_id>/<int:model_id>", methods=["POST"])
