@@ -159,6 +159,20 @@ class SQLWorker:
             db.session.commit()
             return DeleteStatus.OK
 
+    def clear_model(self, model_id: int):
+        with current_app.app_context():
+            model = Model.query.get(model_id)
+            if not model:
+                return DeleteStatus.ModelNotExist
+            model_items = json.loads(model.content)
+            model_items["connections"] = []
+            model_items["layers"] = []
+            model.content = json.dumps(model_items)
+            db.session.add(model)
+            db.session.commit()
+            return DeleteStatus.OK
+
+
     def check_dimensions(self, layer_from: dict, layer_to: dict):
         parameters_from = parse_parameters(layer_from["parameters"])
         parameters_to = parse_parameters(layer_to["parameters"])
