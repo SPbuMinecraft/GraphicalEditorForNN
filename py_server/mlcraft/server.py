@@ -74,6 +74,15 @@ def update_layer(user_id: int, model_id: int):
         error(HTTPStatus.BAD_REQUEST, f"No such id: {json['id']}")
     return "done", HTTPStatus.OK
 
+@app.route("/clear_model/<int:user_id>/<int:model_id>", methods=["POST"])
+def clear_model(user_id: int, model_id: int):
+    if not sql_worker.verify_access(user_id, model_id):
+        error(HTTPStatus.FORBIDDEN, "You have no rights for changing this model")
+    try:
+        sql_worker.clear_model(model_id)
+    except KeyError as e:
+        error(HTTPStatus.BAD_REQUEST, message=str(e))
+    return "done", HTTPStatus.OK
 
 @app.route("/add_connection/<int:user_id>/<int:model_id>", methods=["POST"])
 def add_connection(user_id: int, model_id: int):
