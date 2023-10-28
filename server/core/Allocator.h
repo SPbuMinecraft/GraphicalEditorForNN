@@ -4,6 +4,7 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 class Blob;
 class Allocator;
@@ -13,6 +14,8 @@ class Stack {
     std::vector<float*> pointers;
 
     friend Allocator;
+public:
+    Stack(): top(0) {};
 };
 
 struct Shape {
@@ -36,6 +39,11 @@ typedef std::tuple<Shape, int> PtrInfo;
 
 template<typename Key, typename Value>
 using dict = std::unordered_map<Key, Value>;
+
+struct AllocationInfo {
+    dict<Shape, Stack> pointerTable;
+    dict<float*, PtrInfo> getInfo;
+};
 
 /** Singleton class
  - Description:
@@ -63,29 +71,38 @@ using dict = std::unordered_map<Key, Value>;
  */
 class Allocator {
     float* base = NULL;
-    SessionBuffer buf;
-
-    dict<Shape, Stack> pointerTable;
-    dict<float*, PtrInfo> getInfo;
 
     bool kostyl = false;
-    std::vector<float*> sessionPointers = {};
 
     static Allocator *instance;
 
+    std::vector<float*> sessionPointers;
+    SessionBuffer buf;
+    std::unordered_set<float*> constMems;
+
+    bool virtualMode = true;
+    dict<Shape, std::size_t> counts;
+
+    AllocationInfo realInfo;
+    AllocationInfo virtInfo;
+    AllocationInfo& info = virtInfo;
+
     Allocator() {};
 public:
+
+    static void startVirtualMode();
+    static void endVirtualMode();
     /// Call this **BEFORE** calling `allocate`
     /// For now, just need to pre-count all shapes, maybe later there will be a virtual mode,
     /// where all shapes will be counted automatically after a dry run through the graph.
     /// - Parameter counts: **UPPER** limit to the needed amount of EACH shape
     /// - Parameter sessionBufferSize: max bytesize of a buffer you can alloc and free multiple times
-    static void start(dict<Shape, std::size_t> counts, std::size_t sessionBufferSize = 8 * 50);
+    static void start(dict<Shape, std::size_t> counts);
 
     /// Only call this after `start` and **before** `end`
     /// Gives a pointer to a memory big enough to store the requested shape
     /// - Parameter shape: The requested shape itself
-    static float* allocate(Shape shape);
+    static float* allocate(Shape shape, bool constMemory = false);
 
     /// Call this when your object is done using the pointer
     /// - Parameter ptr: A pointer that you **GOT** from the `allocate` function

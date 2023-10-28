@@ -3,18 +3,40 @@
 #include <iostream>
 #include <exception>
 #include <cassert>
+#include <cstring>
 
 using namespace std;
 
 Allocator* Allocator::instance = NULL;
 
-void Allocator::start(dict<Shape, size_t> counts, size_t bufSize) {
+#define TMP_BUFF_SIZE 1024
+
+void Allocator::startVirtualMode() {
     assert(!instance);
     instance = new Allocator();
+    instance->buf.base = new char[TMP_BUFF_SIZE];
+    instance->buf.size = TMP_BUFF_SIZE;
+}
 
-    instance->buf.base = new char[bufSize];
-    instance->buf.size = bufSize;
+void Allocator::endVirtualMode() {
+    assert(instance);
+    assert(instance->virtualMode);
+    instance->virtualMode = false;
 
+    for (auto &[ptr, stack] : instance->info.pointerTable) {
+        for (auto ptr : stack.pointers) {
+            delete[] ptr;
+        }
+        stack.pointers.clear();
+    }
+    Allocator::endSession();
+
+    instance->info = instance->realInfo;
+    start(instance->counts);
+}
+
+
+void Allocator::start(dict<Shape, size_t> counts) {
     size_t total = 0;
     for (auto const [shape, count]: counts) {
         total += count * shape.rows * shape.cols;
@@ -28,23 +50,36 @@ void Allocator::start(dict<Shape, size_t> counts, size_t bufSize) {
         for (int i = 0; i < count; ++i) {
             float* ptr = base + offset + i * shape.rows * shape.cols;
             s.pointers.push_back(ptr);
-            instance->getInfo[ptr] = {shape, i};
+            instance->info.getInfo[ptr] = {shape, i};
         }
 
         offset += count * shape.rows * shape.cols;
-        instance->pointerTable[shape] = s;
+        instance->info.pointerTable[shape] = s;
     }
 
     instance->base = base;
 }
 
-float* Allocator::allocate(Shape shape) {
+float* Allocator::allocate(Shape shape, bool constMemory) {
     assert(instance);
-    Stack &s = instance->pointerTable[shape];
+    auto &info = instance->info;
+    if (constMemory) {
+        float* result = new float[shape.rows * shape.cols];
+        instance->constMems.insert(result);
+        return result;
+    }
+    if (instance->virtualMode) {
+        instance->counts[shape]++;
+        Stack &s = info.pointerTable[shape];
+        float* ptr = new float[shape.rows * shape.cols];
+        info.getInfo[ptr] = {shape, s.pointers.size()};
+        s.pointers.push_back(ptr);
+    }
+    Stack &s = info.pointerTable[shape];
     // ran out of memory
     assert(s.top < s.pointers.size());
     // THIS IS IMPORTANT
-    get<1>(instance->getInfo[s.pointers[s.top]]) = s.top;
+    get<1>(info.getInfo[s.pointers[s.top]]) = s.top;
 
     float* result = s.pointers[s.top++];
     if (instance->kostyl) {
@@ -56,20 +91,26 @@ float* Allocator::allocate(Shape shape) {
 
 void Allocator::release(float* ptr) {
     assert(instance);
+    auto &info = instance->info;
+    if (instance->constMems.find(ptr) != instance->constMems.end()) {
+        delete[] ptr;
+        instance->constMems.erase(ptr);
+        return;
+    }
 //    if (!instance) return; // you are in luck! everything is already released....
-    auto const [shape, i] = instance->getInfo[ptr];
+    auto const [shape, i] = info.getInfo[ptr];
 
     // shape not found
-    assert(instance->pointerTable.find(shape) != instance->pointerTable.end());
+    assert(info.pointerTable.find(shape) != info.pointerTable.end());
 
-    Stack &s = instance->pointerTable[shape];
+    Stack &s = info.pointerTable[shape];
     assert(i < s.top); // pointer is already free
 
     if (i == --s.top) return;
     swap(s.pointers[i], s.pointers[s.top]);
 
     // remember for which index we swapped our top pointer
-    get<1>(instance->getInfo[s.pointers[i]]) = i;
+    get<1>(info.getInfo[s.pointers[i]]) = i;
 }
 
 void* Allocator::allocateBytes(size_t size) {
@@ -99,8 +140,13 @@ void Allocator::endSession() {
 
 void Allocator::end() {
     assert(instance);
+    if (instance->virtualMode)
+        Allocator::endVirtualMode();
     delete [] instance->buf.base;
     delete [] instance->base;
+    for (auto &memory : instance->constMems) {
+        delete[] memory;
+    }
     delete instance;
     instance = NULL;
 }
@@ -108,9 +154,10 @@ void Allocator::end() {
 void Allocator::printStats() { 
     assert(instance);
     printf("Allocator base: 0x%tx\n", (ptrdiff_t)instance->base);
-    printf("shapes count: %ld\n", instance->pointerTable.size());
+    printf("Virtual Mode: %d\n", instance->virtualMode);
+    printf("shapes count: %ld\n", instance->info.pointerTable.size());
     size_t total = 0, used = 0;
-    for (auto const &[shape, s]: instance->pointerTable) {
+    for (auto const &[shape, s]: instance->info.pointerTable) {
         total += shape.rows * shape.cols * s.pointers.size();
         used += shape.rows * shape.cols * s.top;
         printf("  (%ld, %ld): %d/%ld pointers occupied\n",
@@ -124,12 +171,13 @@ void Allocator::printStats() {
 void Allocator::printPointersInfo() {
     assert(instance);
     printf("Allocator base: 0x%tx\n", (ptrdiff_t)instance->base);
-    printf("shapes count: %ld\n", instance->pointerTable.size());
+    printf("Virtual Mode: %d\n", instance->virtualMode);
+    printf("shapes count: %ld\n", instance->info.pointerTable.size());
     int used = 0, total = 0;
-    for (auto const &[shape, s]: instance->pointerTable) {
+    for (auto const &[shape, s]: instance->info.pointerTable) {
         printf("Pointers of shape (%ld, %ld), count = %d:\n", shape.rows, shape.cols, s.top);
         for (int i = 0; i < s.top; ++i) {
-            auto const [ignore, j] = instance->getInfo[s.pointers[i]];
+            auto const [ignore, j] = instance->info.getInfo[s.pointers[i]];
             printf("  [%d] = 0x%tx: %d\n", i, (ptrdiff_t)s.pointers[i], j);
         }
         used += s.top;

@@ -18,16 +18,10 @@ void Tensor::getParentsGrads(vector<LazyBlobRef> &grads) {
 
 Tensor::Tensor(Operation& operation, const vector<TensorRef>& parents): operation(operation), parents(parents) {
     for (auto p: parents) p.get().childrenCount++;
-    vector<LazyBlobRef> datas;
-    getParentsData(datas);
-    Shape shape = operation.computeDim(datas);
-    this->gradient = Blob {shape.rows, shape.cols};
-    Allocator::endSession();
 }
 
 Tensor::Tensor(Blob data): operation(noop), parents({}) {
     this->output = std::move(data);
-    this->gradient = Blob(data.rows, data.cols);
 }
 
 Tensor::Tensor(Tensor&& other) noexcept: operation(other.operation) {
@@ -82,14 +76,17 @@ void Tensor::backward() {
 }
 
 void Tensor::accumulate(const LazyBlob& gradient) {
-    *this->gradient += gradient;
+    if (!this->gradient)
+        this->gradient = gradient;
+    else 
+        *this->gradient += gradient;
     childrenGradReady++;
 }
 
 void Tensor::clear() {
-    gradient->clear();
     // if has parents, then clear output cache
-    if (parents.size()) 
+    this->gradient = {};
+    if (parents.size())
         this->output = {};
     this->childrenGradReady = 0;
     for (auto p: parents) p.get().clear();
