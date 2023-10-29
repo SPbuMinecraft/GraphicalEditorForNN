@@ -27,4 +27,7 @@ def test_update_layer(client: FlaskClient, app: Flask):
         m = db.session.get(Model, 1)
     assert m is not None
     params = json.loads(m.content)["layers"][0]["parameters"]
-    assert (params == "inFeatures=3;outFeatures=100" or params == "outFeatures=100;inFeatures=3")
+    assert (
+        params == "inFeatures=3;outFeatures=100"
+        or params == "outFeatures=100;inFeatures=3"
+    )

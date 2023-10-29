@@ -177,7 +177,6 @@ class SQLWorker:
             db.session.commit()
             return DeleteStatus.OK
 
-
     def check_dimensions(self, layer_from: dict, layer_to: dict):
         parameters_from = parse_parameters(layer_from["parameters"])
         parameters_to = parse_parameters(layer_to["parameters"])

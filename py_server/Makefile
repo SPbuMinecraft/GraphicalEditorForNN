@@ -64,7 +64,7 @@ format: install
 
 test: install formatcheck typecheck pytest
 formatcheck: install
-	$(dirBin)/black --diff .
+	$(dirBin)/black --diff --check .
 typecheck: install
 	$(dirBin)/mypy .
 pytest: install

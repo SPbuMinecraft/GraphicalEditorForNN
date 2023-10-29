@@ -72,6 +72,7 @@ def update_layer(user_id: int, model_id: int):
         error(HTTPStatus.BAD_REQUEST, f"No such id: {json['id']}")
     return "done", HTTPStatus.OK
 
+
 @app.route("/clear_model/<int:user_id>/<int:model_id>", methods=["POST"])
 def clear_model(user_id: int, model_id: int):
     if not sql_worker.verify_access(user_id, model_id):
@@ -81,6 +82,7 @@ def clear_model(user_id: int, model_id: int):
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
     return "done", HTTPStatus.OK
+
 
 @app.route("/add_connection/<int:user_id>/<int:model_id>", methods=["POST"])
 def add_connection(user_id: int, model_id: int):
@@ -171,14 +173,21 @@ def train_model(
         # Convert json to another format for C++ by deleting connsetcions ids and rename layers_type
         model["connections"] = list(
             map(
-                lambda connection: {"layer_from": connection["layer_from"], "layer_to": connection["layer_to"]},
+                lambda connection: {
+                    "layer_from": connection["layer_from"],
+                    "layer_to": connection["layer_to"],
+                },
                 model["connections"],
             )
         )
         model["layers"] = list(
             map(
-                lambda layer: {"id": layer["id"], "type": layer["layer_type"], "parameters": layer["parameters"]},
-                model["layers"]
+                lambda layer: {
+                    "id": layer["id"],
+                    "type": layer["layer_type"],
+                    "parameters": layer["parameters"],
+                },
+                model["layers"],
             )
         )
         model_to_send = {"graph": model, "dataset": json["dataset"]}

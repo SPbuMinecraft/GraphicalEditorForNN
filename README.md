@@ -12,6 +12,9 @@
 
 ## Build options
 
+> **Important:** If CI tests don't pass, but work locally, make sure 
+> your branch is updated (rebase on the current main)
+
 > **Important:** All Makefiles require `node` to run.  
 > On MacOS it is just `brew install node`.  
 > On linux run `curl -qL https://www.npmjs.com/install.sh | sudo sh` and you should be good
