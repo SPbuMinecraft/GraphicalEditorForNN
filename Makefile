@@ -14,11 +14,15 @@ endif
 
 define HELP
 Usage: make (build|test).(py_server|server) (<option>=<value>)*
-       make clean
+       make run.(client|py_server|server) (<option>=<value)*
+       make clean (<option>=<value>)*
 Example (runs tests in py_server): make test.py_server V=2
 
 Targets:
 --------
+run.client: starts the client
+run.py_server: starts the py_server
+run.server: starts the c++ server
 build.py_server: builds py_server
 build.server: builds server
 test.py_server: invokes tests in py_server
@@ -41,6 +45,12 @@ endef
 help: export HELP := $(HELP)
 help:
 	@echo "$$HELP"
+
+$(addprefix run.,py_server client): run.%:
+	$(MAKE) -C $* -e
+
+run.server:
+	$(MAKE) serve -C server -e
 
 $(addprefix build.,$(targets)): build.%:
 	$(MAKE) -C $* -e build 
