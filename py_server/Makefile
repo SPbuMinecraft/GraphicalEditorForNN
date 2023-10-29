@@ -24,7 +24,7 @@ endif
 getField = $(shell node -p "require('$(CONFIG_PATH)').py_server.$1")
 flags = -h $(call getField,HOST) -p $(call getField,PORT)
 
-python = $(shell which 'python' || which 'python3')
+python = $(shell which 'python3.10' || which 'python3' || which 'python')
 ifeq ("$(python)","")
 $(error "Python interpreter not found, is it in your PATH?")
 endif
@@ -64,7 +64,7 @@ format: install
 
 test: install formatcheck typecheck pytest
 formatcheck: install
-	$(dirBin)/black --check .
+	$(dirBin)/black --diff .
 typecheck: install
 	$(dirBin)/mypy .
 pytest: install

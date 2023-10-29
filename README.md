@@ -12,6 +12,10 @@
 
 ## Build options
 
+> **Important:** All Makefiles require `node` to run.  
+> On MacOS it is just `brew install node`.  
+> On linux run `curl -qL https://www.npmjs.com/install.sh | sudo sh` and you should be good
+
 There is one Makefile at the project root and a Makefile for each folder (`client`, `py_server`, `server`)
 
 For each Makefile you can run 
@@ -43,6 +47,21 @@ Runs server on the port 2002, or just use `make` to run it on the default port
 
 ### Run Python Server
 Make sure you have `python` version at least **3.10**  
+> **Important:** when you first install this new build system, **delete** old virtual environment
+> in `py_server` folder with `rm -r .venv`. Then, if your default `python` command uses python
+> version lower than 3.10, specify the python interpreter explicitly: `make python=python3.10`
+> for example. 
+> You only need to specify it explicitly once, after that make will use python from the 
+> created virtual environment.  
+> make clean **will not** delete `.venv` folder, so if you created it with a wrong python version,
+> delete it and then run `make python=...` again with a correct version of python
+
+> If you see error like this on linux, when trying to create a .venv:
+> ```
+> Error: Command '['.../.venv/bin/python3.11', '-m', 'ensurepip', '--upgrade', '--default-pip']' returned non-zero exit status 1.
+> ```
+> Try `sudo apt install <your python path>-venv`
+
 Then a simple `make` in the `py_server` directory should work  
 It will build you a virtual environment in the folder `py_server/.venv`. Then it will install all dependencies in it
 via `pip`, including our own project `mlcraft`.  
@@ -59,12 +78,12 @@ Other targets available:
 ### Run C++ Server
 
 > **Important:** If you want to build a c++ server, you need to install [Boost](https://www.boost.org/users/download/).  
-> Then, add the path to the boost root (folder with `include` and `lib` inside) in the `config.json` file.  
+> Then, **in the `config.json` file** add the path to the boost root (folder with `include` and `lib` inside).  
 > For example: `"BOOST_ROOT": "/usr/local/Cellar/boost/1.81.0_1"`  
 > After that you should be able to build everything just fine...
 
 There are 3(4) main targets available to build:
-- `make`: runs the `core/main.cpp` file (use it to test you Tensor and so on...)
+- `make`: runs the `core/main.cpp` file (use it to test your Tensor and so on...)
 - `make serve`: runs the server (`api/server.cpp`)
 - `make test`: runs all the tests in the `tests` directory (test file for X.cpp **must** be named `XTests.cpp`)
 - `make test.X`: runs a single test for `X`
