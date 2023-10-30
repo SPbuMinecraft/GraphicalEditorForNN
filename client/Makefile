@@ -1,16 +1,34 @@
-.PHONY: all debug release test clean
+.PHONY: run
+.DEFAULT_GOAL = run
 
-PORT = $(shell node -p "require('../config.json').client.PORT")
-PYTHON = $(shell which 'python3' || which 'python' || (echo "python not found"; exit 1))
+ifndef CONFIG_PATH
+CONFIG_PATH = $(abspath ../config.json)
+endif
+# check if file exists
+ifeq ("$(wildcard $(CONFIG_PATH))","")
+$(error Not a valid config: check your CONFIG_PATH variable)
+endif
+ifeq ("$(shell which npx)","")
+$(error 'npx' not found, try installing 'node')
+endif
 
-all: common
-debug: common
-release: common
-build:
+port = $(shell node -p "require('$(CONFIG_PATH)').client.PORT")
 
-common: index.html
+help:
+	@echo "\n\
+	Usage: make (<option>=<value>)* \n\
+	Example (hosts the client code) make V=2 \n\
+	\n\
+	Available targets: \n\
+	run: runs by default, starts the server \n\
+	help: print this \n\
+	\n\
+	Available options: \n\
+	V: if V=1, will print a little info, if V=2 will print all commands \n\
+	CONFIG_PATH: path to the config file, default = ../config.json \n\
+	"
+
+run: index.html
 	@echo "Starting client server"
 	@echo "-----------------------------------------------------------"
-	python -m http.server $(PORT)
-
-clean:
+	npx serve -l $(port)
