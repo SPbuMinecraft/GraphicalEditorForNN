@@ -32,8 +32,12 @@ ReLULayer::ReLULayer(const std::vector<TensorRef>& args) {
 }
 
 Data2dLayer::Data2dLayer(const Data2dLayerParameters& params, const std::vector<float>& values)
-    : width(params.width), height(params.height) {
-    result = Tensor({height, width, values.data()});
+    : width(params.width) {
+    result = Tensor({params.height, width, values.data()});
+}
+
+OutputLayer::OutputLayer(const std::vector<TensorRef>& args) {
+    result = Tensor(id, {args[0]}, true);
 }
 
 MSELoss::MSELoss(const std::vector<TensorRef>& args, RandomObject* randomInit) {

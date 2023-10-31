@@ -33,6 +33,11 @@ Blob::~Blob() {
     delete[] data;
 }
 
+Blob& Blob::operator=(const float* data) {
+    copy_n(data, rows * cols, this->data);
+    return *this;
+}
+
 float* Blob::getData() const {
     return data;
 }

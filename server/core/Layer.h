@@ -21,9 +21,14 @@ public:
 
 class Data2dLayer: public Layer {
 public:
-    size_t width, height;
-    
+    size_t width;
     Data2dLayer(const Data2dLayerParameters& params, const std::vector<float>& values);
+};
+
+class OutputLayer: public Layer {
+public:
+    OpId id;
+    OutputLayer(const std::vector<TensorRef>& args);
 };
 
 class LinearLayer: public Layer {

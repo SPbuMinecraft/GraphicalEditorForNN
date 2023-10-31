@@ -1,13 +1,5 @@
 #include "GraphBuilder.h"
 
-void Graph::ParseInputData(const crow::json::rvalue& data, std::vector<float>& result) {
-    for (auto& inputValue : data) {
-        result.push_back(static_cast<float>(inputValue.d()));
-    }
-    if (result.size() != result.capacity()) {
-        throw std::invalid_argument("Sizes mismatch!");
-    }
-}
 
 void Graph::OverviewLayers(const crow::json::rvalue& layers, const crow::json::rvalue& data,
                  std::unordered_map<int, crow::json::rvalue>& layer_dicts,
@@ -21,7 +13,7 @@ void Graph::OverviewLayers(const crow::json::rvalue& layers, const crow::json::r
         layerTypes_[id] = type;
         layer_dicts[id] = layer;
 
-        if (type == "Data") {
+        if (type == "Data" || type == "Target") {
             CHECK_HAS_FIELD(data, std::to_string(id));
             data_dicts[id] = data[std::to_string(id)];
         }
@@ -113,7 +105,6 @@ Graph::Graph(crow::json::rvalue modelJson,
     TopologySort(straightEdges, entryNodes, layersOrder);
 
     for (int layer_id : layersOrder) {
-        // int id = layer["id"].i();
         std::vector<TensorRef> prevLayers;
         prevLayers.reserve(reversedEdges[layer_id].size());
         for (auto prevLayerId : reversedEdges[layer_id]) {
@@ -127,22 +118,24 @@ Graph::Graph(crow::json::rvalue modelJson,
             SGD.append(layers_[layer_id]->layerOperationParams);
         } else if (type == "ReLU") {
             layers_.emplace(layer_id, new ReLULayer{prevLayers});
-        } else if (type == "Data") {
+        } else if (type == "Data" || type == "Target") {
             CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
             auto params = ParseData2d(layerDicts[layer_id]["parameters"]);
             std::vector<float> values;
-            values.reserve(params.width * params.height);
             ParseInputData(dataDicts[layer_id], values);
+            if (values.size() % params.width != 0) {
+                throw std::invalid_argument("Sizes mismatch!");
+            }
+            params.height = values.size() / params.width;
             layers_.emplace(layer_id, new Data2dLayer{params, values});
+        } else if (type == "Output") {
+            layers_.emplace(layer_id, new OutputLayer{prevLayers});
+            lastPredictIds_.push_back(layer_id);
         } else if (type == "MSELoss") {
             layers_.emplace(layer_id, new MSELoss{prevLayers, randomInit});
             lastTrainIds_.push_back(layer_id);
         } else {
             throw std::invalid_argument("Unknown layer type");
-        }
-        if (straightEdges.find(layer_id) != straightEdges.end() && layerTypes_[layer_id] != "Data"
-            && straightEdges[layer_id].size() == 1 && layerTypes_[straightEdges[layer_id][0]] == "MSELoss") {
-            lastPredictIds_.push_back(layer_id);
         }
     }
 }
@@ -150,30 +143,23 @@ Graph::Graph(crow::json::rvalue modelJson,
 void Graph::ChangeInputData(crow::json::rvalue& data) {
     std::vector<std::string> keys = data.keys();
     for (auto& key : keys) {
-        auto params = ParseData2d(data[key]);
-        CHECK_HAS_FIELD(data[key], "values");
         int id = std::stoi(key);
         if (layerTypes_.find(id) == layerTypes_.end()) {
             throw std::out_of_range("No layer with such an id: " + key);
         }
-        if (layerTypes_[id] != "Data") {
+        if (layerTypes_[id] != "Data" && layerTypes_[id] != "Target") {
             throw std::domain_error("Layer with id " + key + " is not a Data layer");
         }
         Data2dLayer* layer = reinterpret_cast<Data2dLayer*>(layers_[id]);
-        if (params.width != layer->width || params.height > layer->height) {
-            throw std::invalid_argument("Dimensions mismatch");
-        }
 
-        std::cout << "Checks passed" << std::endl;
-
+        // Needs checks!!
         std::vector<float> values;
-        values.reserve(params.width * params.height);
-        ParseInputData(data[key]["values"], values);
-        for (size_t j = 0; j < params.height; ++j) {
-            for (size_t i = 0; i < params.width; ++i) {
-                layer->result.value().output.value()[j][i] = values[j * params.width + i];
-            }
+        ParseInputData(data[key], values);
+        if (layer->result.value().output.value().rows *
+            layer->result.value().output.value().cols != values.size()) {
+            throw std::invalid_argument("Sizes mismatch!");
         }
+        layer->result.value().output.value() = values.data();
     }
 }
 

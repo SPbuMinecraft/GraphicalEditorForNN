@@ -10,7 +10,6 @@ private:
     std::vector<int> lastTrainIds_ = {};
     std::vector<int> lastPredictIds_ = {};
 
-    void ParseInputData(const crow::json::rvalue& data, std::vector<float>& result);
     void OverviewLayers(const crow::json::rvalue& layers, const crow::json::rvalue& data,
                         std::unordered_map<int, crow::json::rvalue>& layer_dicts,
                         std::unordered_map<int, crow::json::rvalue>& data_dicts);

@@ -22,6 +22,8 @@ public:
     Blob(const Blob& other);
     ~Blob();
 
+    Blob& operator=(const float* data);
+
     float* getData() const;
 
     float at(std::size_t i, std::size_t j) const;

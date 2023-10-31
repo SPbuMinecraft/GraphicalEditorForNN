@@ -6,7 +6,14 @@ void CHECK_HAS_FIELD(const crow::json::rvalue& layer, const std::string& field) 
     }
 }
 
-LinearLayerParameters ParseLinear(crow::json::rvalue parameters) {
+void ParseInputData(const crow::json::rvalue& data, std::vector<float>& result) {
+    // Think about optimization via reservation
+    for (auto& inputValue : data) {
+        result.push_back(static_cast<float>(inputValue.d()));
+    }
+}
+
+LinearLayerParameters ParseLinear(const crow::json::rvalue& parameters) {
     size_t inFeatures, outFeatures;
     bool bias = true;
     std::string device = "cpu";
@@ -27,14 +34,11 @@ LinearLayerParameters ParseLinear(crow::json::rvalue parameters) {
     return LinearLayerParameters{inFeatures, outFeatures, bias, device};
 }
 
-Data2dLayerParameters ParseData2d(crow::json::rvalue parameters) {
-    size_t width, height;
+Data2dLayerParameters ParseData2d(const crow::json::rvalue& parameters) {
+    size_t width;
 
     CHECK_HAS_FIELD(parameters, "width");
-    CHECK_HAS_FIELD(parameters, "height");
 
     width = static_cast<size_t>(parameters["width"].i());
-    height = static_cast<size_t>(parameters["height"].i());
-
-    return Data2dLayerParameters{width, height};
+    return Data2dLayerParameters{.width = width};
 }

@@ -26,5 +26,7 @@ struct Data2dLayerParameters {
 
 void CHECK_HAS_FIELD(const crow::json::rvalue& layer, const std::string& field);
 
-LinearLayerParameters ParseLinear(crow::json::rvalue parameters);
-Data2dLayerParameters ParseData2d(crow::json::rvalue parameters);
+void ParseInputData(const crow::json::rvalue& data, std::vector<float>& result);
+
+LinearLayerParameters ParseLinear(const crow::json::rvalue& parameters);
+Data2dLayerParameters ParseData2d(const crow::json::rvalue& parameters);

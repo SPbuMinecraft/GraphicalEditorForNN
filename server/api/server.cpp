@@ -27,21 +27,22 @@ float train(json::rvalue json, Graph** graph) {
         SGD.step();
         lastNode.clear();
     }
+
     return 0.0f;
 }
 
 float predict(json::rvalue json, Graph* graph, std::vector<json::wvalue>& answer) {
-    std::cout << "Let's predict" << std::endl;
     graph->ChangeInputData(json);
-    std::cout << "Data changed successfully" << std::endl;
 
     auto lastNode = graph->getLastPredictLayers()[0]->result.value();  // Пока не думаем о нескольких выходах (!) Hard-coded
+    lastNode.clear();
     Blob result = lastNode.forward();
     lastNode.clear();
-
+    
     for (size_t j = 0; j < result.rows; ++j) {
         for (size_t i = 0; i < result.cols; ++i) {
-            answer.push_back(json::wvalue(result[j][i]));
+            answer.push_back(json::wvalue(static_cast<float>(result[j][i])));
+            std::cout << result[j][i] << std::endl;
         }
     }
     return 0.0f;
@@ -82,7 +83,7 @@ int main() {
         auto body = json::load(req.body);
         std::cout << "Checking json!" << std::endl;
         if (!body) return response(status::BAD_REQUEST, "Invalid body");
-
+        std::cout << "Training" << std::endl;
         train(body, &graph);
         return response(status::OK);
     });
