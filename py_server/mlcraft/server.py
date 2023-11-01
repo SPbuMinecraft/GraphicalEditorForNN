@@ -153,7 +153,7 @@ def train_model(user_id: int, model_id: int, safe: int):  # Unfortunately, flask
         model["dataset"] = json["dataset"]
 
         response = requests.post(
-            current_app.config["CPP_SERVER"] + f"/train{model_id}", json=model, timeout=3
+            current_app.config["CPP_SERVER"] + f"/train/{model_id}", json=model, timeout=3
         )
         sql_worker.train_model(model_id)
         return response.text, response.status_code
