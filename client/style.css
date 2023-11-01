@@ -60,7 +60,7 @@ html, body {
     }
     &#error{
         background-color: var(--notification-color-fail);
-        border: var(--border-width) solid var(--notification-color-fail-border);;
+        border: var(--border-width) solid var(--notification-color-fail-border);
     }
 }
 
@@ -154,7 +154,7 @@ header .button-wrapper {
     border-bottom: var(--border-width) solid var(--background3);
     border-bottom-right-radius: 30px;
 }
-/*потом прикручу функциональность*/
+
 .day-night-mode-label {
     display: block;
     position: absolute;
@@ -231,6 +231,50 @@ header .button-wrapper {
     height: calc(100vh - var(--header-height));
     display: none;
 }
+.background {
+    position: absolute;
+    display: block;
+    overflow-y: scroll;
+    width: 100%;
+    height: calc( 100%  - var(--header-height) + var(--border-width));
+    top: calc(var(--header-height) + var(--border-width));
+
+}
+.nn-block {
+    position: relative;
+    margin: 20px 15px 15px 20px;
+    height: 250px;
+    width: 250px;
+    text-align: center;
+    align-content: center;
+    display: inline-grid;
+    justify-content: center;
+    background-color: var(--background1);
+    border: var(--border-width) solid var(--background3);
+    border-radius: 30px;
+    overflow: hidden;
+    .button-wrapper{
+        margin-top: 15px;
+        display: inline-grid;
+        position: relative;
+        place-self: center;
+        padding-top: 10px;
+        height: 30px;
+        width: 80px;
+        font-size: 18px;
+    }
+    .text-wrapper{
+        text-align: center;
+        padding: 10px 30px;
+        border: var(--border-width) solid var(--background3);
+        border-radius: 30px;
+        background-color: var(--background-color);
+    }
+}
+#new-nn{
+    background-color: var(--background0);
+}
+
 
 
 
@@ -273,7 +317,7 @@ header .button-wrapper {
     right: 0px;
     background-color: var(--background0);
     display: none;
-    z-index: 1;
+    z-index: 2;
     border-top: var(--border-width) solid var(--background3);
     border-left: var(--border-width) solid var(--background3);
     border-bottom: var(--border-width) solid var(--background3);
@@ -425,6 +469,20 @@ header .button-wrapper {
     left: 20px;
     top: 10%;
     cursor: move;
+}
+.btn-save {
+    float: right;
+    position: absolute;
+    bottom: 60px;
+    right: 80px;
+    color: white;
+    font-weight: bold;
+    border: 1px solid #0e5ba3;
+    background: #4ea9ff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1;
 }
 
 .btn-clear {
