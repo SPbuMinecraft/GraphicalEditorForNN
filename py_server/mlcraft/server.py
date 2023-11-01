@@ -153,7 +153,7 @@ def train_model(user_id: int, model_id: int, safe: int):  # Unfortunately, flask
         model["dataset"] = json["dataset"]
 
         response = requests.post(
-            current_app.config["CPP_SERVER"] + "/train", json=model, timeout=3
+            current_app.config["CPP_SERVER"] + f"/train{model_id}", json=model, timeout=3
         )
         sql_worker.train_model(model_id)
         return response.text, response.status_code
@@ -175,7 +175,7 @@ def predict(user_id: int, model_id: int):
         if not sql_worker.is_model_trained(model_id):
             error(HTTPStatus.PRECONDITION_FAILED, "Not trained")
         response = requests.post(
-            current_app.config["CPP_SERVER"] + "/predict",
+            current_app.config["CPP_SERVER"] + f"/predict/{model_id}",
             json={"0": [json["x"], json["y"]]},
             timeout=3,
         )

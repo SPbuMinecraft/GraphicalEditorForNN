@@ -61,16 +61,18 @@ int main() {
     SimpleApp app;
     auto port = loadConfig();
 
-    Graph* graph = nullptr;  // Doesn't work, needs sessions
+    //Graph* graph = nullptr;  // Doesn't work, needs sessions
 
-    CROW_ROUTE(app, "/predict").methods(HTTPMethod::POST)
-    ([&](const request& req) -> response {
+    std::map<int, Graph*> sessions;
+
+    CROW_ROUTE(app, "/predict/<int>").methods(HTTPMethod::POST)
+    ([&](const request& req, int model_id) -> response {
         auto body = json::load(req.body);
         if (!body) return response(status::BAD_REQUEST, "Invalid body");
-
+        if (sessions.find(model_id) == sessions.end()) return response(status::BAD_REQUEST, "Not trained");
         std::vector<json::wvalue> answer;
         try {
-            predict(body, graph, answer);
+            predict(body, sessions[model_id], answer);
         } catch (const std::runtime_error &err) {
             return response(status::BAD_REQUEST, "Invalid body");
         }
@@ -78,20 +80,24 @@ int main() {
         return crow::response(status::OK, response);
     });
 
-    CROW_ROUTE(app, "/train").methods(HTTPMethod::POST)
-    ([&graph](const request& req) -> response {
+    CROW_ROUTE(app, "/train/<int>").methods(HTTPMethod::POST)
+    ([&](const request& req, int model_id) -> response {
         auto body = json::load(req.body);
         std::cout << "Checking json!" << std::endl;
         if (!body) return response(status::BAD_REQUEST, "Invalid body");
         std::cout << "Training" << std::endl;
-        train(body, &graph);
-        return response(status::OK);
+        if (sessions.find(model_id) != sessions.end() && sessions[model_id] != nullptr) {
+            delete sessions[model_id];
+        }
+        sessions[model_id] = nullptr;
+        train(body, &sessions[model_id]);
+        return response(status::OK, "done");
     });
 
     app.port(port).multithreaded().run();
 
-    if (graph) {
-        delete graph;
+    for (auto model_graph: sessions) {
+        delete model_graph.second;
     }
     
     return 0;
