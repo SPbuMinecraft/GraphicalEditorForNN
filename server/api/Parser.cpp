@@ -16,7 +16,6 @@ void ParseInputData(const crow::json::rvalue& data, std::vector<float>& result) 
 LinearLayerParameters ParseLinear(const crow::json::rvalue& parameters) {
     size_t inFeatures, outFeatures;
     bool bias = true;
-    std::string device = "cpu";
 
     CHECK_HAS_FIELD(parameters, "inFeatures");
     CHECK_HAS_FIELD(parameters, "outFeatures");
@@ -27,11 +26,8 @@ LinearLayerParameters ParseLinear(const crow::json::rvalue& parameters) {
     if (parameters.has("bias")) {
         bias = parameters["bias"].b();
     }
-    if (parameters.has("device")) {
-        device = parameters["device"].s();
-    }
 
-    return LinearLayerParameters{inFeatures, outFeatures, bias, device};
+    return LinearLayerParameters{inFeatures, outFeatures, bias};
 }
 
 Data2dLayerParameters ParseData2d(const crow::json::rvalue& parameters) {

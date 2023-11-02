@@ -43,6 +43,10 @@ BlobRef Tensor::forward() {
     if (outputIsNull) {
         vector<BlobRef> datas;
         getParentsData(datas);
+        vector<size_t> dims = operation.computeDim(datas);
+        if (dims[0] != output.value().rows) {
+            output.emplace(Blob{dims[0], dims[1]});
+        }
         operation.compute(datas, output.value());
         outputIsNull = false;
     }

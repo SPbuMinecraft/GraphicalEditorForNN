@@ -29,7 +29,7 @@ static const BiasSum sumOperation;
 static const ReLU reluOperation;
 
 int example() {
-    LinearLayerParameters params{2ull, 2ull, true, std::string("cpu")};
+    LinearLayerParameters params{2ull, 2ull, true};
 
     Blob x {4, 2, input};
     auto inputNode = Tensor(x);

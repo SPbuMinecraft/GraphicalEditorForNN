@@ -132,7 +132,7 @@ Graph::Graph(crow::json::rvalue modelJson,
             layers_.emplace(layer_id, new OutputLayer{prevLayers});
             lastPredictIds_.push_back(layer_id);
         } else if (type == "MSELoss") {
-            layers_.emplace(layer_id, new MSELoss{prevLayers, randomInit});
+            layers_.emplace(layer_id, new MSELoss{prevLayers});
             lastTrainIds_.push_back(layer_id);
         } else {
             throw std::invalid_argument("Unknown layer type");
@@ -155,11 +155,11 @@ void Graph::ChangeInputData(crow::json::rvalue& data) {
         // Needs checks!!
         std::vector<float> values;
         ParseInputData(data[key], values);
-        if (layer->result.value().output.value().rows *
-            layer->result.value().output.value().cols != values.size()) {
+        size_t width = layer->result.value().output.value().cols;
+        if (values.size() % width != 0) {
             throw std::invalid_argument("Sizes mismatch!");
         }
-        layer->result.value().output.value() = values.data();
+        layer->result.value().output.emplace(Blob{values.size() / width, width, values.data()});
     }
 }
 

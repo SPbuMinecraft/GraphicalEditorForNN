@@ -36,7 +36,7 @@ public:
     Multiply mul;
     BiasSum sum;
     Tensor W;
-    Tensor b;
+    std::optional<Tensor> b;
     
     LinearLayer(
         const LinearLayerParameters& params,
@@ -55,7 +55,7 @@ public:
     Substract sub;
     Square sqr;
     Mean mean;
-    MSELoss(const std::vector<TensorRef>& args, RandomObject* randomInit = nullptr);
+    MSELoss(const std::vector<TensorRef>& args);
 };
 
 class MultLayer: public Layer {

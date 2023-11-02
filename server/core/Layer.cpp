@@ -12,19 +12,22 @@ static Blob dataInit(size_t h, size_t w, RandomObject* randomInit = nullptr) {
 LinearLayer::LinearLayer(const LinearLayerParameters& params,
                          const std::vector<TensorRef>& args,
                          RandomObject* randomInit)
-    : W(dataInit(params.inFeatures, params.outFeatures, randomInit)),
-    b(dataInit(1, params.outFeatures)) {
+    : W(dataInit(params.inFeatures, params.outFeatures, randomInit)), b({}) {
     layerOperationParams.push_back(W);
 
     if (params.bias) {
-        b = Tensor(dataInit(1, params.outFeatures, randomInit));
-        layerOperationParams.push_back(b);
+        b.emplace(dataInit(1, params.outFeatures, randomInit));
+        layerOperationParams.push_back(b.value());
     }
     
     Tensor multNode(mul, {args[0], W});
-    pipeline.push_back(multNode);
+    if (params.bias) {
+        pipeline.push_back(multNode);
+        result = Tensor(sum, {pipeline[0], b.value()});
+    } else {
+        result = multNode;
+    }
 
-    result = Tensor(sum, {pipeline[0], b});
 }
 
 ReLULayer::ReLULayer(const std::vector<TensorRef>& args) {
@@ -40,7 +43,7 @@ OutputLayer::OutputLayer(const std::vector<TensorRef>& args) {
     result = Tensor(id, {args[0]}, true);
 }
 
-MSELoss::MSELoss(const std::vector<TensorRef>& args, RandomObject* randomInit) {
+MSELoss::MSELoss(const std::vector<TensorRef>& args) {
     pipeline.reserve(2);
 
     Tensor diff(sub, {args[0], args[1]});

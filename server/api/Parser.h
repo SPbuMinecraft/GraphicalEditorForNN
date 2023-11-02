@@ -16,7 +16,6 @@ struct LinearLayerParameters {
     size_t inFeatures;
     size_t outFeatures;
     bool bias;
-    std::string device;
 };
 
 struct Data2dLayerParameters {

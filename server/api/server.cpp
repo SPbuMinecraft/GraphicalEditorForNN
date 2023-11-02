@@ -61,6 +61,7 @@ int main() {
     SimpleApp app;
     auto port = loadConfig();
 
+
     //Graph* graph = nullptr;  // Doesn't work, needs sessions
 
     std::map<int, Graph*> sessions;
@@ -80,6 +81,7 @@ int main() {
         return crow::response(status::OK, response);
     });
 
+
     CROW_ROUTE(app, "/train/<int>").methods(HTTPMethod::POST)
     ([&](const request& req, int model_id) -> response {
         auto body = json::load(req.body);
@@ -92,9 +94,11 @@ int main() {
         sessions[model_id] = nullptr;
         train(body, &sessions[model_id]);
         return response(status::OK, "done");
+
     });
 
     app.port(port).multithreaded().run();
+
 
     for (auto model_graph: sessions) {
         delete model_graph.second;
