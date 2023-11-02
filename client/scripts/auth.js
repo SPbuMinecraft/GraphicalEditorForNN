@@ -62,14 +62,13 @@ async function loginUser() {
                     PasswordInputElement.classList.add("error-alert");
                     break;
             }
-
-
         } else {
             console.log("Пользователь авторизирован, ID: ", responseJson.user_id);
         }
     } catch (error) {
         console.error("Произошла ошибка при отправке запроса:", error);
     }
+    window.location.href = "../index.html";
 }
 
 async function registerUser() {
@@ -118,4 +117,5 @@ async function registerUser() {
     } catch (error) {
         console.error("Произошла ошибка при отправке запроса:", error);
     }
+    window.location.href = "../index.html";
 }
