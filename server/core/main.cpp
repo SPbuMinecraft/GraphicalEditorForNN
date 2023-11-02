@@ -2,8 +2,6 @@
 #include <string>
 #include <vector>
 
-#include <crow_all.h>
-
 #include "Tensor.h"
 #include "RandomInit.h"
 #include "Layer.h"
@@ -28,7 +26,7 @@ static const Multiply multOperation;
 static const BiasSum sumOperation;
 static const ReLU reluOperation;
 
-int example() {
+int main() {
     std::unordered_map<std::string, float> layer1Params = {};
     layer1Params["h"] = 2;
     layer1Params["w"] = 2;
@@ -44,11 +42,6 @@ int example() {
 
     auto trueNode = Tensor(out);
 
-
-
-
-
-
     RandomObject initObject(0, 1, 42);
     OptimizerBase SGD = OptimizerBase(0.1);
     // LinearLayer layer1 {layer1Params, {inputNode}};
@@ -58,13 +51,11 @@ int example() {
     TensorRef res = layer1.result.value();
     ReLULayer reluLayer1  {{}, {res}};
 
-
     res = reluLayer1.result.value();
     // LinearLayer layer2 {layer2Params, {*res}};
     LinearLayer layer2 {layer2Params, {res}, &initObject};
     res = layer2.result.value();
     SGD.append(layer2.layerOperationParams);
-
 
     MSELoss mseLoss {{}, {res, trueNode}};
 
@@ -75,7 +66,8 @@ int example() {
 
     Blob result {1, 1};
 
-    for (int j = 0; j < 1000; ++j) {
+
+    for (int j = 0; j < 100; ++j) {
         result = lastNode.forward();
         printf("%d: %f\n", j, result[0][0]);
         // lastNode.gradient = result;

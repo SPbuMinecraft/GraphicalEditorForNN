@@ -14,6 +14,7 @@
 
     "cpp_server": {
         "HOST": "localhost",
-        "PORT": 2000
+        "PORT": 2000,
+        "BOOST_ROOT": ""
     }
 }

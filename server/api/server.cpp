@@ -16,17 +16,14 @@ float predict(json::rvalue json) {
     return 0;
 }
 
-long loadConfig() {
-    ifstream t("../config.json");
-    stringstream buffer;
-    buffer << t.rdbuf();
-    auto configs = json::load(buffer.str());
-    return configs["cpp_server"]["PORT"].i();
+void invalidArgs() { 
+    cout << "Usage: ./server <host: str> <port: int>" << endl;
+    exit(1);
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc != 3) invalidArgs();
     SimpleApp app;
-    auto port = loadConfig();
 
     CROW_ROUTE(app, "/predict").methods(HTTPMethod::POST)
     ([&](const request& req) -> response {
@@ -52,7 +49,11 @@ int main() {
         return response(status::OK);
     });
 
-    app.port(port).multithreaded().run();
+    int port;
+    if (sscanf(argv[2], "%d", &port) != 1) invalidArgs();
+
+    // for now we cannot handle even one thread (
+    app.port(port).run();
 
     return 0;
 }

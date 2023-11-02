@@ -1,0 +1,55 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  Python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: install-python
+        uses: actions/setup-python@v4
+        id: python
+        with:
+          python-version: "3.10"
+
+      - name: Build
+        run: make build.py_server
+        env:
+          python: ${{steps.python.outputs.python-path}}
+
+      - name: Test
+        run: make test.py_server
+
+  CPP:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: install-boost
+        uses: MarkusJx/install-boost@v2.4.4
+        id: install-boost
+        with:
+          boost_version: 1.81.0 
+
+      - name: Build
+        run: make build.server
+        env:
+          boost: ${{steps.install-boost.outputs.BOOST_ROOT}}
+
+      - name: Test
+        run: make test.server
+        env:
+          boost: ${{steps.install-boost.outputs.BOOST_ROOT}}

@@ -1,10 +1,14 @@
 import json
 from sqlite3 import IntegrityError
-from flask import current_app
+from flask import current_app, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask import jsonify
+from .utils import (
+    LayersConnectionStatus,
+    DeleteStatus,
+    parse_parameters,
+    check_paths_exist,
+)
 from . import errors
-from .utils import LayersConnectionStatus, DeleteStatus, parse_parameters, check_paths_exist
 
 db = SQLAlchemy()  # Has to be global by Flask documentation
 
@@ -73,7 +77,7 @@ class SQLWorker:
 
     def add_model(self, user_id: int, name: str):
         with current_app.app_context():
-            model_owner = User.query.get(user_id)
+            model_owner = db.session.get(User, user_id)
             if not model_owner:
                 return -1
             new_model = Model(
@@ -110,6 +114,20 @@ class SQLWorker:
             db.session.add(model)
             db.session.commit()
             return new_id
+
+    def update_layer(self, new_params: str, layer_id: int, model_id: int):
+        with current_app.app_context():
+            model = db.session.get(Model, model_id)
+        if model is None:
+            # change later for suitable Error type
+            raise KeyError(f"No model with id {model_id}")
+        items = json.loads(model.content)
+        layer = next(l for l in items["layers"] if l["id"] == layer_id)
+        layer["parameters"] = new_params
+        model.content = json.dumps(items)
+        with current_app.app_context():
+            db.session.add(model)
+            db.session.commit()
 
     def add_connection(
         self, layer_from: int, layer_to: int, model_id: int
@@ -177,6 +195,19 @@ class SQLWorker:
             model_items["connections"] = new_connections_list
             model.content = json.dumps(model_items)
             model.is_trained = False
+            db.session.add(model)
+            db.session.commit()
+            return DeleteStatus.OK
+
+    def clear_model(self, model_id: int):
+        with current_app.app_context():
+            model = Model.query.get(model_id)
+            if not model:
+                return DeleteStatus.ModelNotExist
+            model_items = json.loads(model.content)
+            model_items["connections"] = []
+            model_items["layers"] = []
+            model.content = json.dumps(model_items)
             db.session.add(model)
             db.session.commit()
             return DeleteStatus.OK

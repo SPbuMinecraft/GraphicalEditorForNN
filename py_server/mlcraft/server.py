@@ -5,6 +5,7 @@ from flask_cors import CORS
 from sqlite3 import IntegrityError
 from . import errors
 
+
 from .utils import (
     error,
     parse_parameters,
@@ -16,7 +17,6 @@ from .db import sql_worker
 
 
 app = Blueprint("make a better name", __name__)
-CORS(app)
 
 
 @app.route("/add_user", methods=["POST"])
@@ -77,6 +77,34 @@ def add_layer(user_id: int, model_id: int):
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
     return str(inserted_id), HTTPStatus.CREATED
+
+
+@app.route("/update_layer/<int:user_id>/<int:model_id>", methods=["PUT"])
+def update_layer(user_id: int, model_id: int):
+    if not sql_worker.verify_access(user_id, model_id):
+        error(HTTPStatus.FORBIDDEN, "You have no rights for changing this model")
+    json = request.json
+    if json is None:
+        error(HTTPStatus.BAD_REQUEST, message="No json provided")
+    try:
+        sql_worker.update_layer(json["parameters"], int(json["id"]), model_id)
+    except KeyError as e:
+        error(HTTPStatus.BAD_REQUEST, f"Key error: {e}")
+    except StopIteration as e:
+        error(HTTPStatus.BAD_REQUEST, f"No such id: {json['id']}")
+    return "done", HTTPStatus.OK
+
+
+@app.route("/clear_model/<int:user_id>/<int:model_id>", methods=["POST"])
+def clear_model(user_id: int, model_id: int):
+    if not sql_worker.verify_access(user_id, model_id):
+        error(HTTPStatus.FORBIDDEN, "You have no rights for changing this model")
+    try:
+        sql_worker.clear_model(model_id)
+    except KeyError as e:
+        error(HTTPStatus.BAD_REQUEST, message=str(e))
+    return "done", HTTPStatus.OK
+
 
 
 @app.route("/add_connection/<int:user_id>/<int:model_id>", methods=["POST"])
@@ -145,7 +173,9 @@ def delete_connection(user_id: int, model_id: int):
 
 
 @app.route("/train/<int:user_id>/<int:model_id>/<int:safe>", methods=["POST"])
-def train_model(user_id: int, model_id: int, safe: int):  # Unfortunately, flask don't have convertor for bool
+def train_model(
+    user_id: int, model_id: int, safe: int
+):  # Unfortunately, flask don't have convertor for bool
     # checks belonging of the model to user
     allowed = sql_worker.verify_access(user_id, model_id)
     if not allowed:
@@ -163,17 +193,29 @@ def train_model(user_id: int, model_id: int, safe: int):  # Unfortunately, flask
             )
         if not is_valid_model(model):
             error(HTTPStatus.NOT_ACCEPTABLE, "Invalid model found")
-        # Convert json to another format for C++
+        # Convert json to another format for C++ by deleting connsetcions ids and rename layers_type
         model["connections"] = list(
             map(
-                lambda connection: [connection["layer_from"], connection["layer_to"]],
+                lambda connection: {
+                    "layer_from": connection["layer_from"],
+                    "layer_to": connection["layer_to"],
+                },
                 model["connections"],
             )
         )
-        model["dataset"] = json["dataset"]
-
+        model["layers"] = list(
+            map(
+                lambda layer: {
+                    "id": layer["id"],
+                    "type": layer["layer_type"],
+                    "parameters": layer["parameters"],
+                },
+                model["layers"],
+            )
+        )
+        model_to_send = {"graph": model, "dataset": json["dataset"]}
         response = requests.post(
-            current_app.config["CPP_SERVER"] + "/train", json=model, timeout=3
+            current_app.config["CPP_SERVER"] + "/train", json=model_to_send, timeout=3
         )
         sql_worker.train_model(model_id)
         return response.text, response.status_code
