@@ -79,6 +79,7 @@ body {
 
 
 .login-box {
+    font-size: 13px;
     top: 50%;
     left: 50%;
     width:500px;
@@ -86,13 +87,12 @@ body {
 }
 
 .signup-box{
+    font-size: 13px;
     top: 50%;
     left: 50%;
     width:500px;
     height:300px;
 }
-
-
 
 
 .login h1 { color: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.3); letter-spacing:1px; text-align:center; }
@@ -157,4 +157,11 @@ input:focus { box-shadow: inset 0 -5px 45px rgba(100,100,100,0.4), 0 1px 1px rgb
     font-family: 'JetBrains Mono', monospace;
     color: #849aec;
     text-decoration: none;
+}
+.error-area{
+    color: #dc482f;
+}
+
+.error-alert{
+    color: #dc482f;;
 }

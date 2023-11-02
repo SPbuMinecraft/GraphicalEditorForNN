@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>VisualNetworks</title>
-    <link rel="stylesheet" type="text/css" href="../styles/auth.css">
     <link rel="stylesheet" type="text/css" href="../styles/common.css">
+
+    <link rel="stylesheet" type="text/css" href="../styles/auth.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -44,6 +45,7 @@
                     <button type="submit" class="btn service-btn google">G</button>
                     <button type="submit" class="btn service-btn vk">VK</button>
                 </div>
+                <div class="error-area"></div>
 
             </div>
 
@@ -57,7 +59,9 @@
                 <div class="signup_button">
                     <input type="button" class="btn" value="Sign up" onclick="registerUser()"/>
                 </div>
+                    <div class="error-area"></div>
                 </form>
+
             </div>
         </div>
 
@@ -66,3 +70,13 @@
 </div>
 </body>
 </html>
+
+// Проверяем пароль
+if (passwordInput.value !== passwordConfirmInput.value) {
+errorArea.innerHTML = "Password confirmation doesn't match password";
+return;
+}
+if (passwordInput.length < 6) {
+errorArea.innerHTML = "Password length must be at least 6 symbols";
+return;
+}
