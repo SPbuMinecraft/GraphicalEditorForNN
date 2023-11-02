@@ -109,8 +109,6 @@ async function registerUser() {
                     EmailInputElement.classList.add("error-alert");
                     break;
             }
-
-
         } else {
             console.log("Пользователь зарегистрирован, ID: ", responseJson.user_id);
         }
