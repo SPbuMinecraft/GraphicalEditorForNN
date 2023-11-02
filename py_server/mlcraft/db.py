@@ -33,8 +33,6 @@ class Model(db.Model):  # type: ignore
     is_trained = db.Column(db.Boolean)
 
 
-
-
 class SQLWorker:
     def __init__(self, app):
         with app.app_context():
@@ -42,16 +40,18 @@ class SQLWorker:
 
     def add_user(self, user_parameters: dict):
         with current_app.app_context():
-
             # Не очень хорошее решение по обработке ошибок... А если ошибок станет 10, 100?
             existing_user = User.query.filter_by(login=user_parameters["login"]).first()
             if existing_user is not None:
-                raise errors.UserAlreadyExistsError("There's already an account with this username")
-            
+                raise errors.UserAlreadyExistsError(
+                    "There's already an account with this username"
+                )
+
             existing_mail = User.query.filter_by(mail=user_parameters["mail"]).first()
             if existing_mail is not None:
-                raise errors.MailAlreadyExistsError("There's already an account with this email.")
-
+                raise errors.MailAlreadyExistsError(
+                    "There's already an account with this email."
+                )
 
             new_user = User()
             new_user.login = user_parameters["login"]
@@ -64,8 +64,9 @@ class SQLWorker:
                 return new_user.id
             except IntegrityError as e:
                 db.session.rollback()
-                raise IntegrityError("Failed to add the user due to a uniqueness violation")
-            
+                raise IntegrityError(
+                    "Failed to add the user due to a uniqueness violation"
+                )
 
     def get_user(self, user_parameters: dict):
         existing_user = User.query.filter_by(login=user_parameters["login"]).first()

@@ -26,14 +26,20 @@ def add_user():
         return jsonify({"error": "No JSON data provided"}), HTTPStatus.BAD_REQUEST
     try:
         user_id = sql_worker.add_user(json_data)
-        return jsonify({"user_id": user_id}), HTTPStatus.OK
+        return jsonify({"user_id": user_id}), HTTPStatus.CREATED
     except errors.UserAlreadyExistsError as e:
-        return jsonify({"error": str(e), "problemPart": "username"}), HTTPStatus.CONFLICT  # HTTP 409 Conflict\
+        return (
+            jsonify({"error": str(e), "problemPart": "username"}),
+            HTTPStatus.CONFLICT,
+        )  # HTTP 409 Conflict\
     except errors.MailAlreadyExistsError as e:
         return jsonify({"error": str(e), "problemPart": "mail"}), HTTPStatus.CONFLICT
     except IntegrityError as e:
-        return jsonify({"error": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR  # HTTP 500 Internal Server Error
-    
+        return (
+            jsonify({"error": str(e)}),
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+        )  # HTTP 500 Internal Server Error
+
 
 @app.route("/login_user", methods=["POST"])
 def login_user():
@@ -44,9 +50,15 @@ def login_user():
         user_id = sql_worker.get_user(json_data)
         return jsonify({"user_id": user_id}), HTTPStatus.OK
     except errors.UserNotFoundError as e:
-        return jsonify({"error": str(e), "problemPart": "username"}), HTTPStatus.UNAUTHORIZED
+        return (
+            jsonify({"error": str(e), "problemPart": "username"}),
+            HTTPStatus.UNAUTHORIZED,
+        )
     except errors.WrongPasswordError as e:
-        return jsonify({"error": str(e), "problemPart": "password"}), HTTPStatus.UNAUTHORIZED
+        return (
+            jsonify({"error": str(e), "problemPart": "password"}),
+            HTTPStatus.UNAUTHORIZED,
+        )
 
 
 @app.route("/add_model/<int:user_id>", methods=["POST"])
@@ -104,7 +116,6 @@ def clear_model(user_id: int, model_id: int):
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
     return "done", HTTPStatus.OK
-
 
 
 @app.route("/add_connection/<int:user_id>/<int:model_id>", methods=["POST"])

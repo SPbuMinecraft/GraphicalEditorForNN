@@ -10,16 +10,21 @@ def post_request(client: FlaskClient, url: str, data: dict):
 
 
 def test_add_user(client: FlaskClient):
-    assert (
-        post_request(client, "/add_user", data={}).status_code == HTTPStatus.BAD_REQUEST
+    response = post_request(
+        client,
+        "/add_user",
+        data={"login": "biba", "mail": "boba@mail.ru", "password": "bibaboba"},
     )
-    response = post_request(client, "/add_user", data={"name": "john"})
     assert response.status_code == HTTPStatus.CREATED
-    assert response.data == b"3"
+    assert response.data == b'{"user_id":3}\n'
 
 
 def test_add_model(client: FlaskClient, app: Flask):
-    post_request(client, "/add_user", data={"name": "john"})
+    post_request(
+        client,
+        "/add_user",
+        data={"login": "biba", "mail": "boba@mail.ru", "password": "bibaboba"},
+    )
     response = post_request(client, "/add_model/3", data={"name": "My fresh AI"})
     assert response.status_code == HTTPStatus.CREATED
     assert response.data == b"5"

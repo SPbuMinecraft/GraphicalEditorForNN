@@ -41,9 +41,11 @@ def make_app(config=None):
     # CORS(app)
 
     from . import db  # this is ok, but only for professional programmers
+
     db.init_app(app)
 
     from . import server
+
     app.register_blueprint(server.app)
 
     return app
