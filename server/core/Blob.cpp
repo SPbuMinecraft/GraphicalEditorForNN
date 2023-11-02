@@ -7,15 +7,17 @@
 
 using namespace std;
 
-Blob::Blob(size_t rows, size_t cols, RandomObject* object): rows(rows), cols(cols) {
-    this->data = Allocator::allocate({rows, cols});
+Blob::Blob(size_t rows, size_t cols, bool constMemory, RandomObject* object): rows(rows), cols(cols) {
+    this->data = Allocator::allocate({rows, cols}, constMemory);
     if (object == nullptr) clear();
     else object->simpleInit(data, rows * cols);
 }
 
-Blob::Blob(size_t rows, size_t cols, const float* data): Blob(rows, cols) {
+Blob::Blob(size_t rows, size_t cols, const float* data, bool constMemory): Blob(rows, cols, constMemory) {
     copy_n(data, rows * cols, this->data);
 }
+
+Blob::Blob(size_t rows, size_t cols): Blob(rows, cols, false) {}
 
 Blob::Blob(float value): Blob(1, 1, &value) {};
 
@@ -88,4 +90,12 @@ Blob Blob::zeros(size_t rows, size_t cols) {
 }
 Blob Blob::ones(size_t rows, size_t cols) {
     return fill(rows, cols, 1);
+}
+
+Blob Blob::constBlob(std::size_t rows, std::size_t cols, const float* data) {
+    return Blob(rows, cols, data, true);
+}
+
+Blob Blob::constBlobRandom(std::size_t rows, std::size_t cols, RandomObject* object) {
+    return Blob(rows, cols, true, object);
 }

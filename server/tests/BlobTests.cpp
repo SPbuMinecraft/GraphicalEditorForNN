@@ -7,24 +7,17 @@ using namespace std;
 
 /// THESE PASS !!!! ✅✅✅
 TEST_CASE("Simple") {
-    Allocator::start({
-        {{2, 5}, 10},
-        {{5, 2}, 10},
-        {{1, 1}, 10},
-        {{2, 1}, 10},
-        {{1, 5}, 10},
-        {{2, 2}, 10}
-    });
+    Allocator::startVirtualMode();
     {
     float p1[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
     float p2[] = {-1, -2, -3, -4, -5, -6, -7, -8, -9, -10};
-    Blob a {2, 5, p1};
-    Blob b {5, 2, p2};
+    Blob a = Blob::constBlob(2, 5, p1);
+    Blob b = Blob::constBlob(5, 2, p2);
     REQUIRE(a.rows == 2); REQUIRE(a.cols == 5);
     REQUIRE(b.rows == 5); REQUIRE(b.cols == 2);
     
     SUBCASE("Test equals") {
-        Blob c {2, 5, p1};
+        Blob c = Blob::constBlob(2, 5, p1);
         CHECK(a == c);
     }
     
@@ -36,17 +29,17 @@ TEST_CASE("Simple") {
     
     SUBCASE("Test transpose") {
         float p3[] = {1, 6, 2, 7, 3, 8, 4, 9, 5, 10 };
-        Blob c {5, 2, p3};
+        Blob c = Blob::constBlob(5, 2, p3);
         CHECK(a.lazy().transposed() == c);
         CHECK(a.lazy().transposed().transposed() == a);
     }
     
     SUBCASE("Test -") {
-        CHECK(-b.lazy() == Blob {5, 2, p1}) ;
+        CHECK(-b.lazy() == Blob::constBlob(5, 2, p1));
         CHECK(-(-b.lazy()) == b);
         float zeros[10] = {0};
-        Blob c {2, 5, zeros};
-        Blob some {2, 5, p2};
+        Blob c = Blob::constBlob(2, 5, zeros);
+        Blob some = Blob::constBlob(2, 5, p2);
         Blob d = -some.lazy();
         CHECK(a.lazy() - d == c);
         Blob more = -(d - a.lazy());
@@ -55,8 +48,8 @@ TEST_CASE("Simple") {
     
     SUBCASE("Test +") {
         float zeros[10] = {0};
-        Blob c {2, 5, zeros};
-        Blob d {2, 5, p2};
+        Blob c = Blob::constBlob(2, 5, zeros);
+        Blob d = Blob::constBlob(2, 5, p2);
         CHECK(a.lazy() + d == c);
         Blob some = d + a.lazy();
         CHECK(a.lazy() + d == some);
@@ -66,10 +59,10 @@ TEST_CASE("Simple") {
     
     SUBCASE("Test stretching +") {
         float fones[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-        Blob oneByOne {1, 1, fones};
-        Blob oneByTwo {2, 1, fones};
-        Blob oneByFive = {1, 5, fones};
-        Blob ones {2, 5, fones};
+        Blob oneByOne = Blob::constBlob(1, 1, fones);
+        Blob oneByTwo = Blob::constBlob(2, 1, fones);
+        Blob oneByFive = Blob::constBlob(1, 5, fones);
+        Blob ones = Blob::constBlob(2, 5, fones);
         const LazyBlob& la = a.lazy();
         CHECK(Blob(la + ones) == la + oneByOne);
         CHECK(Blob(la + ones) == la + oneByTwo);
@@ -78,7 +71,7 @@ TEST_CASE("Simple") {
     
     SUBCASE("Test &") {
         float result[] = { -95, -110, -220, -260 };
-        Blob c {2, 2, result};
+        Blob c = Blob::constBlob(2, 2, result);
         CHECK((a & b.lazy()) == c);
     }
     }

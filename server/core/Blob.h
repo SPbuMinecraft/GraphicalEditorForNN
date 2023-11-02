@@ -12,13 +12,14 @@ typedef float (*UnaryTransform)(float x);
 class Blob final {
 private:
     float* data = NULL;
+    Blob(std::size_t rows, std::size_t cols, const float* data, bool constMemory = false);
+    Blob(std::size_t rows, std::size_t cols, bool constMemory, RandomObject* object = nullptr);
 public:
     /// Keep it `const`, PLEASE
     const std::size_t rows;
     const std::size_t cols;
 
-    Blob(std::size_t rows, std::size_t cols, const float* data);
-    Blob(std::size_t rows, std::size_t cols, RandomObject* object = nullptr);
+    Blob(std::size_t rows, std::size_t cols);
     Blob(float value);
     /// Move constructor, it takes data away from `other`
     Blob(Blob&& other) noexcept;
@@ -31,6 +32,8 @@ public:
     static Blob fill(std::size_t rows, std::size_t cols, float value);
     static Blob zeros(std::size_t rows, std::size_t cols);
     static Blob ones(std::size_t rows, std::size_t cols);
+    static Blob constBlob(std::size_t rows, std::size_t cols, const float* data);
+    static Blob constBlobRandom(std::size_t rows, std::size_t cols, RandomObject* object = nullptr);
 
     /// Convert to lazy with these
     operator const LazyBlob&() const;
