@@ -116,6 +116,16 @@ Some json formats to use for requests
 
 [`Server/predict`](documentation/api-examples/userPredict.json)  
 
+## Links
+
+[Figma](https://www.figma.com/file/VlSKVSf3cpgZ1pa75CTaMb/Untitled?type=design&node-id=0-1&mode=design&t=kecMaQTEdpRHFw8j-0)
+
+[Ugile project](https://ru.yougile.com/team/b400e1850fe9/GraphicalEditorForNN) (authorization required)
+
+[Schedule table](https://docs.google.com/spreadsheets/d/1BtKyKgk-_1t9loRz4vYTFROSOF-8Fd3Q9gN2qE21gpA/edit?usp=sharing)
+
+[Sprint 1 Retrospective](https://docs.google.com/spreadsheets/d/1N3NUDa-gbqLRaJE3SnSPSLX4hekyoULw-SIBjqRFItg/edit?usp=sharing)
+
 ## Technology stack
 
 ### Languages:
