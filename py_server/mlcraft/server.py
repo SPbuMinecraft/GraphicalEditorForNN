@@ -183,6 +183,13 @@ def delete_connection(user_id: int, model_id: int):
     return "done", HTTPStatus.OK
 
 
+def connectionTo(id: int, connections: list) -> int:
+    for conn in connections:
+        if conn["layer_to"] == id:
+            return conn["layer_from"]
+
+
+
 @app.route("/train/<int:user_id>/<int:model_id>/<int:safe>", methods=["POST"])
 def train_model(
     user_id: int, model_id: int, safe: int
@@ -224,11 +231,63 @@ def train_model(
                 model["layers"],
             )
         )
-        model_to_send = {"graph": model, "dataset": json["dataset"]}
+        for key, array in json["dataset"].items():
+            json["dataset"][key] = list(filter(lambda x: bool(x), array))
+        
+        for layer in model["layers"]:
+            try:
+                tmp = layer["parameters"]["inFeatures"]
+                layer["parameters"]["inFeatures"] = layer["parameters"]["outFeatures"]
+                layer["parameters"]["outFeatures"] = tmp
+                layer["parameters"]["bias"] = True
+            except:
+                pass
+
+            if layer["type"] == "Relu":
+                layer["type"] = "ReLU"
+
+            if layer["type"] == "Output":
+                output_id = layer["id"]
+                last = connectionTo(output_id, model["connections"])
+                model["connections"].append({
+                    "layer_from": last,
+                    "layer_to": 1000
+                })
+        model["layers"].append({
+            "id": 999,
+            "type": "Data",
+            "parameters": {
+                "width": 1
+            }
+        })
+        model["connections"].append({
+            "layer_from": 999,
+            "layer_to": 1000
+        })
+        model["layers"].append({
+            "id": 1000,
+            "type": "MSELoss",
+            "parameters":{}
+        })
+        dataset: dict[int, list[float]] = {}
+        for id, array in json["dataset"].items():
+            if int(id) == output_id:
+                # output
+                dataset['999'] = array
+            else:
+                dataset[id] = array
+        
+        for id, array in dataset.items():
+            for i in range(len(array)):
+                array[i] = int(array[i])
+
+
+        model_to_send = {"graph": model, "dataset": dataset}
+        print(model_to_send)
         response = requests.post(
             current_app.config["CPP_SERVER"] + f"/train/{model_id}",
-            json=model,
-            timeout=3,
+            json=model_to_send,
+            # timeout=3,
         )
         sql_worker.train_model(model_id)
         return response.text, response.status_code
@@ -249,10 +308,11 @@ def predict(user_id: int, model_id: int):
     try:
         if not sql_worker.is_model_trained(model_id):
             error(HTTPStatus.PRECONDITION_FAILED, "Not trained")
+        json = {"0": [float(json["x"]), float(json["y"])]}
         response = requests.post(
             current_app.config["CPP_SERVER"] + f"/predict/{model_id}",
-            json={"0": [json["x"], json["y"]]},
-            timeout=3,
+            json=json,
+            # timeout=3,
         )
         return response.text, response.status_code
     except KeyError as e:
