@@ -1,7 +1,8 @@
 import os
 import json
-from flask import Flask
+from flask import Flask, url_for
 from flask_cors import CORS
+from flask_swagger_ui import get_swaggerui_blueprint
 
 
 def extract_config(file):
@@ -13,6 +14,9 @@ def extract_config(file):
 
     client = configs["client"]
     config["CLIENT"] = f"http://{client['HOST']}:{client['PORT']}"
+
+    config["SERVER_NAME"] = "localhost:3000"
+    config["PREFERRED_URL_SCHEME"] = "http"
 
     return config
 
@@ -39,6 +43,12 @@ def make_app(config=None):
     # CORS(app, origins=app.config["CLIENT"])
     # uncomment this and comment line above if you want to make it simple
     CORS(app)
+
+    swagger = get_swaggerui_blueprint(
+        "/swagger",
+        app.url_for("static", filename="swagger.yaml"),
+    )
+    app.register_blueprint(swagger, url_prefix="/swagger")
 
     from . import db  # this is ok, but only for professional programmers
 

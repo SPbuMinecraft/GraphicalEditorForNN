@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from .utils import (
     LayersConnectionStatus,
     DeleteStatus,
+    VerificationStatus,
     parse_parameters,
     check_paths_exist,
 )
@@ -80,7 +81,7 @@ class SQLWorker:
         with current_app.app_context():
             model_owner = db.session.get(User, user_id)
             if not model_owner:
-                return -1
+                raise errors.ObjectNotFoundError(f"No user with id {user_id}")
             new_model = Model(
                 owner=user_id,
                 name=name,
@@ -95,7 +96,7 @@ class SQLWorker:
         with current_app.app_context():
             model = db.session.get(Model, model_id)
             if not model:
-                return -1
+                raise errors.ObjectNotFoundError(f"No model with id {model_id}")
             model_items = json.loads(
                 model.content
             )  # Throws exception if model.content is not json
@@ -120,9 +121,8 @@ class SQLWorker:
     def update_layer(self, new_params: str, layer_id: int, model_id: int):
         with current_app.app_context():
             model = db.session.get(Model, model_id)
-        if model is None:
-            # change later for suitable Error type
-            raise KeyError(f"No model with id {model_id}")
+        if not model:
+            raise errors.ObjectNotFoundError(f"No model with id {model_id}")
         items = json.loads(model.content)
         layer = next(l for l in items["layers"] if l["id"] == layer_id)
         layer["parameters"] = new_params
@@ -136,7 +136,7 @@ class SQLWorker:
         with current_app.app_context():
             model = db.session.get(Model, model_id)
             if not model:
-                raise KeyError(f"No model with id {model_id}")
+                raise errors.ObjectNotFoundError(f"No model with id {model_id}")
             model_items = json.loads(model.content)
             layer = next(l for l in model_items["layers"] if l["id"] == layer_id)
             if sorted(layer["parents"]) != sorted(new_parents):
@@ -244,8 +244,9 @@ class SQLWorker:
                 return LayersConnectionStatus.DoNotExist
             layer1 = layer1_candidates[0]
             layer2 = layer2_candidates[0]
-            if not self.check_dimensions(layer1, layer2):
-                return LayersConnectionStatus.DimensionsMismatch
+            # TO BE DONE later
+            # if not self.check_dimensions(layer1, layer2):
+            #     return LayersConnectionStatus.DimensionsMismatch
             if layer2["type"] == "Data" or layer1["type"] == "Output":
                 return LayersConnectionStatus.WrongDirection
             if check_paths_exist([layer_to], [layer_from], model_items):
@@ -255,9 +256,11 @@ class SQLWorker:
     def verify_access(self, user_id, model_id):
         with current_app.app_context():
             model_passport = db.session.get(Model, model_id)
-            if model_passport is None or model_passport.owner != user_id:
-                return False
-            return True
+            if model_passport is None:
+                return VerificationStatus.NotFound
+            if model_passport.owner != user_id:
+                return VerificationStatus.Forbidden
+            return VerificationStatus.OK
 
     def get_graph_elements(self, model_id):
         with current_app.app_context():

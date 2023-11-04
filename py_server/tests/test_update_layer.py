@@ -13,13 +13,13 @@ def put_request(client: FlaskClient, url: str, data: dict):
 def test_update_layer(client: FlaskClient, app: Flask):
     r = post_request(
         client,
-        "/add_layer/1/1",
+        "/layer/1/1",
         data={"type": "Linear", "parameters": "inFeatures=2;outFeatures=1"},
     )
     assert r.status_code == HTTPStatus.CREATED
     r = put_request(
         client,
-        "/update_layer/1/1",
+        "/layer/1/1",
         data={"id": 0, "parameters": "inFeatures=3;outFeatures=100"},
     )
     assert r.status_code == HTTPStatus.OK
