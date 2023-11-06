@@ -19,6 +19,7 @@ private:
 
     void getParentsData(std::vector<BlobRef> &datas);
     void getParentsGrads(std::vector<BlobRef> &grads);
+
 public:
     std::optional<Blob> output;
     std::optional<Blob> gradient;
@@ -26,7 +27,7 @@ public:
     Tensor(const Operation& operation, const std::vector<TensorRef>& parents);
     Tensor(const Blob& data);
 
-    Tensor operator=(const Tensor & other);
+    Tensor& operator=(const Tensor & other);
 
     BlobRef forward();
     void backward();

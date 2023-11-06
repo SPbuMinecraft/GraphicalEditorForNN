@@ -19,7 +19,7 @@ Blob::Blob(size_t rows, size_t cols, const float value): rows(rows), cols(cols) 
             data[i * cols + j] = value;
 }
 
-Blob::Blob(size_t rows, size_t cols, RandomObject* const object): rows(rows), cols(cols) {
+Blob::Blob(size_t rows, size_t cols, RandomObject* object): rows(rows), cols(cols) {
     this->data = new float[rows * cols];
     if (object == nullptr) clear();
     else object->simpleInit(this->data, rows * cols);
@@ -31,6 +31,11 @@ Blob::Blob(): data(nullptr), rows(0), cols(0) {}
 
 Blob::~Blob() {
     delete[] data;
+}
+
+Blob& Blob::operator=(const float* data) {
+    copy_n(data, rows * cols, this->data);
+    return *this;
 }
 
 float* Blob::getData() const {
