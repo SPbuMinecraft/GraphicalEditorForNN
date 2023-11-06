@@ -1,3 +1,4 @@
+from sqlite3 import IntegrityError
 import requests
 from http import HTTPStatus
 from flask import Blueprint, request, current_app
@@ -9,6 +10,8 @@ from .utils import (
     LayersConnectionStatus,
     DeleteStatus,
 )
+from . import errors
+
 from .db import sql_worker
 
 
@@ -19,10 +22,10 @@ app = Blueprint("make a better name", __name__)
 def add_user():
     json_data = request.get_json()
     if not json_data:
-        return jsonify({"error": "No JSON data provided"}), HTTPStatus.BAD_REQUEST
+        return {"error": "No JSON data provided"}, HTTPStatus.BAD_REQUEST
     try:
         user_id = sql_worker.add_user(json_data)
-        return jsonify({"user_id": user_id}), HTTPStatus.CREATED
+        return {"user_id": user_id}, HTTPStatus.CREATED
     except errors.UserAlreadyExistsError as e:
         return (
             {"error": str(e), "problemPart": "username"},
@@ -32,7 +35,7 @@ def add_user():
         return {"error": str(e), "problemPart": "mail"}, HTTPStatus.CONFLICT
     except IntegrityError as e:
         return (
-           {"error": str(e)},
+            {"error": str(e)},
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )  # HTTP 500 Internal Server Error
 
@@ -41,10 +44,10 @@ def add_user():
 def login_user():
     json_data = request.get_json()
     if not json_data:
-        return jsonify({"error": "No JSON data provided"}), HTTPStatus.BAD_REQUEST
+        return {"error": "No JSON data provided"}, HTTPStatus.BAD_REQUEST
     try:
         user_id = sql_worker.get_user(json_data)
-        return jsonify({"user_id": user_id}), HTTPStatus.OK
+        return {"user_id": user_id}, HTTPStatus.OK
     except errors.UserNotFoundError as e:
         return (
             {"error": str(e), "problemPart": "username"},
