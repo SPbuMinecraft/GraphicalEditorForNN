@@ -121,45 +121,9 @@
         </label>
 
         <div class="predict-train-interface" id="train">
-          <form class="predict-train-form" id="xy-form-train">
-            <label for="x-value1" class="x-val-label"> x </label>
-            <input type="number" class="form-control-x" id="x-value1" name="x" />
-            <label for="y-value1" class="y-val-label"> y </label>
-            <input type="number" class="form-control-y" id="y-value1" name="y" />
-            <label for="res-value1" class="res-val-label"> = </label>
-            <input type="number" class="form-control-res" id="res-value1" name="res" /><br />
-
-            <label for="x-value2" class="x-val-label"> x </label>
-            <input type="number" class="form-control-x" id="x-value2" name="x" />
-            <label for="y-value2" class="y-val-label"> y </label>
-            <input type="number" class="form-control-y" id="y-value2" name="y" />
-            <label for="res-value2" class="res-val-label"> =</label>
-            <input type="number" class="form-control-res" id="res-value2" name="res" /><br />
-
-            <label for="x-value3" class="x-val-label"> x </label>
-            <input type="number" class="form-control-x" id="x-value3" name="x" />
-            <label for="y-value3" class="y-val-label"> y </label>
-            <input type="number" class="form-control-y" id="y-value3" name="y" />
-            <label for="res-value3" class="res-val-label"> =</label>
-            <input type="number" class="form-control-res" id="res-value3" name="res" /><br />
-
-            <label for="x-value4" class="x-val-label"> x </label>
-            <input type="number" class="form-control-x" id="x-value4" name="x" />
-            <label for="y-value4" class="y-val-label"> y </label>
-            <input type="number" class="form-control-y" id="y-value4" name="y" />
-            <label for="res-value4" class="res-val-label"> =</label>
-            <input type="number" class="form-control-res" id="res-value4" name="res" /><br />
-
-            <label for="x-value5" class="x-val-label"> x </label>
-            <input type="number" class="form-control-x" id="x-value5" name="x" />
-            <label for="y-value5" class="y-val-label"> y </label>
-            <input type="number" class="form-control-y" id="y-value5" name="y" />
-            <label for="res-value5" class="res-val-label"> =</label>
-            <input type="number" class="form-control-res" id="res-value5" name="res" /><br />
-          </form>
-          <label class="button-wrapper" id="train-button">
+          <label class="button-wrapper" id="train-button" disabled>
             Train
-            <input type="button" onclick="trainRequest()" />
+            <input type="button" onclick="trainRequest()" disabled />
           </label>
         </div>
         <div class="predict-train-interface" id="predict">
@@ -729,16 +693,16 @@
       }
 
       function trainRequest() {
-        var form_data = buildTrainData(document.querySelector("#xy-form-train"))
-
-        sendJson(form_data, `http://${py_server_address}/train/${user_id}/${model_id}/0`, "POST").then(train_status => {
-          if (train_status == "done") {
-            train_status = true
-          } else {
-            train_status = false
-          }
-          showBuildNotification(train_status)
-          onTrainShowPredict(train_status)
+        console.assert(train_data, "no training data was set")
+        fetch(`http://${py_server_address}/train/${user_id}/${model_id}/0`, {
+          method: "POST",
+          mode: "cors",
+          headers: {"Content-Type": "text/csv"},
+          body: train_data,
+        }).then(response => {
+          const is_trained = response.status == 200
+          showBuildNotification(is_trained)
+          onTrainShowPredict(is_trained)
         })
       }
 
@@ -993,6 +957,13 @@
         const text = await file.text()
         // do whatever with the `text`
         console.log(`Got goods: ${text}`)
+        train_data = text
+        // allow user to press a train button from now on
+        button_wrapper = document.getElementById("train-button")
+        button_wrapper.getElementsByTy
+        train_button = button_wrapper.children[0]
+        button_wrapper.removeAttribute("disabled")
+        train_button.removeAttribute("disabled")
       }
       const csv_upload = document.getElementById("csv-upload-button")
       csv_upload.addEventListener("change", csvUploaded)
