@@ -6,7 +6,7 @@
 #include "Layer.h"
 
 static Blob dataInit(size_t h, size_t w, RandomObject* randomInit) {
-    return Blob::constBlobRandom(h, w, randomInit);
+    return Blob::constBlobRandom(Shape {h, w}, randomInit);
 }
 
 LinearLayer::LinearLayer(std::unordered_map<std::string, float> params,

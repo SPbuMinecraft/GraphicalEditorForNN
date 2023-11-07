@@ -1,15 +1,18 @@
+#include <cassert>
+#include <vector>
+
+#include "Shape.h"
+#include "Iterations.h"
 #include "LazyBlob.h"
 #include "Allocator.h"
 #include "Blob.h"
-#include <cassert>
 
 LazyBlobView::LazyBlobView(const Blob &ref): ref(ref) {};
 
-std::size_t LazyBlobView::rows() const { return ref.rows; };
-std::size_t LazyBlobView::cols() const { return ref.cols; };
+Shape LazyBlobView::shape() const { return ref.shape; };
 
-float LazyBlobView::operator() (std::size_t i, std::size_t j) const {
-    return ref(i, j);
+float LazyBlobView::operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const {
+    return ref(k, l, i, j);
 }
 
 class LazyBlobUnaryOperation: public LazyBlob {
@@ -31,15 +34,109 @@ protected:
                                  const BinaryTransform operation):
     LazyBlobBinaryOperation(a, b), operation(operation) {};
 
-    std::size_t rows() const final override { return std::max(a.rows(), b.rows()); }
-    std::size_t cols() const final override { return std::max(a.cols(), b.cols()); }
+    Shape shape() const final override { 
+        return Shape {
+            a.shape().dim4,
+            a.shape().dim3, 
+            std::max(a.rows(), b.rows()), 
+            std::max(a.cols(), b.cols()), 
+            std::max(a.shape().dimsCount, b.shape().dimsCount)
+        }; 
+    }
 
-    float operator() (std::size_t i, std::size_t j) const final override {
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const final override {
         auto ia = i < a.rows() ? i : 0;
         auto ja = j < a.cols() ? j : 0;
         auto ib = i < b.rows() ? i : 0;
         auto jb = j < b.cols() ? j : 0;
-        return operation(a(ia, ja), b(ib, jb));
+        return operation(a(k, l, ia, ja), b(k, l, ib, jb));
+    }
+};
+
+class LazyBlobSelfOperation: public LazyBlob {
+protected:
+    const LazyBlob &a;
+    LazyBlobSelfOperation(const LazyBlob &a): a(a) {};
+};
+
+class LazyBlobSelfSum final: public LazyBlobSelfOperation {
+public:
+    std::vector<size_t> axis;
+    LazyBlobSelfSum(const LazyBlob &a, std::vector<size_t> axis): LazyBlobSelfOperation(a), axis(axis) {};
+
+    Shape shape() const final override {
+        std::size_t realShape[4];
+        memcpy(realShape, a.shape().dims, 4 * sizeof(std::size_t));
+        for (auto dim: axis)
+            realShape[dim] = 1;
+        return Shape {realShape[0], realShape[1], realShape[2], realShape[3], a.shape().dimsCount};
+    }
+
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        float result = 0;
+        // std::vector<size_t> axisIndex;
+        size_t indexes[] = {k, l, i, j};
+        // for (int i = 0; i < 4 - shape().dimsCount; ++i) {
+        //     axisIndex.push_back(0);
+        // }
+        // for (int i = 0; axis.size() < 4; i++) {
+        //     axisIndex.push_back(indexes[i]);
+        // }
+        
+        bool axis[] = {false, false, false, false};
+        size_t size[] = {0, 0, 0, 0};
+        for (auto dim: this->axis) {
+            axis[dim] = true;
+            size[dim] = a.shape().dims[dim];
+        }
+        opp(axis, size, [&](size_t k1, size_t l1, size_t i1, size_t j1) {
+            result += a(axis[0] ? k1 : indexes[0], axis[1] ? l1 : indexes[1], axis[2] ? i1 : indexes[2], axis[3] ? l1 : indexes[3]);
+            // result += a(axis[0] ? k1 : axisIndex[0], axis[1] ? l1 : axisIndex[1], axis[2] ? i1 : axisIndex[2], axis[3] ? l1 : axisIndex[3]);
+        });
+
+        return result;
+    }
+};
+
+class LazyBlobSelfMean final: public LazyBlobSelfOperation {
+public:
+    std::vector<size_t> axis;
+    LazyBlobSelfMean(const LazyBlob &a, std::vector<size_t> axis): LazyBlobSelfOperation(a), axis(axis) {};
+
+    Shape shape() const final override {
+        std::size_t realShape[4];
+        memcpy(realShape, a.shape().dims, 4 * sizeof(std::size_t));
+        for (auto dim: axis)
+            realShape[dim] = 1;
+        return Shape {realShape[0], realShape[1], realShape[2], realShape[3], a.shape().dimsCount};
+    }
+
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        float result = 0;
+        size_t count = 0;
+
+        std::vector<size_t> axisIndex;
+        size_t indexes[] = {k, l, i, j};
+        // for (int i = 0; i < 4 - shape().dimsCount; ++i) {
+        //     axisIndex.push_back(0);
+        // }
+        // for (int i = 0; axisIndex.size() < 4; i++) {
+        //     axisIndex.push_back(indexes[i]);
+        // }
+        
+        bool axis[] = {false, false, false, false};
+        size_t size[] = {0, 0, 0, 0};
+        for (auto dim: this->axis) {
+            axis[dim] = true;
+            size[dim] = a.shape().dims[dim];
+        }
+        opp(axis, size, [&](size_t k1, size_t l1, size_t i1, size_t j1) {
+            result += a(axis[0] ? k1 : indexes[0], axis[1] ? l1 : indexes[1], axis[2] ? i1 : indexes[2], axis[3] ? l1 : indexes[3]);
+            // result += a(axis[0] ? k1 : axisIndex[0], axis[1] ? l1 : axisIndex[1], axis[2] ? i1 : axisIndex[2], axis[3] ? l1 : axisIndex[3]);
+            count++;
+        });
+
+        return result / count;
     }
 };
 
@@ -68,13 +165,19 @@ class LazyBlobDot final: public LazyBlobBinaryOperation {
 public:
     LazyBlobDot(const LazyBlob &a, const LazyBlob &b): LazyBlobBinaryOperation(a, b) {};
 
-    std::size_t rows() const override { return a.rows(); }
-    std::size_t cols() const override { return b.cols(); }
+    Shape shape() const final override { 
+        return Shape {a.shape().dim4, a.shape().dim3, a.rows(), b.cols(), std::max(a.shape().dimsCount, b.shape().dimsCount)};
+    }
 
-    float operator() (std::size_t i, std::size_t j) const override {
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
         float result = 0;
-        for (int k = 0; k < a.cols(); ++k)
-            result += a(i, k) * b(k, j);
+
+        bool axis[] = {false, false, false, true};
+        size_t size[] = {0, 0, 0, a.cols()};
+        opp(axis, size, [&](size_t i1, size_t j1, size_t k1, size_t l1) {
+            result += a(k, l, i, l1) * b(k, l, l1, j);
+        });
+
         return result;
     }
 };
@@ -86,11 +189,12 @@ public:
     LazyBlobCombine(const LazyBlob& a, const LazyBlob& b, const BinaryTransform how):
         LazyBlobBinaryOperation(a, b), how(how) {};
 
-    std::size_t rows() const override { return a.rows(); }
-    std::size_t cols() const override { return a.cols(); }
+    Shape shape() const final override { 
+        return a.shape();
+    }
 
-    float operator() (std::size_t i, std::size_t j) const override {
-        return how(a(i, j), b(i, j));
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        return how(a(k, l, i, j), b(k, l, i, j));
     }
 };
 
@@ -98,11 +202,12 @@ class LazyBlobTranspose final: public LazyBlobUnaryOperation {
 public:
     LazyBlobTranspose(const LazyBlob &a): LazyBlobUnaryOperation(a) {};
 
-    std::size_t rows() const override { return a.cols(); }
-    std::size_t cols() const override { return a.rows(); }
+    Shape shape() const final override { 
+        return Shape {a.shape().dim4, a.shape().dim3, a.cols(), a.rows(), a.shape().dimsCount};
+    }
 
-    float operator() (std::size_t i, std::size_t j) const override {
-        return a(j, i);
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        return a(k, l, j, i);
     }
 };
 
@@ -112,11 +217,12 @@ private:
 public:
     LazyBlobApply(const LazyBlob &a, const UnaryTransform operation): LazyBlobUnaryOperation(a), operation(operation) {};
 
-    std::size_t rows() const final override { return a.rows(); }
-    std::size_t cols() const final override { return a.cols(); }
+    Shape shape() const final override { 
+        return a.shape();
+    }
 
-    float operator() (std::size_t i, std::size_t j) const final override {
-        return operation(a(i, j));
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const final override {
+        return operation(a(k, l, i, j));
     }
 };
 
@@ -129,22 +235,24 @@ class LazyScalarSum: public LazyScalarOperation {
 public:
     LazyScalarSum(const LazyBlob &a, float b): LazyScalarOperation(a, b) {};
 
-    std::size_t rows() const override { return a.rows(); }
-    std::size_t cols() const override { return a.cols(); }
+    Shape shape() const final override { 
+        return a.shape();
+    }
 
-    float operator() (std::size_t i, std::size_t j) const override {
-        return scalar + a(i, j);
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        return scalar + a(k, l, i, j);
     }
 };
 class LazyScalarMult: public LazyScalarOperation {
 public:
     LazyScalarMult(const LazyBlob &a, float b): LazyScalarOperation(a, b) {};
 
-    std::size_t rows() const override { return a.rows(); }
-    std::size_t cols() const override { return a.cols(); }
+    Shape shape() const final override { 
+        return a.shape();
+    }
 
-    float operator() (std::size_t i, std::size_t j) const override {
-        return scalar * a(i, j);
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        return scalar * a(k, l, i, j);
     }
 };
 
@@ -200,6 +308,16 @@ const LazyBlob& LazyBlob::transposed() const {
     return alloc1<LazyBlobTranspose>(*this);
 }
 
+const LazyBlob& LazyBlob::sum(std::vector<std::size_t> axis) const {
+    void* location = Allocator::allocateBytes(sizeof(LazyBlobSelfSum));
+    return *(new(location) LazyBlobSelfSum(*this, axis));
+}
+
+const LazyBlob& LazyBlob::mean(std::vector<std::size_t> axis) const {
+    void* location = Allocator::allocateBytes(sizeof(LazyBlobSelfMean));
+    return *(new(location) LazyBlobSelfMean(*this, axis));
+}
+
 const LazyBlob& LazyBlob::applying(const UnaryTransform t) const {
     void* location = Allocator::allocateBytes(sizeof(LazyBlobApply));
     return *(new(location) LazyBlobApply(*this, t));
@@ -246,38 +364,49 @@ const LazyBlob& operator / (const LazyBlob &a, float b) {
 
 Blob& operator += (Blob& a, const LazyBlob& b) {
     // either equal or can stretch b
-    assert(a.rows == b.rows() || b.rows() == 1);
-    assert(a.cols == b.cols() || b.cols() == 1);
+    assert(a.shape.rows == b.rows() || b.rows() == 1);
+    assert(a.shape.cols == b.cols() || b.cols() == 1);
     size_t rows = b.rows(), cols = b.cols();
-    for (int i = 0; i < a.rows; ++i)
-        for (int j = 0; j < a.cols; ++j)
-            a[i][j] += b(i < rows ? i : 0, j < cols ? j : 0);
+    
+    bool axis[] = {false, false, true, true};
+    size_t size[] = {0, 0, a.shape.rows, a.shape.cols};
+    opp(axis, size, [&](size_t i, size_t j, size_t k, size_t l) {
+        *(a.get_address(i, j)) += b(k < rows ? k : 0, l < cols ? l : 0);
+    });
+
     return a;
 }
 Blob& operator -= (Blob& a, const LazyBlob& b) {
-    assert(a.rows == b.rows() || b.rows() == 1);
-    assert(a.cols == b.cols() || b.cols() == 1);
+    assert(a.shape.rows == b.rows() || b.rows() == 1);
+    assert(a.shape.cols == b.cols() || b.cols() == 1);
     size_t rows = b.rows(), cols = b.cols();
-    for (int i = 0; i < a.rows; ++i)
-        for (int j = 0; j < a.cols; ++j)
-            a[i][j] -= b(i < rows ? i : 0, j < cols ? j : 0);
+    
+    bool axis[] = {false, false, true, true};
+    size_t size[] = {0, 0, a.shape.rows, a.shape.cols};
+    opp(axis, size, [&](size_t i, size_t j, size_t k, size_t l) {
+        *(a.get_address(k, l)) -= b(k < rows ? k : 0, l < cols ? l : 0);
+    });
+
     return a;
 }
 Blob& operator *= (Blob& a, const LazyBlob& b) {
-    assert(a.rows == b.rows() || b.rows() == 1);
-    assert(a.cols == b.cols() || b.cols() == 1);
+    assert(a.shape.rows == b.rows() || b.rows() == 1);
+    assert(a.shape.cols == b.cols() || b.cols() == 1);
     size_t rows = b.rows(), cols = b.cols();
-    for (int i = 0; i < a.rows; ++i)
-        for (int j = 0; j < a.cols; ++j)
-            a[i][j] *= b(i < rows ? i : 0, j < cols ? j : 0);
+    
+    bool axis[] = {false, false, true, true};
+    size_t size[] = {0, 0, a.shape.rows, a.shape.cols};
+    opp(axis, size, [&](size_t i, size_t j, size_t k, size_t l) {
+        *(a.get_address(k, l)) *= b(k < rows ? k : 0, l < cols ? l : 0);
+    });
     return a;
 }
 
 std::ostream& operator<<(std::ostream& os, const LazyBlob &b) {
-    for (int i = 0; i < b.rows(); ++i) {
-        for (int j = 0; j < b.cols(); ++j)
-            os << b(i, j) << " ";
-        os << std::endl;
-    }
+    bool axis[] = {false, false, true, true};
+    size_t size[] = {0, 0, b.rows(), b.cols()};
+    opp(axis, size, [&](size_t i, size_t j, size_t k, size_t l) {
+        os << b(k, l) << " ";
+    });
     return os;
 }

@@ -39,21 +39,20 @@ void Allocator::endVirtualMode() {
 void Allocator::start(dict<Shape, size_t> counts) {
     size_t total = 0;
     for (auto const [shape, count]: counts) {
-        total += count * shape.rows * shape.cols;
+        total += count * shape.size();
     }
     float* base = new float[total];
 
     size_t offset = 0;
     for (auto const [shape, count]: counts) {
         Stack s;
-        s.top = 0;
         for (int i = 0; i < count; ++i) {
-            float* ptr = base + offset + i * shape.rows * shape.cols;
+            float* ptr = base + offset + i * shape.size();
             s.pointers.push_back(ptr);
             instance->info.getInfo[ptr] = {shape, i};
         }
 
-        offset += count * shape.rows * shape.cols;
+        offset += count * shape.size();
         instance->info.pointerTable[shape] = s;
     }
 
@@ -64,14 +63,14 @@ float* Allocator::allocate(Shape shape, bool constMemory) {
     assert(instance);
     auto &info = instance->info;
     if (constMemory) {
-        float* result = new float[shape.rows * shape.cols];
+        float* result = new float[shape.size()];
         instance->constMems.insert(result);
         return result;
     }
     if (instance->virtualMode) {
         instance->counts[shape]++;
         Stack &s = info.pointerTable[shape];
-        float* ptr = new float[shape.rows * shape.cols];
+        float* ptr = new float[shape.size()];
         info.getInfo[ptr] = {shape, s.pointers.size()};
         s.pointers.push_back(ptr);
     }
@@ -123,11 +122,11 @@ void* Allocator::allocateBytes(size_t size) {
     return result;
 }
 
-Blob* Allocator::allocateBlob(size_t rows, size_t cols) {
+Blob* Allocator::allocateBlob(Shape shape) {
     assert(instance);
     void* location = allocateBytes(sizeof(Blob));
     instance->kostyl = true;
-    return new(location) Blob(rows, cols);
+    return new(location) Blob(shape);
 }
 
 void Allocator::endSession() {
@@ -158,10 +157,10 @@ void Allocator::printStats() {
     printf("shapes count: %ld\n", instance->info.pointerTable.size());
     size_t total = 0, used = 0;
     for (auto const &[shape, s]: instance->info.pointerTable) {
-        total += shape.rows * shape.cols * s.pointers.size();
-        used += shape.rows * shape.cols * s.top;
-        printf("  (%ld, %ld): %d/%ld pointers occupied\n",
-               shape.rows, shape.cols, s.top, s.pointers.size());
+        total += shape.size() * s.pointers.size();
+        used += shape.size() * s.top;
+        printf("  (%s): %d/%ld pointers occupied\n",
+               shape.toString().c_str(), s.top, s.pointers.size());
     }
     if (instance->buf.top)
         printf("Current session: %ld/%ld bytes used\n", instance->buf.top, instance->buf.size);
@@ -175,7 +174,7 @@ void Allocator::printPointersInfo() {
     printf("shapes count: %ld\n", instance->info.pointerTable.size());
     int used = 0, total = 0;
     for (auto const &[shape, s]: instance->info.pointerTable) {
-        printf("Pointers of shape (%ld, %ld), count = %d:\n", shape.rows, shape.cols, s.top);
+        printf("Pointers of shape (%s), count = %d:\n", shape.toString().c_str(), s.top);
         for (int i = 0; i < s.top; ++i) {
             auto const [ignore, j] = instance->info.getInfo[s.pointers[i]];
             printf("  [%d] = 0x%tx: %d\n", i, (ptrdiff_t)s.pointers[i], j);
@@ -186,11 +185,6 @@ void Allocator::printPointersInfo() {
     printf("Total %d/%d pointers used\n", used, total);
 }
 
-
-bool Shape::operator == (const Shape& other) const {
-    return this->rows == other.rows && this->cols == other.cols;
-}
-
 inline void hash_combine(std::size_t& seed, size_t v) {
     seed ^= v + 0x9e3779b9 + (seed<<6) + (seed>>2);
 }
@@ -198,8 +192,9 @@ inline void hash_combine(std::size_t& seed, size_t v) {
 size_t hash<Shape>::operator()(const Shape& shape) const {
     size_t seed = 1843;
 
-    hash_combine(seed, hash<size_t>()(shape.rows));
-    hash_combine(seed, hash<size_t>()(shape.cols));
+    hash_combine(seed, hash<size_t>()(shape.size()));
+    // hash_combine(seed, hash<size_t>()(shape.rows));
+    // hash_combine(seed, hash<size_t>()(shape.cols));
 
     return seed;
 };

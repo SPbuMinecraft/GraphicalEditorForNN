@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "Shape.h"
+
 class Blob;
 class Allocator;
 
@@ -18,10 +20,6 @@ public:
     Stack(): top(0) {};
 };
 
-struct Shape {
-    std::size_t rows, cols;
-    bool operator == (const Shape& other) const;
-};
 template<>
 struct std::hash<Shape> {
     std::size_t operator()(const Shape& k) const;
@@ -124,7 +122,7 @@ public:
     /// - Parameter cols: amount of cols for the new blob
     /// - Warning: `(rows, cols)` shape must be registered in the `start` method
     /// - Returns: Pointer to the new blob
-    static Blob* allocateBlob(std::size_t rows, std::size_t cols);
+    static Blob* allocateBlob(Shape shape);
 
     /// Call this to end a session, if session haven't started it's a noop
     /// - Warning: Only call after `start` and before `end`

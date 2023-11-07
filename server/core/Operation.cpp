@@ -71,11 +71,11 @@ vector<LazyBlobRef> BiasSum::grad(const Blob& grad, const vector<LazyBlobRef>& a
     args2(a, b);
     (void)a;
 
-    Blob *bgrad = Allocator::allocateBlob(1, grad.cols);
+    Blob *bgrad = Allocator::allocateBlob(Shape {1, grad.shape.cols});
 
-    for (int i = 0; i < grad.rows; ++i)
-        for (int j = 0; j < grad.cols; ++j)
-            (*bgrad)[0][j] = b(0, j) + grad(i, j);
+    for (int i = 0; i < grad.shape.rows; ++i)
+        for (int j = 0; j < grad.shape.cols; ++j)
+            *(bgrad->get_address(0, j)) = b(0, j) + grad(i, j);
 
     return {grad, *bgrad};
 }
@@ -99,12 +99,9 @@ Shape Square::computeDim(const std::vector<LazyBlobRef>& args) const {
 
 Blob Mean::compute(const vector<LazyBlobRef>& args) const {
     args1(a);
-    float sum = 0;
-    for (int i = 0; i < a.rows(); ++i)
-        for (int j = 0; j < a.cols(); ++j)
-            sum += a(i, j);
-    return sum / (a.rows() * a.cols());
+    return a.mean({2, 3});
 }
+
 vector<LazyBlobRef> Mean::grad(const Blob& grad, const vector<LazyBlobRef>& args) const {
     args1(a);
     return { grad / (a.rows() * a.cols()) };
