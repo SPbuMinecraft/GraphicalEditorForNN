@@ -182,13 +182,6 @@ def delete_connection(user_id: int, model_id: int):
     return "done", HTTPStatus.OK
 
 
-def connectionTo(id: int, connections: list) -> int:
-    for conn in connections:
-        if conn["layer_to"] == id:
-            return conn["layer_from"]
-
-
-
 @app.route("/train/<int:user_id>/<int:model_id>/<int:safe>", methods=["POST"])
 def train_model(
     user_id: int, model_id: int, safe: int
@@ -230,59 +223,8 @@ def train_model(
                 model["layers"],
             )
         )
-        for key, array in json["dataset"].items():
-            json["dataset"][key] = list(filter(lambda x: bool(x), array))
-        
-        for layer in model["layers"]:
-            try:
-                tmp = layer["parameters"]["inFeatures"]
-                layer["parameters"]["inFeatures"] = layer["parameters"]["outFeatures"]
-                layer["parameters"]["outFeatures"] = tmp
-                layer["parameters"]["bias"] = True
-            except:
-                pass
 
-            if layer["type"] == "Relu":
-                layer["type"] = "ReLU"
-
-            if layer["type"] == "Output":
-                output_id = layer["id"]
-                last = connectionTo(output_id, model["connections"])
-                model["connections"].append({
-                    "layer_from": last,
-                    "layer_to": 1000
-                })
-        model["layers"].append({
-            "id": 999,
-            "type": "Data",
-            "parameters": {
-                "width": 1
-            }
-        })
-        model["connections"].append({
-            "layer_from": 999,
-            "layer_to": 1000
-        })
-        model["layers"].append({
-            "id": 1000,
-            "type": "MSELoss",
-            "parameters":{}
-        })
-        dataset: dict[int, list[float]] = {}
-        for id, array in json["dataset"].items():
-            if int(id) == output_id:
-                # output
-                dataset['999'] = array
-            else:
-                dataset[id] = array
-        
-        for id, array in dataset.items():
-            for i in range(len(array)):
-                array[i] = int(array[i])
-
-
-        model_to_send = {"graph": model, "dataset": dataset}
-        print(model_to_send)
+        model_to_send = {"graph": model, "dataset": json["dataset"]}
         response = requests.post(
             current_app.config["CPP_SERVER"] + f"/train/{model_id}",
             json=model_to_send,
