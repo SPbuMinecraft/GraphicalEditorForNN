@@ -140,10 +140,10 @@ def add_connection(user_id: int, model_id: int):
             )
         if allowed == LayersConnectionStatus.Cycle:
             error(HTTPStatus.BAD_REQUEST, "Graph must by acyclic")
-        inserted_id = sql_worker.add_connection(layer_from_id, layer_to_id, model_id)
+        status = sql_worker.add_connection(layer_from_id, layer_to_id, model_id)
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
-    return str(inserted_id), HTTPStatus.CREATED
+    return str(status), HTTPStatus.CREATED
 
 
 @app.route("/delete_layer/<int:user_id>/<int:model_id>", methods=["POST"])
@@ -158,8 +158,6 @@ def delete_layer(user_id: int, model_id: int):
         status = sql_worker.delete_layer(int(json["id"]), model_id)
         if status == DeleteStatus.ElementNotExist:
             error(HTTPStatus.NOT_FOUND, "Layer does not exist")
-        if status == DeleteStatus.LayerNotFree:
-            error(HTTPStatus.BAD_REQUEST, "The layer contains connections")
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
     return "done", HTTPStatus.OK
@@ -174,9 +172,28 @@ def delete_connection(user_id: int, model_id: int):
     if not json:
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
-        status = sql_worker.delete_connection(int(json["id"]), model_id)
+        status = sql_worker.delete_connection(
+            int(json["layer_from"]), int(json["layer_to"]), model_id
+        )
         if status == DeleteStatus.ElementNotExist:
             error(HTTPStatus.NOT_FOUND, "Connection does not exist")
+    except KeyError as e:
+        error(HTTPStatus.BAD_REQUEST, message=str(e))
+    return "done", HTTPStatus.OK
+
+
+@app.route("/shuffle_inputs/<int:user_id>/<int:model_id>", methods=["POST"])
+def shuffle_inputs(user_id: int, model_id: int):
+    allowed = sql_worker.verify_access(user_id, model_id)
+    if not allowed:
+        error(HTTPStatus.FORBIDDEN, "You have no rights for changing this model")
+    json = request.json
+    if not json:
+        error(HTTPStatus.BAD_REQUEST, message="No json provided")
+    try:
+        status = sql_worker.shuffle_inputs(
+            json["new_connections"], int(json["layer_id"]), model_id
+        )
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
     return "done", HTTPStatus.OK
@@ -205,14 +222,13 @@ def train_model(
             error(HTTPStatus.NOT_ACCEPTABLE, "Invalid model found")
         # Convert json to another format for C++ by deleting connsetcions ids and rename layers_type
         model["connections"] = list(
-            map(
-                lambda connection: {
-                    "layer_from": connection["layer_from"],
-                    "layer_to": connection["layer_to"],
-                },
-                model["connections"],
-            )
-        )
+            {
+                "layer_from": layer_from,
+                "layer_to": layer_to["id"],
+            }
+            for layer_to in model["layers"]
+            for layer_from in layer_to["connections"]
+        )  # Create list of connections for C++ server
         model["layers"] = list(
             map(
                 lambda layer: {
@@ -226,7 +242,7 @@ def train_model(
         model_to_send = {"graph": model, "dataset": json["dataset"]}
         response = requests.post(
             current_app.config["CPP_SERVER"] + f"/train/{model_id}",
-            json=model,
+            json=model_to_send,
             timeout=3,
         )
         sql_worker.train_model(model_id)
