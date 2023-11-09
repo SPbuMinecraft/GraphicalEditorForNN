@@ -1,8 +1,8 @@
 {
-  "name": "drawflow-demo",
+  "name": "ml-craft",
   "version": "1.0.0",
-  "description": "",
-  "main": "../GraphicalEditorForNN/client/templates/authorization.html",
+  "main": "scripts/auth.js",
+  "type":"module",
   "scripts": {
     "start": "parcel ./templates/authorization.html --open",
     "build": "parcel build ./templates/authorization.html"
@@ -16,5 +16,8 @@
     "jshint": "^2.13.6",
     "parcel-bundler": "^1.6.1"
   },
-  "keywords": []
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }

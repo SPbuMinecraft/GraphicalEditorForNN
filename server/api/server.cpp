@@ -55,9 +55,6 @@ int main(int argc, char *argv[]) {
     if (argc != 3) invalidArgs();
     SimpleApp app;
 
-
-    //Graph* graph = nullptr;  // Doesn't work, needs sessions
-
     std::map<int, Graph*> sessions;
 
     CROW_ROUTE(app, "/predict/<int>").methods(HTTPMethod::POST)
@@ -91,7 +88,6 @@ int main(int argc, char *argv[]) {
         train(body, &g);
         sessions[model_id] = g;
         return response(status::OK, "done");
-
     });
 
     int port;
