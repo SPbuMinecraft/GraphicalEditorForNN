@@ -229,7 +229,8 @@ class SQLWorker:
         with current_app.app_context():
             if not self.verify_access(user_id, model_id):
                 return LayersConnectionStatus.AccessDenied
-            model: Model = db.session.get(Model, model_id)
+            model = db.session.get(Model, model_id)
+            assert model is not None
             model_items = json.loads(model.content)
             layers = model_items["layers"]
             layer1_candidates = list(
