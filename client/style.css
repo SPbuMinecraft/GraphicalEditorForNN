@@ -5,6 +5,7 @@
     --background-box-title: #d0d0d0;
     --gradient-color: #aebcd2;
     --text-color: #000000;
+    --disable-color: #aaa;
     --notification-color-success: #3fd778;
     --notification-color-success-border: #156532;
     --notification-color-fail: #f66262;
@@ -322,6 +323,12 @@ header .button-wrapper {
     font-weight: bold;
     background-color: var(--color1);
     transition: background-color 0.125s ease-in;
+    border-color: var(--background4);
+}
+.button-wrapper:disabled,
+.button-wrapper[disabled] {
+    font-weight: bold;
+    background-color: var(--disable-color);
     border-color: var(--background4);
 }
 
