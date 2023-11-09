@@ -170,15 +170,15 @@ class SQLWorker:
             if not model:
                 return DeleteStatus.ModelNotExist
             model_items = json.loads(model.content)
-            layer = next(iter(l for l in model_items["layers"] if l["id"] == layer_id), None)
+            layer = next(
+                iter(l for l in model_items["layers"] if l["id"] == layer_id), None
+            )
             if layer is None:
                 return DeleteStatus.ElementNotExist
             model_items["layers"].remove(layer)
             for layer in model_items["layers"]:
                 layer["parents"] = list(
-                    filter(
-                        lambda layer_from: layer_id != layer_from, layer["parents"]
-                    )
+                    filter(lambda layer_from: layer_id != layer_from, layer["parents"])
                 )
             model.content = json.dumps(model_items)
             model.is_trained = False
@@ -192,7 +192,9 @@ class SQLWorker:
             if not model:
                 return DeleteStatus.ModelNotExist
             model_items = json.loads(model.content)
-            layer = next(iter(l for l in model_items["layers"] if l["id"] == layer_to), None)
+            layer = next(
+                iter(l for l in model_items["layers"] if l["id"] == layer_to), None
+            )
             if layer is None:
                 return DeleteStatus.ElementNotExist
             if layer_from not in layer["parents"]:
