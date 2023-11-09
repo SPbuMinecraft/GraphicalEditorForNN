@@ -24,7 +24,8 @@
     --header-height: 65px;
 }
 
-html, body {
+html,
+body {
     color: var(--text-color);
     background-color: var(--background-color);
     margin: 0;
@@ -33,12 +34,8 @@ html, body {
     height: 100vh;
     display: grid;
     overflow: hidden;
-    font-family: 'Roboto', sans-serif;
+    font-family: "Roboto", sans-serif;
 }
-
-
-
-
 
 /* Уведомления */
 .notification {
@@ -54,18 +51,16 @@ html, body {
     color: var(--text-color);
     font-size: 20px;
     border-radius: 15px;
-    &#success{
+    &#success {
         background-color: var(--notification-color-success);
-        border: var(--border-width) solid var(--notification-color-success-border);
+        border: var(--border-width) solid
+            var(--notification-color-success-border);
     }
-    &#error{
+    &#error {
         background-color: var(--notification-color-fail);
         border: var(--border-width) solid var(--notification-color-fail-border);
     }
 }
-
-
-
 
 /*элементы верхней части окна*/
 header {
@@ -106,17 +101,13 @@ header {
     border-radius: 15px;
     font-weight: bold;
     background-color: var(--background1);
-    transition: background-color .125s ease-in;
+    transition: background-color 0.125s ease-in;
 }
 .menu ul li.selected {
     border-radius: 15px;
     font-weight: bold;
     background-color: var(--background1);
 }
-
-
-
-
 
 /*Profile*/
 header .button-wrapper {
@@ -131,7 +122,7 @@ header .button-wrapper {
 }
 .profile-icon:hover {
     background-color: var(--color2);
-    transition: background-color .125s ease-in;
+    transition: background-color 0.125s ease-in;
     border-color: var(--background4);
 }
 
@@ -190,7 +181,7 @@ header .button-wrapper {
         width: 50px;
         border-radius: 50px;
         background-color: var(--color1);
-        transition: background-color .125s ease-in;
+        transition: background-color 0.125s ease-in;
 
         &::before {
             content: "";
@@ -203,11 +194,10 @@ header .button-wrapper {
             transform: scale(0);
             background: var(--background3);
             z-index: 5;
-            transition: all .125s ease-in;
+            transition: all 0.125s ease-in;
         }
 
         &::after {
-
             content: "";
             position: absolute;
             left: 2px;
@@ -216,14 +206,10 @@ header .button-wrapper {
             height: 20px;
             border-radius: 50%;
             background: #fff89e;
-            transition: all .125s ease-in;
+            transition: all 0.125s ease-in;
         }
     }
 }
-
-
-
-
 
 /*Home screen*/
 .home {
@@ -236,9 +222,8 @@ header .button-wrapper {
     display: block;
     overflow-y: scroll;
     width: 100%;
-    height: calc( 100%  - var(--header-height) + var(--border-width));
+    height: calc(100% - var(--header-height) + var(--border-width));
     top: calc(var(--header-height) + var(--border-width));
-
 }
 .nn-block {
     position: relative;
@@ -253,7 +238,7 @@ header .button-wrapper {
     border: var(--border-width) solid var(--background3);
     border-radius: 30px;
     overflow: hidden;
-    .button-wrapper{
+    .button-wrapper {
         margin-top: 15px;
         display: inline-grid;
         position: relative;
@@ -263,7 +248,7 @@ header .button-wrapper {
         width: 80px;
         font-size: 18px;
     }
-    .text-wrapper{
+    .text-wrapper {
         text-align: center;
         padding: 10px 30px;
         border: var(--border-width) solid var(--background3);
@@ -271,14 +256,9 @@ header .button-wrapper {
         background-color: var(--background-color);
     }
 }
-#new-nn{
+#new-nn {
     background-color: var(--background0);
 }
-
-
-
-
-
 
 /*Terminal screen*/
 .terminal {
@@ -287,20 +267,12 @@ header .button-wrapper {
     display: none;
 }
 
-
-
-
-
 /*Metrics screen*/
 .metrics {
     width: 100%;
     height: calc(100vh - var(--header-height));
     display: none;
 }
-
-
-
-
 
 /*Constructor screen*/
 .constructor {
@@ -309,7 +281,7 @@ header .button-wrapper {
     height: calc(100vh - var(--header-height));
     display: flex;
 }
-.layer-data{
+.layer-data {
     position: absolute;
     height: 300px;
     width: 300px;
@@ -335,25 +307,25 @@ header .button-wrapper {
     background-color: var(--background1);
 }
 
-.button-wrapper{
+.button-wrapper {
     text-align: center;
     background-color: var(--color4);
     color: var(--text-color);
     cursor: pointer;
     border: var(--border-width) solid var(--background3);
     border-radius: 30px;
-    & input{
+    & input {
         display: none;
     }
 }
-.button-wrapper:hover{
+.button-wrapper:hover {
     font-weight: bold;
     background-color: var(--color1);
-    transition: background-color .125s ease-in;
+    transition: background-color 0.125s ease-in;
     border-color: var(--background4);
 }
 
-.col .button-wrapper{
+.col .button-wrapper {
     display: block;
     position: relative;
     padding-top: 10px;
@@ -364,21 +336,21 @@ header .button-wrapper {
     font-size: 18px;
 }
 
-.predict-train-interface{
+.predict-train-interface {
     position: relative;
     left: calc((300px - 250px - var(--border-width) * 2) / 2);
     top: 10px;
     width: 250px;
-    .button-wrapper{
+    .button-wrapper {
         display: block;
         position: relative;
         align-self: center;
-        left: calc((250px - 80px)/2);
+        left: calc((250px - 80px) / 2);
         height: 30px;
         width: 80px;
         font-size: 18px;
     }
-    &#train{
+    &#train {
         display: block;
     }
     &#predict {
@@ -422,14 +394,14 @@ header .button-wrapper {
         left: 5px;
     }
 
-    & input{
+    & input {
         background-color: var(--background-color);
         border: 1px solid var(--text-color);
         color: var(--text-color);
     }
 }
 
-.predict-result-wrapper{
+.predict-result-wrapper {
     position: relative;
     padding: 10px;
     height: fit-content;
@@ -449,10 +421,6 @@ header .button-wrapper {
         overflow-x: scroll;
     }
 }
-
-
-
-
 
 /* Editing Drawflow */
 .drag-drawflow {
@@ -551,8 +519,12 @@ header .button-wrapper {
     top: 0px;
     background: var(--background-color);
     background-size: 25px 25px;
-    background-image: linear-gradient(to right, var(--gradient-color) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--gradient-color) 1px, transparent 1px);
+    background-image: linear-gradient(
+            to right,
+            var(--gradient-color) 1px,
+            transparent 1px
+        ),
+        linear-gradient(to bottom, var(--gradient-color) 1px, transparent 1px);
 }
 
 @media only screen and (max-width: 768px) {
@@ -593,13 +565,15 @@ header .button-wrapper {
     stroke-width: var(--connection-width);
 }
 
-.drawflow .drawflow-node .input, .drawflow .drawflow-node .output {
+.drawflow .drawflow-node .input,
+.drawflow .drawflow-node .output {
     height: 15px;
     width: 15px;
     border: 2px solid var(--border-color);
 }
 
-.drawflow .drawflow-node .input:hover, .drawflow .drawflow-node .output:hover {
+.drawflow .drawflow-node .input:hover,
+.drawflow .drawflow-node .output:hover {
     background: var(--color4);
 }
 
@@ -646,13 +620,12 @@ header .button-wrapper {
     stroke: var(--border-color);
     stroke-width: 2;
     fill: white;
-
 }
 
-.drawflow .connection .point.selected, .drawflow .connection .point:hover {
+.drawflow .connection .point.selected,
+.drawflow .connection .point:hover {
     fill: #4ea9ff;
 }
-
 
 /* Modal */
 .modal {
@@ -666,7 +639,6 @@ header .button-wrapper {
     overflow: auto;
     background-color: rgb(0, 0, 0);
     background-color: rgba(0, 0, 0, 0.7);
-
 }
 
 .modal-content {

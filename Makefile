@@ -55,7 +55,7 @@ run.server:
 $(addprefix build.,$(targets)): build.%:
 	$(MAKE) -C $* -e build 
 
-$(addprefix test.,$(targets)): test.%:
+$(addprefix test.,$(targets) client): test.%:
 	$(MAKE) -C $* -e test
 
 clean:

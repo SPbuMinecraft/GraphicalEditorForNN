@@ -106,16 +106,6 @@ You can build and test things from the root folder as well, but I don't think it
 conveniently run the [CI](.github/workflows/CI.yml)   
 Use `make help` to see available targets there
 
-## Formats
-
-Some json formats to use for requests
-
-[`Server++/train`](documentation/api-examples/train.json)  
-
-[`Server++/predict`](documentation/api-examples/predict.json)  
-
-[`Server/predict`](documentation/api-examples/userPredict.json)  
-
 ## Technology stack
 
 ### Languages:
