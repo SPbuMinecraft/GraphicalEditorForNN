@@ -229,7 +229,7 @@ class SQLWorker:
         with current_app.app_context():
             if not self.verify_access(user_id, model_id):
                 return LayersConnectionStatus.AccessDenied
-            model = db.session.get(Model, model_id)
+            model: Model = db.session.get(Model, model_id)
             model_items = json.loads(model.content)
             layers = model_items["layers"]
             layer1_candidates = list(
@@ -253,7 +253,7 @@ class SQLWorker:
     def verify_access(self, user_id, model_id):
         with current_app.app_context():
             model_passport = db.session.get(Model, model_id)
-            if not model_passport or model_passport.owner != user_id:
+            if model_passport is None or model_passport.owner != user_id:
                 return False
             return True
 
