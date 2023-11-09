@@ -182,7 +182,7 @@ def delete_connection(user_id: int, model_id: int):
     return "done", HTTPStatus.OK
 
 
-@app.route("/shuffle_inputs/<int:user_id>/<int:model_id>", methods=["POST"])
+@app.route("/update_parents_order/<int:user_id>/<int:model_id>", methods=["POST"])
 def shuffle_inputs(user_id: int, model_id: int):
     allowed = sql_worker.verify_access(user_id, model_id)
     if not allowed:
@@ -191,8 +191,8 @@ def shuffle_inputs(user_id: int, model_id: int):
     if not json:
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
-        status = sql_worker.shuffle_inputs(
-            json["new_connections"], int(json["layer_id"]), model_id
+        status = sql_worker.update_parents_order(
+            json["new_parents"], int(json["layer_id"]), model_id
         )
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
@@ -227,7 +227,7 @@ def train_model(
                 "layer_to": layer_to["id"],
             }
             for layer_to in model["layers"]
-            for layer_from in layer_to["connections"]
+            for layer_from in layer_to["parents"]
         )  # Create list of connections for C++ server
         model["layers"] = list(
             map(
