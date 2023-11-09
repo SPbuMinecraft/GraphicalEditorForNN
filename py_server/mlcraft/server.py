@@ -239,11 +239,12 @@ def train_model(
                 model["layers"],
             )
         )
+
         model_to_send = {"graph": model, "dataset": json["dataset"]}
         response = requests.post(
             current_app.config["CPP_SERVER"] + f"/train/{model_id}",
             json=model_to_send,
-            timeout=3,
+            # timeout=3,
         )
         sql_worker.train_model(model_id)
         return response.text, response.status_code
@@ -264,10 +265,11 @@ def predict(user_id: int, model_id: int):
     try:
         if not sql_worker.is_model_trained(model_id):
             error(HTTPStatus.PRECONDITION_FAILED, "Not trained")
+        json = {"0": [float(json["x"]), float(json["y"])]}
         response = requests.post(
             current_app.config["CPP_SERVER"] + f"/predict/{model_id}",
-            json={"0": [json["x"], json["y"]]},
-            timeout=3,
+            json=json,
+            # timeout=3,
         )
         return response.text, response.status_code
     except KeyError as e:
