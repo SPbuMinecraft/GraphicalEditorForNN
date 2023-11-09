@@ -183,7 +183,7 @@ def delete_connection(user_id: int, model_id: int):
 
 
 @app.route("/update_parents_order/<int:user_id>/<int:model_id>", methods=["POST"])
-def shuffle_inputs(user_id: int, model_id: int):
+def update_parents_order(user_id: int, model_id: int):
     allowed = sql_worker.verify_access(user_id, model_id)
     if not allowed:
         error(HTTPStatus.FORBIDDEN, "You have no rights for changing this model")
