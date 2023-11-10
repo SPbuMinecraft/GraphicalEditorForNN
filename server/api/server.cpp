@@ -12,18 +12,22 @@ using namespace crow;
 void train(json::rvalue& json, Graph** graph) {
     RandomObject initObject(0, 1, 42);
     OptimizerBase SGD = OptimizerBase(0.1);
+    Allocator::startVirtualMode();
+
     *graph = new Graph(json, &initObject, SGD);
     std::cout << "Graph is ready!" << std::endl;
 
-    Blob result {1, 1};
 
     auto& lastNode = (*graph)->getLastTrainLayers()[0]->result.value();  // Пока не думаем о нескольких выходах (!) Hard-coded
+    lastNode.forward();
+    lastNode.backward(true);
+    lastNode.clear();
+    Allocator::endVirtualMode();
+
     for (int j = 0; j < 1000; ++j) {
-        result = lastNode.forward();
+        auto &result = lastNode.forward();
         printf("%d: %f\n", j, result[0][0]);
-        // lastNode.gradient = result;
-        lastNode.gradient.value()[0][0] = 1;
-        lastNode.backward();
+        lastNode.backward(true);
         SGD.step();
         lastNode.clear();
     }
@@ -33,9 +37,7 @@ void predict(json::rvalue& json, Graph* graph, std::vector<float>& answer) {
     graph->ChangeInputData(json);
 
     auto& lastNode = graph->getLastPredictLayers()[0]->result.value();  // Пока не думаем о нескольких выходах (!) Hard-coded
-    lastNode.clear();
-    Blob result = lastNode.forward();
-    lastNode.clear();
+    auto& result = lastNode.forward();
     
     answer.reserve(result.rows * result.cols);
     for (size_t j = 0; j < result.rows; ++j) {

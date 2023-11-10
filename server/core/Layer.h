@@ -21,7 +21,6 @@ public:
 
 class Data2dLayer: public Layer {
 public:
-    size_t width;
     Data2dLayer(const Data2dLayerParameters& params, const std::vector<float>& values);
 };
 

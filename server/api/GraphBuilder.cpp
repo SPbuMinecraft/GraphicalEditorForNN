@@ -160,7 +160,7 @@ void Graph::ChangeInputData(crow::json::rvalue& data) {
         if (values.size() % width != 0) {
             throw std::invalid_argument("Sizes mismatch!");
         }
-        layer->result->output.emplace(Blob{values.size() / width, width, values.data()});
+        layer->result->output->changeData(values.data());
     }
 }
 
