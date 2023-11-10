@@ -10,6 +10,8 @@
 
 [Retrospectives](https://docs.google.com/spreadsheets/d/1N3NUDa-gbqLRaJE3SnSPSLX4hekyoULw-SIBjqRFItg/edit?usp=sharing)
 
+[Artifacts](https://docs.google.com/spreadsheets/d/1bWZJQjIyJ7C32olwx6MAcjix8CeSey4rFpeFd0Huoyc/edit#gid=0)
+
 ## Build options
 
 > **Important:** If CI tests don't pass, but work locally, make sure 
@@ -134,4 +136,4 @@ Use `make help` to see available targets there
 ![](documentation/ServerArchitecture.svg)
 
 ### Data
-![](documentation/DatabaseArchitecture.jpg)
+![](documentation/DatabaseArchitecture.png)
