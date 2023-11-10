@@ -24,6 +24,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
     <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.13.0/Sortable.min.js"></script>
   </head>
   <body>
     <!-- HTML parts -->
@@ -181,11 +182,17 @@
           <h3></h3>
           <label for="linear-outFeatures-parameter"> outFeatures </label>
           <input id="linear-outFeatures-parameter" type="number" value="1" size="4" />
+          <div id = "linear-input-selection">
+            <ul id="linear-inputs-sortable-list"> </ul>
+          </div>
         </div>
 
         <div class="special-layer-parameters" id="special-layer-parameters" style="display: none">
           <label for="special-width-parameter">Width</label>
           <input id="special-width-parameter" type="number" value="1" size="4" />
+          <div id = "special-input-selection">
+            <ul id="special-inputs-sortable-list"> </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -285,6 +292,7 @@
         console.log("selected layer DBID: " + Object.values(editor.getNodeFromId(id)["data"])[0]) // DBID -- database id
         last_selected_layer_id = Object.values(editor.getNodeFromId(id)["data"])[0] // database id of last selected layer
         console.log("layer parameters: " + Object.values(editor.getNodeFromId(id)["data"])[2])
+        console.log("Connections: " + Object.values(editor.getNodeFromId(id)["data"])[1])
       })
       editor.on("moduleCreated", function (name) {
         console.log("Module Created " + name)
@@ -302,56 +310,46 @@
           layer_to: data2.DBID,
         }
 
-        // "id = <connection ID in database>; next = <connected layer ID in database>"
-        addConnection(layers_connection).then(id => {
-          editor.updateNodeDataFromId(connection.output_id, {
-            DBID: data1.DBID,
-            Connections: data1.Connections.concat({
-              id: id,
-              next: data2.DBID,
-            }),
-            Parameters: data1.Parameters,
+        addConnection(layers_connection).then(() => {
+          editor.updateNodeDataFromId(connection.input_id, {
+            DBID: data2.DBID,
+            Connections: data2.Connections.concat(data1.DBID),
+            Parameters: data2.Parameters,
           })
         })
       })
       editor.on("connectionRemoved", function (connection) {
         console.log("Connection removed")
-
         const data1 = editor.getNodeFromId(connection.output_id).data
         const data2 = editor.getNodeFromId(connection.input_id).data
-
         let layer_from_db_id = data1.DBID
         let layer_to_db_id = data2.DBID
-        let list_of_connections = data1.Connections
-        let layer_parameters = data1.parameters
 
-        let parsed_connection = null
-        let i = 0
-        let connection_id = {
-          // id of connection we are deleting
-          id: null,
+        let connection_info = {
+          layer_from: layer_from_db_id,
+          layer_to: layer_to_db_id,
         }
+        deleteConnection(connection_info)
+
+        let list_of_connections = data2.Connections
+        let layer_parameters = data2.Parameters
         let cur_elem_index = null
 
-        while (i < list_of_connections.length) {
-          parsed_connection = list_of_connections[i]
-          if (parsed_connection.next == layer_to_db_id) {
-            connection_id.id = parsed_connection.id
+        for (var i = 0; i < list_of_connections.length; i++) {
+          if (list_of_connections[i] == layer_from_db_id) {
             cur_elem_index = i
             break
           }
-          i++
         }
 
         list_of_connections.splice(cur_elem_index, 1) // deletes connection from list
-        editor.updateNodeDataFromId(connection.output_id, {
-          DBID: layer_from_db_id,
+        editor.updateNodeDataFromId(connection.input_id, {
+          DBID: layer_to_db_id,
           Connections: list_of_connections,
           Parameters: layer_parameters,
         })
-        console.log("Layer id " + layer_from_db_id + " connections: " + list_of_connections)
+        console.log(list_of_connections)
 
-        let delayed_deletion = delay(300).then(() => deleteConnection(connection_id))
       })
       editor.on("nodeMoved", function (id) {
         console.log("Node moved " + id)
@@ -660,17 +658,27 @@
       }
 
       async function addConnection(layers_connection) {
-        return await sendJson(
+        const response = await sendJson(
           layers_connection,
           `http://${py_server_address}/add_connection/${user_id}/${model_id}`,
           "POST",
         )
+        if (response == "1") {
+          console.log("Connection added successfully")
+        }
       }
 
       async function updateLayerParameter(sending_obj) {
         console.log(
           "Server response for updating parameter: " +
             (await sendJson(sending_obj, `http://${py_server_address}/update_layer/${user_id}/${model_id}`, "PUT")),
+        )
+      }
+
+      async function updateParentOrder(sending_obj) {
+        console.log(
+          "Server response for updating inputs order: " +
+            (await sendJson(sending_obj, `http://${py_server_address}/update_parents_order/${user_id}/${model_id}`, "POST"))
         )
       }
 
@@ -689,7 +697,6 @@
         ;(async () => {
           await sendJson(sending_object, `http://${py_server_address}/delete_connection/${user_id}/${model_id}`, "POST")
         })()
-        console.log(`Deleted connection with DBID: ${sending_object.id}`)
       }
 
       function trainRequest() {
@@ -982,6 +989,63 @@
         // id format "node-<id>"
         const correct_id = id.split("-")[1]
         const node = editor.getNodeFromId(correct_id)
+        const connections = Object.values(editor.getNodeFromId(correct_id)['data'])[1]
+        const layer_dbid = Object.values(editor.getNodeFromId(correct_id)['data'])[0]
+        console.log(connections)
+
+        let sortable_list
+        if (node.class == "linear") {
+          sortable_list = document.querySelector("#linear-inputs-sortable-list")
+        }
+        else if (node.class == "special") {
+          sortable_list = document.querySelector("#special-inputs-sortable-list")
+        }
+
+        let child = sortable_list.lastElementChild
+        while (child) {
+          sortable_list.removeChild(child)
+          child = sortable_list.lastElementChild
+        }
+
+        for (let i = 0; i < connections.length; i++) {
+          let new_element = document.createElement("LI");
+          let text_for_new_element = document.createTextNode("Input from: " + connections[i]);
+          new_element.appendChild(text_for_new_element);
+          sortable_list.appendChild(new_element)
+        }
+
+        let new_input_order = []
+        new Sortable(sortable_list, {
+          animation: 150,
+          ghostClass: 'sortable-ghost',
+          onEnd: function(event) {
+            new_input_order = []
+            console.log('Изменился порядок элементов:');
+            for (i in sortable_list.childNodes) {
+              try {
+                if (sortable_list.childNodes[i].textContent.includes("Input")) {
+                  console.log(sortable_list.childNodes[i].textContent)
+                  new_input_order.push(Number(sortable_list.childNodes[i].textContent.split(" ")[2]))
+                }
+              }
+              catch (e){
+                continue
+              }
+            }
+            let new_inputs_object = {
+              new_parents: new_input_order,
+              layer_id: layer_dbid,
+            }
+            updateParentOrder(new_inputs_object).then(() => {
+              editor.updateNodeDataFromId(correct_id, { // точно ли это id ??
+                DBID: layer_dbid,
+                Connections: new_input_order,
+                Parameters: Object.values(editor.getNodeFromId(correct_id)["data"])[2],
+              })
+            })
+            console.log(new_input_order)
+          }
+        });
 
         document.getElementById("layer-data").style.display = "block"
         var layer_parameters = getParametersFromNode(correct_id)
