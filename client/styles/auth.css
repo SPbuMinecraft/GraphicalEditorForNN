@@ -4,14 +4,13 @@ body {
     margin: 0; /* Убираем внешние отступы у body */
     padding: 0; /* Убираем внешний отступ у body */
     overflow: hidden; /* Убираем прокрутку страницы, если контент слишком большой */
-    font-family: 'JetBrains Mono', monospace;
+    font-family: "JetBrains Mono", monospace;
 }
-
 
 .container {
     width: 100%; /* Растягиваем div на всю ширину экрана */
     height: 100vh; /* Растягиваем div на всю высоту экрана */
-    background-color: #4B4F70; /* Цвет заливки div */
+    background-color: #4b4f70; /* Цвет заливки div */
     display: flex;
     justify-content: center; /* Выравниваем по горизонтали по центру */
     align-items: center; /* Выравниваем по вертикали по центру */
@@ -19,7 +18,7 @@ body {
 
 .logo {
     position: sticky;
-    top: 0
+    top: 0;
 }
 
 .logo_text {
@@ -53,13 +52,13 @@ body {
     flex-direction: row;
 }
 
-.login-choose{
+.login-choose {
     width: 80px;
     margin-right: 10px;
     margin-left: 10px;
 }
 
-.signup-choose{
+.signup-choose {
     width: 95px;
 }
 
@@ -77,91 +76,97 @@ body {
     left: -500px;
 }
 
-
 .login-box {
     font-size: 13px;
     top: 50%;
     left: 50%;
-    width:500px;
-    height:300px;
+    width: 500px;
+    height: 300px;
 }
 
-.signup-box{
+.signup-box {
     font-size: 13px;
     top: 50%;
     left: 50%;
-    width:500px;
-    height:300px;
+    width: 500px;
+    height: 300px;
 }
 
-
-.login h1 { color: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.3); letter-spacing:1px; text-align:center; }
+.login h1 {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    letter-spacing: 1px;
+    text-align: center;
+}
 
 input {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: "JetBrains Mono", monospace;
     width: 93%;
     margin-bottom: 10px;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0, 0, 0, 0.3);
     outline: none;
     padding: 10px;
     font-size: 13px;
     color: #fff;
-    text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
-    border: 1px solid rgba(0,0,0,0.3);
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 0, 0, 0.3);
     border-radius: 4px;
-    box-shadow: inset 0 -5px 45px rgba(100,100,100,0.2), 0 1px 1px rgba(255,255,255,0.2);
-    -webkit-transition: box-shadow .5s ease;
-    -moz-transition: box-shadow .5s ease;
-    -o-transition: box-shadow .5s ease;
-    -ms-transition: box-shadow .5s ease;
-    transition: box-shadow .5s ease;
+    box-shadow:
+        inset 0 -5px 45px rgba(100, 100, 100, 0.2),
+        0 1px 1px rgba(255, 255, 255, 0.2);
+    -webkit-transition: box-shadow 0.5s ease;
+    -moz-transition: box-shadow 0.5s ease;
+    -o-transition: box-shadow 0.5s ease;
+    -ms-transition: box-shadow 0.5s ease;
+    transition: box-shadow 0.5s ease;
 }
 
-input:focus { box-shadow: inset 0 -5px 45px rgba(100,100,100,0.4), 0 1px 1px rgba(255,255,255,0.2); }
+input:focus {
+    box-shadow:
+        inset 0 -5px 45px rgba(100, 100, 100, 0.4),
+        0 1px 1px rgba(255, 255, 255, 0.2);
+}
 
-.services_buttons{
+.services_buttons {
     padding: 10px;
 }
 
-
-
-.login_button{
+.login_button {
     margin-top: 10px;
     margin-bottom: 20px;
 }
 
-
-.service-btn{
+.service-btn {
     width: 55px;
-    background-color: #EB6B56;
+    background-color: #eb6b56;
 }
 
-.service-btn:hover{
+.service-btn:hover {
     width: 45px;
     background-color: #dc482f;
 }
 
-.service-btn:active{
+.service-btn:active {
     width: 43px;
     background-color: #dc482f;
     box-shadow: inset 3px 3px 3px #792112;
 }
 
-.link{
-    font-family: 'JetBrains Mono', monospace;
+.link {
+    font-family: "JetBrains Mono", monospace;
     color: #1a264d;
     text-decoration: none;
 }
 
-.link:hover{
-    font-family: 'JetBrains Mono', monospace;
+.link:hover {
+    font-family: "JetBrains Mono", monospace;
     color: #849aec;
     text-decoration: none;
 }
-.error-area{
+.error-area {
     color: #dc482f;
 }
 
-.error-alert{
-    color: #dc482f;;
+.error-alert {
+    color: #dc482f;
 }

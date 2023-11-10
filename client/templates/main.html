@@ -1,123 +1,102 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>MLCraft </title>
-    <meta
-            name="description"
-            content="none yet"/>
+    <title>MLCraft</title>
+    <meta name="description" content="none yet" />
     <script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"></script>
     <script
-            src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js"
-            integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs="
-            crossorigin="anonymous"
+      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js"
+      integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs="
+      crossorigin="anonymous"
     ></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.css" />
+    <link rel="stylesheet" type="text/css" href="../style.css" />
     <link
-            rel="stylesheet"
-            href="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.css"/>
-    <link
-            rel="stylesheet"
-            type="text/css"
-            href="../style.css"/>
-    <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
-            integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ="
-            crossorigin="anonymous"/>
-    <link
-            href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
-            rel="stylesheet"/>
-    <link
-            href="https://fonts.googleapis.com/icon?family=Material+Icons"
-            rel="stylesheet">
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
+      integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ="
+      crossorigin="anonymous"
+    />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
     <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
-</head>
-<body>
+  </head>
+  <body>
+    <!-- HTML parts -->
+    <div class="notification" id="error">Error</div>
+    <div class="notification" id="success">Success</div>
 
-
-
-<!-- HTML parts -->
-<div class="notification" id="error"> Error</div>
-<div class="notification" id="success"> Success</div>
-
-
-<header>
-    <label class="button-wrapper">
-        <input type="button" class="profile-check" onclick=showProfile()>
-        <i class="material-icons" style="font-size:65px; position: relative; left:-7px; bottom: 2px" onmousedown="return false">person</i>
-    </label>
-    <h2 onmousedown="return false">MLCraft</h2>
-    <div class="github-link">
+    <header>
+      <label class="button-wrapper">
+        <input type="button" class="profile-check" onclick="showProfile()" />
+        <i
+          class="material-icons"
+          style="font-size: 65px; position: relative; left: -7px; bottom: 2px"
+          onmousedown="return false"
+          >person</i
+        >
+      </label>
+      <h2 onmousedown="return false">MLCraft</h2>
+      <div class="github-link">
         <a href="https://github.com/SPbuMinecraft/GraphicalEditorForNN" target="_blank"
-        ><i class="fab fa-github fa-3x" style="color: var(--background3)"></i
+          ><i class="fab fa-github fa-3x" style="color: var(--background3)"></i
         ></a>
-    </div>
-    <div class="menu" onmousedown="return false">
+      </div>
+      <div class="menu" onmousedown="return false">
         <ul>
-            <li id ="select-home" onclick="showMode(event);">
-                Home
-            </li>
-            <li id ="select-constructor" onclick="showMode(event);"
-                class="selected">
-                Constructor
-            </li>
-            <li id ="select-terminal" onclick="showMode(event);">
-                Terminal
-            </li>
-            <li id ="select-metrics" onclick="showMode(event);">
-                Metrics
-            </li>
+          <li id="select-home" onclick="showMode(event);">Home</li>
+          <li id="select-constructor" onclick="showMode(event);" class="selected">Constructor</li>
+          <li id="select-terminal" onclick="showMode(event);">Terminal</li>
+          <li id="select-metrics" onclick="showMode(event);">Metrics</li>
         </ul>
-    </div>
-</header>
+      </div>
+    </header>
 
-<div class="profile" id="profile">
-    Coming soon!
-    <a style="text-decoration:none" href="./authorization.html" onclick="signOut()"> <!--здесь будет ссылка на страницу регистрации-->
-        <label class="button-wrapper">
-            Sign Out
-        </label>
-    </a>
-    <label class="day-night-mode-label">
-        <input type="checkbox" id = "day-night-checkbox-id" class="day-night-checkbox" value="day" onclick=changeTheme()>
+    <div class="profile" id="profile">
+      Coming soon!
+      <a style="text-decoration: none" href="./authorization.html" onclick="signOut()">
+        <!--здесь будет ссылка на страницу регистрации-->
+        <label class="button-wrapper"> Sign Out <input type="button" id="sing-out-button" /> </label>
+      </a>
+      <label class="day-night-mode-label">
+        <input
+          type="checkbox"
+          id="day-night-checkbox-id"
+          class="day-night-checkbox"
+          value="day"
+          onclick="changeTheme()"
+        />
         <span class="control"></span>
-    </label>
-</div>
+      </label>
+    </div>
 
-<div class="home" id="home">
-    <div class="background">
+    <div class="home" id="home">
+      <div class="background">
         <div class="nn-container-class" id="nn-container"></div>
         <div class="nn-block" id="new-nn">
-            <label class="button-wrapper">
-                Create
-                <input type="button" onclick="createNewNN()">
-            </label><br>
-            <label class="button-wrapper">
-                Upload
-                <input type="file" id="onnx-upload-button" accept=".onnx" oninput="uploadModel()"/>
-            </label>
+          <label class="button-wrapper">
+            Create
+            <input type="button" onclick="createNewNN()" /> </label
+          ><br />
+          <label class="button-wrapper">
+            Upload
+            <input type="file" id="onnx-upload-button" accept=".onnx" oninput="uploadModel()" />
+          </label>
         </div>
+      </div>
     </div>
-</div>
 
-<div class="constructor" id ="constructor">
-    <div class="col">
-        <div
-                class="drag-drawflow"
-                draggable="true"
-                ondragstart="drag(event)"
-                data-node="linear">
-            <span> Linear</span>
+    <div class="constructor" id="constructor">
+      <div class="col">
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="linear">
+          <span> Linear</span>
         </div>
-        <div
-                class="drag-drawflow"
-                draggable="true"
-                ondragstart="drag(event)"
-                data-node="relu">
-            <span> ReLU</span>
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="relu">
+          <span> ReLU</span>
         </div>
 
         <!--
@@ -131,244 +110,212 @@
         </div>
         -->
 
-        <div
-                class="drag-drawflow"
-                draggable="false"
-                onmousedown="return false">
-            <span> Coming soon</span>
-        </div> <br>
+        <div class="drag-drawflow" draggable="false" onmousedown="return false">
+          <span> Coming soon</span>
+        </div>
+        <br />
 
         <label class="button-wrapper">
-            Upload
-            <input type="file" id="csv-upload-button" accept=".csv" hidden/>
+          Upload
+          <input type="file" id="csv-upload-button" accept=".csv" hidden />
         </label>
 
         <div class="predict-train-interface" id="train">
-            <form class="predict-train-form" id="xy-form-train">
-                <label for="x-value1" class="x-val-label"> x </label>
-                <input type="text" class="form-control-x" id="x-value1" name="x">
-                <label for="y-value1" class="y-val-label"> y </label>
-                <input type="text" class="form-control-y" id="y-value1" name="y">
-                <label for="res-value1" class="res-val-label"> = </label>
-                <input type="text" class="form-control-res" id="res-value1" name="res"><br>
-
-                <label for="x-value2" class="x-val-label"> x </label>
-                <input type="text" class="form-control-x" id="x-value2" name="x">
-                <label for="y-value2" class="y-val-label"> y </label>
-                <input type="text" class="form-control-y" id="y-value2" name="y">
-                <label for="res-value2" class="res-val-label"> =</label>
-                <input type="text" class="form-control-res" id="res-value2" name="res"><br>
-
-                <label for="x-value3" class="x-val-label"> x </label>
-                <input type="text" class="form-control-x" id="x-value3" name="x">
-                <label for="y-value3" class="y-val-label"> y </label>
-                <input type="text" class="form-control-y" id="y-value3" name="y">
-                <label for="res-value3" class="res-val-label"> =</label>
-                <input type="text" class="form-control-res" id="res-value3" name="res"><br>
-
-                <label for="x-value4" class="x-val-label"> x </label>
-                <input type="text" class="form-control-x" id="x-value4" name="x">
-                <label for="y-value4" class="y-val-label"> y </label>
-                <input type="text" class="form-control-y" id="y-value4" name="y">
-                <label for="res-value4" class="res-val-label"> =</label>
-                <input type="text" class="form-control-res" id="res-value4" name="res"><br>
-
-                <label for="x-value5" class="x-val-label"> x </label>
-                <input type="text" class="form-control-x" id="x-value5" name="x">
-                <label for="y-value5" class="y-val-label"> y </label>
-                <input type="text" class="form-control-y" id="y-value5" name="y">
-                <label for="res-value5" class="res-val-label"> =</label>
-                <input type="text" class="form-control-res" id="res-value5" name="res"><br>
-            </form>
-            <label class="button-wrapper" id="train-button">
-                Train
-                <input type="button" onclick=trainRequest()>
-            </label>
+          <label class="button-wrapper" id="train-button" disabled>
+            Train
+            <input type="button" onclick="trainRequest()" disabled />
+          </label>
         </div>
         <div class="predict-train-interface" id="predict">
-            <form class="predict-train-form" id="xy-form-predict">
-                <label for="x-value" class="x-val-label"> x </label>
-                <input type="text" class="form-control-x" id="x-value" name="x">
+          <form class="predict-train-form" id="xy-form-predict">
+            <label for="x-value" class="x-val-label"> x </label>
+            <input type="number" class="form-control-x" id="x-value" name="x" />
 
-                <label for="y-value" class="y-val-label"> y </label>
-                <input type="text" class="form-control-y" id="y-value" name="y">
-            </form>
-            <label class="button-wrapper" id="submit-button">
-                Predict
-                <input type="submit" onclick=predictRequest()>
-            </label>
-            <div class ="predict-result-wrapper" id ="predict-result-wrapper">
-                =
-                <output class="form-control-res" id="res-value-out" name="res-value" for="x-value y-value"></output>
-            </div>
+            <label for="y-value" class="y-val-label"> y </label>
+            <input type="number" class="form-control-y" id="y-value" name="y" />
+          </form>
+          <label class="button-wrapper" id="submit-button">
+            Predict
+            <input type="submit" onclick="predictRequest()" />
+          </label>
+          <div class="predict-result-wrapper" id="predict-result-wrapper">
+            =
+            <output class="form-control-res" id="res-value-out" name="res-value" for="x-value y-value"></output>
+          </div>
         </div>
+      </div>
 
-    </div>
-
-    <div class="col-right">
+      <div class="col-right">
         <div id="drawflow" ondrop="drop(event)" ondragover="allowDrop(event)">
-            <div class="btn-save" onclick="save()">
-                Save
-            </div>
-            <div class="btn-clear" onclick="editor.clear()">
-                Clear
-            </div>
-            <div class="btn-lock">
-                <i id="lock" class="fas fa-lock" onclick="editor.editor_mode='fixed'; changeMode('lock');"></i>
-                <i id="unlock" class="fas fa-lock-open" onclick="editor.editor_mode='edit'; changeMode('unlock');" style="display: none;"></i>
-            </div>
-            <div class="bar-zoom">
-                <i class="fas fa-search-minus" onclick="editor.zoom_out()"></i>
-                <i class="fas fa-search" onclick="editor.zoom_reset()"></i>
-                <i class="fas fa-search-plus" onclick="editor.zoom_in()"></i>
-            </div>
+          <div class="btn-save" onclick="save()">Save</div>
+          <div class="btn-clear" onclick="editor.clear()">Clear</div>
+          <div class="btn-lock">
+            <i id="lock" class="fas fa-lock" onclick="editor.editor_mode='fixed'; changeMode('lock');"></i>
+            <i
+              id="unlock"
+              class="fas fa-lock-open"
+              onclick="editor.editor_mode='edit'; changeMode('unlock');"
+              style="display: none"
+            ></i>
+          </div>
+          <div class="bar-zoom">
+            <i class="fas fa-search-minus" onclick="editor.zoom_out()"></i>
+            <i class="fas fa-search" onclick="editor.zoom_reset()"></i>
+            <i class="fas fa-search-plus" onclick="editor.zoom_in()"></i>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <div class="layer-data" id="layer-data" >
+      <div class="layer-data" id="layer-data">
         <h2>Layer parameters</h2>
 
         <div class="linear-layer-parameters" id="linear-layer-parameters" style="display: none">
-            <label for="bias-parameter">Bias</label>
-            <select id="bias-parameter">
-                <option value="true">true</option>
-                <option value="false">false</option>
-            </select>
-            <h3></h3>
-            <label for="linear-inFeatures-parameter">inFeatures</label>
-            <input id="linear-inFeatures-parameter" type="number" value="1" size="4">
-            <h3></h3>
-            <label for="linear-outFeatures-parameter">outFeatures</label>
-            <input id="linear-outFeatures-parameter" type="number" value="1" size="4">
+          <label for="bias-parameter">Bias</label>
+          <select id="bias-parameter">
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select>
+          <h3></h3>
+          <label for="linear-inFeatures-parameter">inFeatures</label>
+          <input id="linear-inFeatures-parameter" type="number" value="1" size="4" />
+          <h3></h3>
+          <label for="linear-outFeatures-parameter"> outFeatures </label>
+          <input id="linear-outFeatures-parameter" type="number" value="1" size="4" />
         </div>
 
         <div class="special-layer-parameters" id="special-layer-parameters" style="display: none">
-            <label for="special-width-parameter">Width</label>
-            <input id="special-width-parameter" type="number" value="1" size="4">
+          <label for="special-width-parameter">Width</label>
+          <input id="special-width-parameter" type="number" value="1" size="4" />
         </div>
-
+      </div>
     </div>
-</div>
 
-<div class="terminal" id="terminal">
-    Coming soon!
-</div>
+    <div class="terminal" id="terminal">Coming soon!</div>
 
-<div class="metrics" id="metrics">
-    Coming soon!
-</div>
+    <div class="metrics" id="metrics">Coming soon!</div>
 
-<!--Работа с Drawflow-->
-<script>
-    class CustomDrawflow extends Drawflow {
+    <!--Работа с Drawflow-->
+    <script>
+      class CustomDrawflow extends Drawflow {
         constructor(id) {
-            super(id);
+          super(id)
         }
         removeNodeId(id) {
-            var nodeClassFromId = this.getNodeFromId(id.slice(5)).class;
-            if(nodeClassFromId === "special"){
-                return
-            }
-            var r = confirm("Delete this layer?");
-            if (r === true) {
-                super.removeNodeId(id)
-            }
+          var nodeClassFromId = this.getNodeFromId(id.slice(5)).class
+          if (nodeClassFromId === "special") {
+            return
+          }
+          var r = confirm("Delete this layer?")
+          if (r === true) {
+            super.removeNodeId(id)
+          }
         }
         clear() {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, clear the workspace!',
-                allowOutsideClick: () => !Swal.isLoading()
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    super.clear()
-                    clearModel();
-                    const delayed_add = delay(100).then(() => addNodeToConstructor("data", 600, 430));
-                    const delayed_add2 = delay(200).then(() => addNodeToConstructor("output", 1000, 430));
-                    Swal.fire(
-                        'Deleted!',
-                        'Workspace has been cleared.',
-                        'success'
-                    )
-                }
-            })
-
+          Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, clear the workspace!",
+            allowOutsideClick: () => !Swal.isLoading(),
+          }).then(result => {
+            if (result.isConfirmed) {
+              super.clear()
+              clearModel().then(() => {
+                console.log("adding one node")
+                addNodeToConstructor("data", 600, 430).then(() => {
+                  console.log("adding the other")
+                  addNodeToConstructor("output", 1000, 430)
+                })
+              })
+              Swal.fire("Deleted!", "Workspace has been cleared.", "success")
+            }
+          })
         }
-        contextmenu(e){
-            if(this.node_selected)
-                showLayerInfo(this.node_selected.id)
-            super.contextmenu(e)
+        contextmenu(e) {
+          if (this.node_selected) showLayerInfo(this.node_selected.id)
+          super.contextmenu(e)
         }
-        click(e){
-            hideLayerInfo()
-            super.click(e)
+        click(e) {
+          hideLayerInfo()
+          super.click(e)
         }
-    }
+      }
 
-    var id = document.getElementById("drawflow");
-    const editor = new CustomDrawflow(id);
-    editor.start();
-    editor.addNode("Data", 0, 1, 300, 363, "special", {}, '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>')
-    editor.addNode("Output", 1, 0, 700, 363, "special", {}, '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>')
+      var id = document.getElementById("drawflow")
+      const editor = new CustomDrawflow(id)
+      editor.start()
+      editor.addNode(
+        "Data",
+        0,
+        1,
+        300,
+        363,
+        "special",
+        {},
+        '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>',
+      )
+      editor.addNode(
+        "Output",
+        1,
+        0,
+        700,
+        363,
+        "special",
+        {},
+        '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>',
+      )
 
-    // Events!
-    editor.on("nodeCreated", function (id) {      // Добавление нового слоя (блока)
-        console.log("Node created " + id);
-        //let delay_test = delay(500).then(() => editor.updateNodeDataFromId(id, { DBID: layers_id_queue.pop(),
-                                                                                 //Connections: [],
-                                                                                 //Parameters: layer_parameters_queue.pop()}))
-        //let delayed_log = delay(700).then(() => console.log(Object.values(editor.getNodeFromId(id)['data'])[0]))
-
-
-    });
-    editor.on("nodeRemoved", function (id) {
-        console.log("Node removed " + id);
+      // Events!
+      editor.on("nodeCreated", function (id) {
+        // Добавление нового слоя (блока)
+        console.log("Node created " + id)
+      })
+      editor.on("nodeRemoved", function (id) {
+        console.log("Node removed " + id)
         let layer_to_delete = {
-            id: last_selected_layer_id
-        };
+          id: last_selected_layer_id,
+        }
         deleteLayer(layer_to_delete)
-    });
-    editor.on("nodeSelected", function (id) {
-        last_selected_node_id = id;
-        console.log("selected layer DBID: " + Object.values(editor.getNodeFromId(id)['data'])[0]); // DBID -- database id
-        last_selected_layer_id = Object.values(editor.getNodeFromId(id)['data'])[0];               // database id of last selected layer
-        console.log("layer parameters: " + Object.values(editor.getNodeFromId(id)['data'])[2]);
-    });
-    editor.on("moduleCreated", function (name) {
-        console.log("Module Created " + name);
-    });
-    editor.on("moduleChanged", function (name) {
-        console.log("Module Changed " + name);
-    });
-    editor.on("connectionCreated", function (connection) {
-        console.log("Connection created");
+      })
+      editor.on("nodeSelected", function (id) {
+        last_selected_node_id = id
+        console.log("selected layer DBID: " + Object.values(editor.getNodeFromId(id)["data"])[0]) // DBID -- database id
+        last_selected_layer_id = Object.values(editor.getNodeFromId(id)["data"])[0] // database id of last selected layer
+        console.log("layer parameters: " + Object.values(editor.getNodeFromId(id)["data"])[2])
+      })
+      editor.on("moduleCreated", function (name) {
+        console.log("Module Created " + name)
+      })
+      editor.on("moduleChanged", function (name) {
+        console.log("Module Changed " + name)
+      })
+      editor.on("connectionCreated", function (connection) {
+        console.log("Connection created")
         const data1 = editor.getNodeFromId(connection.output_id).data
         const data2 = editor.getNodeFromId(connection.input_id).data
 
         let layers_connection = {
-            layer_from: data1.DBID,
-            layer_to: data2.DBID
-        };
+          layer_from: data1.DBID,
+          layer_to: data2.DBID,
+        }
 
         // "id = <connection ID in database>; next = <connected layer ID in database>"
-        addConnection(layers_connection).then(function(id) {
-            editor.updateNodeDataFromId(
-                connection.output_id, 
-                {
-                    DBID: data1.DBID,
-                    Connections: data1.Connections.concat({id: id, next: data2.DBID}),
-                    Parameters: data1.Parameters
-                }
-            )
+        addConnection(layers_connection).then(id => {
+          editor.updateNodeDataFromId(connection.output_id, {
+            DBID: data1.DBID,
+            Connections: data1.Connections.concat({
+              id: id,
+              next: data2.DBID,
+            }),
+            Parameters: data1.Parameters,
+          })
         })
-    });
-    editor.on("connectionRemoved", function (connection) {
-        console.log("Connection removed");
+      })
+      editor.on("connectionRemoved", function (connection) {
+        console.log("Connection removed")
 
         const data1 = editor.getNodeFromId(connection.output_id).data
         const data2 = editor.getNodeFromId(connection.input_id).data
@@ -379,605 +326,554 @@
         let layer_parameters = data1.parameters
 
         let parsed_connection = null
-        let i = 0;
-        let connection_id = {      // id of connection we are deleting
-            id : null
+        let i = 0
+        let connection_id = {
+          // id of connection we are deleting
+          id: null,
         }
         let cur_elem_index = null
 
         while (i < list_of_connections.length) {
-            parsed_connection = list_of_connections[i]
-            if (parsed_connection.next == layer_to_db_id) {
-                connection_id.id = parsed_connection.id;
-                cur_elem_index = i;
-                break;
-            }
-            i++;
+          parsed_connection = list_of_connections[i]
+          if (parsed_connection.next == layer_to_db_id) {
+            connection_id.id = parsed_connection.id
+            cur_elem_index = i
+            break
+          }
+          i++
         }
 
         list_of_connections.splice(cur_elem_index, 1) // deletes connection from list
-        editor.updateNodeDataFromId(connection.output_id, { DBID: layer_from_db_id,
-                                                            Connections: list_of_connections,
-                                                            Parameters: layer_parameters})
+        editor.updateNodeDataFromId(connection.output_id, {
+          DBID: layer_from_db_id,
+          Connections: list_of_connections,
+          Parameters: layer_parameters,
+        })
         console.log("Layer id " + layer_from_db_id + " connections: " + list_of_connections)
 
-        let delayed_deletion = delay(300).then(() => deleteConnection(connection_id));
+        let delayed_deletion = delay(300).then(() => deleteConnection(connection_id))
+      })
+      editor.on("nodeMoved", function (id) {
+        console.log("Node moved " + id)
+      })
+      editor.on("zoom", function (zoom) {
+        console.log("Zoom level " + zoom)
+      })
+      editor.on("addReroute", function (id) {
+        console.log("Reroute added " + id)
+      })
+      editor.on("removeReroute", function (id) {
+        console.log("Reroute removed " + id)
+      })
 
-    });
-    editor.on("nodeMoved", function (id) {
-        console.log("Node moved " + id);
-    });
-    editor.on("zoom", function (zoom) {
-        console.log("Zoom level " + zoom);
-    });
-    editor.on("addReroute", function (id) {
-        console.log("Reroute added " + id);
-    });
-    editor.on("removeReroute", function (id) {
-        console.log("Reroute removed " + id);
-    });
-
-    const linear_bias_selector = document.getElementById("bias-parameter")
-    linear_bias_selector.addEventListener("change", function() {
-        var parameters = getParametersFromNode(last_selected_node_id);
-        console.log("last id: " + last_selected_layer_id);
+      const linear_bias_selector = document.getElementById("bias-parameter")
+      linear_bias_selector.addEventListener("change", function () {
+        var parameters = getParametersFromNode(last_selected_node_id)
+        console.log("last id: " + last_selected_layer_id)
         var new_value = document.getElementById("bias-parameter").value
 
         for (i in parameters) {
-            if (parameters[i][0] == "bias") {
-                if (new_value == "true") {
-                    console.log("bias true")
-                    parameters[i][1] = "1";
-                }
-                else {
-                    console.log("bias false")
-                    parameters[i][1] = "0";
-                }
-                joinUpdatedLayerParameters(parameters, last_selected_node_id);
-                break;
+          if (parameters[i][0] == "bias") {
+            if (new_value == "true") {
+              console.log("bias true")
+              parameters[i][1] = "1"
+            } else {
+              console.log("bias false")
+              parameters[i][1] = "0"
             }
+            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            break
+          }
         }
-    });
+      })
 
-    const linear_inFeatures_input = document.getElementById("linear-inFeatures-parameter")
-    linear_inFeatures_input.addEventListener("change", function() {
-        var parameters = getParametersFromNode(last_selected_node_id);
-        console.log("last id: " + last_selected_layer_id);
+      const linear_inFeatures_input = document.getElementById("linear-inFeatures-parameter")
+      linear_inFeatures_input.addEventListener("change", function () {
+        var parameters = getParametersFromNode(last_selected_node_id)
+        console.log("last id: " + last_selected_layer_id)
         var new_value = document.getElementById("linear-inFeatures-parameter").value
 
         for (i in parameters) {
-            if (parameters[i][0] == "inFeatures") {
-                parameters[i][1] = new_value;
-                joinUpdatedLayerParameters(parameters, last_selected_node_id);
-                break;
-            }
+          if (parameters[i][0] == "inFeatures") {
+            parameters[i][1] = new_value
+            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            break
+          }
         }
-    });
+      })
 
-    const linear_outFeatures_input = document.getElementById("linear-outFeatures-parameter")
-    linear_outFeatures_input.addEventListener("change", function() {
-        var parameters = getParametersFromNode(last_selected_node_id);
-        console.log("last id: " + last_selected_layer_id);
+      const linear_outFeatures_input = document.getElementById("linear-outFeatures-parameter")
+      linear_outFeatures_input.addEventListener("change", function () {
+        var parameters = getParametersFromNode(last_selected_node_id)
+        console.log("last id: " + last_selected_layer_id)
         var new_value = document.getElementById("linear-outFeatures-parameter").value
 
         for (i in parameters) {
-            if (parameters[i][0] == "outFeatures") {
-                parameters[i][1] = new_value;
-                joinUpdatedLayerParameters(parameters, last_selected_node_id);
-                break;
-            }
+          if (parameters[i][0] == "outFeatures") {
+            parameters[i][1] = new_value
+            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            break
+          }
         }
-    });
+      })
 
-    const special_width_input = document.getElementById("special-width-parameter")
-    special_width_input.addEventListener("change", function() {
-        var parameters = getParametersFromNode(last_selected_node_id);
-        console.log("last id: " + last_selected_layer_id);
+      const special_width_input = document.getElementById("special-width-parameter")
+      special_width_input.addEventListener("change", function () {
+        var parameters = getParametersFromNode(last_selected_node_id)
+        console.log("last id: " + last_selected_layer_id)
         var new_value = document.getElementById("special-width-parameter").value
 
         for (i in parameters) {
-            if (parameters[i][0] == "width") {
-                parameters[i][1] = new_value;
-                joinUpdatedLayerParameters(parameters, last_selected_node_id);
-                break;
-            }
+          if (parameters[i][0] == "width") {
+            parameters[i][1] = new_value
+            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            break
+          }
         }
-    });
+      })
 
-    /* DRAG EVENT */
-    /* Mouse and Touch Actions */
-    var elements = document.getElementsByClassName("drag-drawflow");
-    for (var i = 0; i < elements.length; i++) {
-        elements[i].addEventListener("touchend", drop, false);
-        elements[i].addEventListener("touchmove", positionMobile, false);
-        elements[i].addEventListener("touchstart", drag, false);
-    }
-    var mobile_item_selec = "";
-    var mobile_last_move = null;
-    function positionMobile(ev) {
-        mobile_last_move = ev;
-    }
-    function allowDrop(ev) {
-        ev.preventDefault();
-    }
-    function drag(ev) {
+      /* DRAG EVENT */
+      /* Mouse and Touch Actions */
+      var elements = document.getElementsByClassName("drag-drawflow")
+      for (var i = 0; i < elements.length; i++) {
+        elements[i].addEventListener("touchend", drop, false)
+        elements[i].addEventListener("touchmove", positionMobile, false)
+        elements[i].addEventListener("touchstart", drag, false)
+      }
+      var mobile_item_selec = ""
+      var mobile_last_move = null
+      function positionMobile(ev) {
+        mobile_last_move = ev
+      }
+      function allowDrop(ev) {
+        ev.preventDefault()
+      }
+      function drag(ev) {
         if (ev.type === "touchstart") {
-            mobile_item_selec = ev.target
-                .closest(".drag-drawflow")
-                .getAttribute("data-node");
+          mobile_item_selec = ev.target.closest(".drag-drawflow").getAttribute("data-node")
         } else {
-            ev.dataTransfer.setData("node", ev.target.getAttribute("data-node"));
+          ev.dataTransfer.setData("node", ev.target.getAttribute("data-node"))
         }
-    }
-    function drop(ev) {
+      }
+      function drop(ev) {
         if (ev.type === "touchend") {
-            var parentdrawflow = document
-                .elementFromPoint(
-                    mobile_last_move.touches[0].clientX,
-                    mobile_last_move.touches[0].clientY
-                )
-                .closest("#drawflow");
-            if (parentdrawflow != null) {
-                addNodeToConstructor(
-                    mobile_item_selec,
-                    mobile_last_move.touches[0].clientX,
-                    mobile_last_move.touches[0].clientY
-                );
-            }
-            mobile_item_selec = "";
+          var parentdrawflow = document
+            .elementFromPoint(mobile_last_move.touches[0].clientX, mobile_last_move.touches[0].clientY)
+            .closest("#drawflow")
+          if (parentdrawflow != null) {
+            addNodeToConstructor(
+              mobile_item_selec,
+              mobile_last_move.touches[0].clientX,
+              mobile_last_move.touches[0].clientY,
+            )
+          }
+          mobile_item_selec = ""
         } else {
-            ev.preventDefault();
-            var data = ev.dataTransfer.getData("node");
-            addNodeToConstructor(data, ev.clientX, ev.clientY);
+          ev.preventDefault()
+          var data = ev.dataTransfer.getData("node")
+          addNodeToConstructor(data, ev.clientX, ev.clientY)
         }
-    }
+      }
 
-    function getParametersFromNode(id) {
-        var layer_parameters = Object.values(editor.getNodeFromId(id)['data'])[2]
-        var splited_parameters = layer_parameters.split(';');
+      function getParametersFromNode(id) {
+        var layer_parameters = Object.values(editor.getNodeFromId(id)["data"])[2]
+        var splited_parameters = layer_parameters.split(";")
         var parameters_array = new Array()
 
         for (i in splited_parameters) {
-            parameters_array.push(splited_parameters[i].split('='));
+          parameters_array.push(splited_parameters[i].split("="))
         }
-        return parameters_array;
-    }
+        return parameters_array
+      }
 
-    function joinUpdatedLayerParameters(new_parameters, id) {
+      function joinUpdatedLayerParameters(new_parameters, id) {
         var temp_array = []
         var new_parameters_string = null
-        var dbid = Object.values(editor.getNodeFromId(id)['data'])[0]
-        var connections = Object.values(editor.getNodeFromId(id)['data'])[1]
+        var dbid = Object.values(editor.getNodeFromId(id)["data"])[0]
+        var connections = Object.values(editor.getNodeFromId(id)["data"])[1]
 
         let parameters_to_send = {
-            id: dbid,
-            parameters: null
-        };
+          id: dbid,
+          parameters: null,
+        }
 
         for (i in new_parameters) {
-            temp_array.push(new_parameters[i].join("="));
+          temp_array.push(new_parameters[i].join("="))
         }
-        new_parameters_string = temp_array.join(";");
+        new_parameters_string = temp_array.join(";")
 
-        editor.updateNodeDataFromId(id, { DBID: dbid,
-                                          Connections: connections,
-                                          Parameters: new_parameters_string });
+        editor.updateNodeDataFromId(id, {
+          DBID: dbid,
+          Connections: connections,
+          Parameters: new_parameters_string,
+        })
         parameters_to_send["parameters"] = new_parameters_string
         console.log(parameters_to_send)
 
-        updateLayerParameter(parameters_to_send);
+        updateLayerParameter(parameters_to_send)
+      }
 
-    }
-
-
-    function addNodeToConstructor(name, pos_x, pos_y) {
+      async function addNodeToConstructor(name, pos_x, pos_y) {
         console.log("added node")
 
-        if (editor.editor_mode === "fixed")
-            return false;
+        if (editor.editor_mode === "fixed") return false
         pos_x =
-            pos_x *
-            (editor.precanvas.clientWidth /
-                (editor.precanvas.clientWidth * editor.zoom)) -
-            editor.precanvas.getBoundingClientRect().x *
-            (editor.precanvas.clientWidth /
-                (editor.precanvas.clientWidth * editor.zoom));
+          pos_x * (editor.precanvas.clientWidth / (editor.precanvas.clientWidth * editor.zoom)) -
+          editor.precanvas.getBoundingClientRect().x *
+            (editor.precanvas.clientWidth / (editor.precanvas.clientWidth * editor.zoom))
         pos_y =
-            pos_y *
-            (editor.precanvas.clientHeight /
-                (editor.precanvas.clientHeight * editor.zoom)) -
-            editor.precanvas.getBoundingClientRect().y *
-            (editor.precanvas.clientHeight /
-                (editor.precanvas.clientHeight * editor.zoom));
+          pos_y * (editor.precanvas.clientHeight / (editor.precanvas.clientHeight * editor.zoom)) -
+          editor.precanvas.getBoundingClientRect().y *
+            (editor.precanvas.clientHeight / (editor.precanvas.clientHeight * editor.zoom))
 
-        const nameMap = { 
-            "linear": "Linear",
-            "relu": "Relu",
-            "data": "Data",
-            "output": "Output"
+        const nameMap = {
+          linear: "Linear",
+          relu: "Relu",
+          data: "Data",
+          output: "Output",
         }
-        const parametersMap = { 
-            "linear": "inputs=1;outputs=1;bias=0;inFeatures=1;outFeatures=2",
-            "relu":  "inputs=1;outputs=1",
-            "data": "inputs=0;outputs=1;width=2",
-            "output": "inputs=1;outputs=0;width=1"
+        const parametersMap = {
+          linear: "inputs=1;outputs=1;bias=0;inFeatures=1;outFeatures=2",
+          relu: "inputs=1;outputs=1",
+          data: "inputs=0;outputs=1;width=2",
+          output: "inputs=1;outputs=0;width=1",
         }
 
-        const layer = { 
-            "type": nameMap[name],
-            "parameters": parametersMap[name]
+        const layer = {
+          type: nameMap[name],
+          parameters: parametersMap[name],
         }
 
-        addLayer(layer).then(function(id) { 
-            const attrs = { DBID: id, Connections: [], Parameters: layer.parameters }
-            switch (name) {
-                case "linear":
-                    var linear = `<div class="layer"><i class="fab moduleA"></i> Linear</div>`;
-                    editor.addNode("linear", 1, 1, pos_x, pos_y, "linear", attrs, linear);
-                    break;
-                case "relu":
-                    var relu = `<div class="layer"><i class="fab moduleA"></i> ReLU</div>`;
-                    editor.addNode("relu", 1, 1, pos_x, pos_y, "relu", attrs, relu);
-                    break;
-                case "data":
-                    var data = '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>';
-                    editor.addNode("data", 0, 1, pos_x, pos_y, "special", attrs, data);
-                    break;
-                case "output":
-                    var output = '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>';
-                    editor.addNode("Output", 1, 0, pos_x, pos_y, "special", attrs, output);
-                    break;
-                //this.addNode("Data", 0, 1, 300, 363, "special", {}, '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>')
-                //this.addNode("Output", 1, 0, 700, 363, "special", {}, '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>')
-                default:
-                    throw "Unreachable"
-            }
-        }).catch(() => console.log("handle error...")) // todo: show something
-    }
+        id = await addLayer(layer)
+        const attrs = {
+          DBID: id,
+          Connections: [],
+          Parameters: layer.parameters,
+        }
+        switch (name) {
+          case "linear":
+            var linear = `<div class="layer"><i class="fab moduleA"></i> Linear</div>`
+            editor.addNode("linear", 1, 1, pos_x, pos_y, "linear", attrs, linear)
+            break
+          case "relu":
+            var relu = `<div class="layer"><i class="fab moduleA"></i> ReLU</div>`
+            editor.addNode("relu", 1, 1, pos_x, pos_y, "relu", attrs, relu)
+            break
+          case "data":
+            var data = '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>'
+            editor.addNode("data", 0, 1, pos_x, pos_y, "special", attrs, data)
+            break
+          case "output":
+            var output = '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>'
+            editor.addNode("Output", 1, 0, pos_x, pos_y, "special", attrs, output)
+            break
+          default:
+            throw "Unreachable"
+        }
+      }
 
-    var transform = "";
-    function showpopup(e) {
-        e.target.closest(".drawflow-node").style.zIndex = "9999";
-        e.target.children[0].style.display = "block";
+      var transform = ""
+      function showpopup(e) {
+        e.target.closest(".drawflow-node").style.zIndex = "9999"
+        e.target.children[0].style.display = "block"
 
-        transform = editor.precanvas.style.transform;
-        editor.precanvas.style.transform = "";
-        editor.precanvas.style.left = editor.canvas_x + "px";
-        editor.precanvas.style.top = editor.canvas_y + "px";
+        transform = editor.precanvas.style.transform
+        editor.precanvas.style.transform = ""
+        editor.precanvas.style.left = editor.canvas_x + "px"
+        editor.precanvas.style.top = editor.canvas_y + "px"
 
-        editor.editor_mode = "fixed";
-    }
+        editor.editor_mode = "fixed"
+      }
 
-    function closemodal(e) {
-        e.target.closest(".drawflow-node").style.zIndex = "2";
-        e.target.parentElement.parentElement.style.display = "none";
-        editor.precanvas.style.transform = transform;
-        editor.precanvas.style.left = "0px";
-        editor.precanvas.style.top = "0px";
-        editor.editor_mode = "edit";
-    }
+      function closemodal(e) {
+        e.target.closest(".drawflow-node").style.zIndex = "2"
+        e.target.parentElement.parentElement.style.display = "none"
+        editor.precanvas.style.transform = transform
+        editor.precanvas.style.left = "0px"
+        editor.precanvas.style.top = "0px"
+        editor.editor_mode = "edit"
+      }
 
-    function changeMode(option) {
+      function changeMode(option) {
         //console.log(lock.id);
         if (option == "lock") {
-            lock.style.display = "none";
-            unlock.style.display = "block";
+          lock.style.display = "none"
+          unlock.style.display = "block"
         } else {
-            lock.style.display = "block";
-            unlock.style.display = "none";
+          lock.style.display = "block"
+          unlock.style.display = "none"
         }
-    }
-</script>
+      }
+    </script>
 
-<!--Заглушки-->
-<script>
-    function getLayerInfoFromDB(id){
+    <!--Заглушки-->
+    <script>
+      function getLayerInfoFromDB(id) {
         //todo
         //взаимодействие с сервером, бд
-    }
-    function exportNN(NNdata){
+      }
+      function exportNN(NNdata) {
         //todo
-    }
-    function signOut(){
+      }
+      function signOut() {
         //todo
-    }
-    function openNNInConstructor(NNdata){
+      }
+      function openNNInConstructor(NNdata) {
         //todo
         //как-то построить схему нн до открытия конструктора
         //хранить html в бд?
         openConstructior()
-    }
-    function saveNN(name){
+      }
+      function saveNN(name) {
         let save_success = saveNNhtmlToDB(name)
         let nn_id = 0
-        if(save_success) addModelBlock(name, nn_id)
+        if (save_success) addModelBlock(name, nn_id)
         return save_success
-    }
-    function saveNNhtmlToDB(name){
+      }
+      function saveNNhtmlToDB(name) {
         const nn_name = name
-        const nn_html = JSON.stringify(editor.export(), null,4);
+        const nn_html = JSON.stringify(editor.export(), null, 4)
         //some logic
         return true
-    }
-    function createNewNN(){
+      }
+      function createNewNN() {
         editor.clear() //вместо этого перезапустить drawflow?
         openConstructior()
-    }
-</script>
+      }
+    </script>
 
-
-<!--JSON requests handling-->
-<script>
-    async function sendJson(sending_object, url, method) {
-
+    <!--JSON requests handling-->
+    <script>
+      async function sendJson(sending_object, url, method) {
         const resp = await fetch(url, {
-            method: method,
-            mode: 'cors',
-            headers: {'content-type': 'application/json'},
-            body: JSON.stringify(sending_object)
+          method: method,
+          mode: "cors",
+          headers: {"content-type": "application/json"},
+          body: JSON.stringify(sending_object),
         })
 
         return await resp.text()
-    }
+      }
 
-    async function addLayer(sending_obj) {
-        return await sendJson(sending_obj, `http://${py_server_address}/add_layer/${user_id}/${model_id}`, 'POST')
-    }
+      async function addLayer(sending_obj) {
+        return await sendJson(sending_obj, `http://${py_server_address}/add_layer/${user_id}/${model_id}`, "POST")
+      }
 
-    async function addConnection(layers_connection) {
-        return await sendJson(layers_connection, `http://${py_server_address}/add_connection/${user_id}/${model_id}`, 'POST')
-    }
-
-    async function updateLayerParameter(sending_obj) {
-        console.log("Server response for updating parameter: " + await sendJson(sending_obj, `http://${py_server_address}/update_layer/${user_id}/${model_id}`, 'PUT'))
-    }
-
-    async function clearModel() {
-        (async() => { console.log(await sendJson(null, `http://${py_server_address}/clear_model/${user_id}/${model_id}`, 'POST')); })()
-    }
-
-    function deleteLayer(sending_object) {
-        (async() => { await sendJson(sending_object, `http://${py_server_address}/delete_layer/${user_id}/${model_id}`, 'POST') } )()
-    }
-
-    function deleteConnection(sending_object) {
-        (async() => { await sendJson(sending_object, `http://${py_server_address}/delete_connection/${user_id}/${model_id}`, 'POST') } )()
-        console.log(`Deleted connection with DBID: ${sending_object.id}`)
-    }
-
-    function trainRequest() {
-        /*
-        const obj = {
-            "0" : [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            "1" : [1, 1, 1, 1, 1]
-        };
-         */
-        var form_data = buildTrainData(document.querySelector("#xy-form-train"));
-
-        sendJson(form_data, `http://${py_server_address}/train/${user_id}/${model_id}/0`, 'POST')
-            .then((train_status) => { 
-                if (train_status == "done") { 
-                    train_status = true
-                } else { 
-                    train_status = false
-                }
-                showBuildNotification(train_status)
-                onTrainShowPredict(train_status)
-            }
+      async function addConnection(layers_connection) {
+        return await sendJson(
+          layers_connection,
+          `http://${py_server_address}/add_connection/${user_id}/${model_id}`,
+          "POST",
         )
-    }
+      }
 
-    function predictRequest() {
+      async function updateLayerParameter(sending_obj) {
+        console.log(
+          "Server response for updating parameter: " +
+            (await sendJson(sending_obj, `http://${py_server_address}/update_layer/${user_id}/${model_id}`, "PUT")),
+        )
+      }
+
+      async function clearModel() {
+        const response = await sendJson(null, `http://${py_server_address}/clear_model/${user_id}/${model_id}`, "POST")
+        console.log(`cleared: ${response}`)
+      }
+
+      function deleteLayer(sending_object) {
+        ;(async () => {
+          await sendJson(sending_object, `http://${py_server_address}/delete_layer/${user_id}/${model_id}`, "POST")
+        })()
+      }
+
+      function deleteConnection(sending_object) {
+        ;(async () => {
+          await sendJson(sending_object, `http://${py_server_address}/delete_connection/${user_id}/${model_id}`, "POST")
+        })()
+        console.log(`Deleted connection with DBID: ${sending_object.id}`)
+      }
+
+      function trainRequest() {
+        console.assert(train_data, "no training data was set")
+        fetch(`http://${py_server_address}/train/${user_id}/${model_id}/0`, {
+          method: "POST",
+          mode: "cors",
+          headers: {"Content-Type": "text/csv"},
+          body: train_data,
+        }).then(response => {
+          const is_trained = response.status == 200
+          showBuildNotification(is_trained)
+          onTrainShowPredict(is_trained)
+        })
+      }
+
+      function predictRequest() {
         const form_data = buildJsonFormData(document.querySelector("#xy-form-predict"))
         console.log(form_data)
 
-        for(let i = 0; i < form_data.length; i++) {
-            let obj = form_data[i];
+        for (let i = 0; i < form_data.length; i++) {
+          let obj = form_data[i]
 
-            console.log(obj);
+          console.log(obj)
         }
 
-        var result
-        sendJson(form_data, `http://${py_server_address}/predict/${user_id}/${model_id}`, 'POST')
-            .then((result) => {
-                onPredictShowResult(result)
-            })
-        //let delayed_result = delay(1000).then(() => onPredictShowResult(result))
-    }
+        sendJson(form_data, `http://${py_server_address}/predict/${user_id}/${model_id}`, "POST").then(result => {
+          onPredictShowResult(result)
+        })
+      }
 
-    function buildJsonFormData(form) {
+      function buildJsonFormData(form) {
         const jsonFormData = {}
         for (const pair of new FormData(form)) {
-            jsonFormData[pair[0]] = pair[1]
+          jsonFormData[pair[0]] = Number(pair[1])
         }
         return jsonFormData
-    }
+      }
 
-    function buildTrainData(form) {
+      function buildTrainData(form) {
         let input = []
         let output = []
         const jsonFormData = {}
 
         for (const pair of new FormData(form)) {
-            if (pair[0] == "res") {
-                output.push(pair[1])
-            }
-            else {
-                input.push(pair[1])
-            }
+          if (pair[0] == "res") {
+            output.push(Number(pair[1]))
+          } else {
+            input.push(Number(pair[1]))
+          }
         }
 
-        jsonFormData["0"] = input;       // 0 - id Data layer
-        jsonFormData["1"] = output;      // 1 - id Output layer
+        jsonFormData["0"] = input // 0 - id Data layer
+        jsonFormData["1"] = output // 1 - id Output layer TODO: id of target block here
         console.log(jsonFormData)
-        return {"dataset": jsonFormData}
-    }
+        return {dataset: jsonFormData}
+      }
+    </script>
 
-    async function submitForm(e, form) {
-        e.preventDefault()
+    <!-- JS scripts -->
+    <script>
+      const dataLayerId = 1
+      const outputLayerId = 2
+      //import {user_id, py_server_address} from "../scripts/auth.js"
+      const user_id = localStorage.getItem("user_id")
+      const model_id = localStorage.getItem("model_id")
+      const py_server_address = localStorage.getItem("py_server_address")
 
-        const btnSubmit = document.getElementById("btnSubmit")
-        btnSubmit.disabled = true
-        setTimeout(() => btnSubmit.disabled = false, 2000)
+      console.log(`current user id: ${user_id}`)
+      console.log(`current address ${py_server_address}`)
 
-        const jsonFormData = buildJsonFormData(form)
-        const headers = buildHeaders()
-        const response = await performPostHttpRequest(`http://${py_server_address}/predict/1/1`, headers, jsonFormData)
+      let last_selected_layer_id // layer's db id
+      let train_status = false
+      var last_selected_node_id // not db id
 
-        if (response) {
-            console.log("Success request")
-        } else {
-            console.log("An error occured")
-        }
-    }
+      // Функция, позволяющая вызывать другю функцию через ms времени
+      const delay = async ms => await new Promise(resolve => setTimeout(resolve, ms))
+      setup()
 
-    // event listener
-    const xy_form = document.querySelector("#xy-form-predict");
-    if (xy_form) {
-        xy_form.addEventListener("submit", function (e) {
-            submitForm(e, this);
-        });
-    }
-</script>
-
-
-<!-- JS scripts -->
-<script>
-    const dataLayerId = 1
-    const outputLayerId = 2
-    //import {user_id, py_server_address} from "../scripts/auth.js"
-    const user_id = localStorage.getItem("user_id")
-    const model_id = localStorage.getItem("model_id")
-    const py_server_address = localStorage.getItem("py_server_address")
-
-    console.log(`current user id: ${user_id}`)
-    console.log(`current address ${py_server_address}`)
-
-    let last_selected_layer_id       // layer's db id
-    let train_status = false
-    var last_selected_node_id       // not db id
-
-    //var layers_id_queue = new Array();           // Queue for layer's id from DB
-    //var connections_id_queue = new Array();      // Same queue for connection's id
-    //var layer_parameters_queue = new Array();    // Queue for layer parameters string
-
-    // Функция, позволяющая вызывать другю функцию через ms времени
-    const delay = async (ms) => await new Promise(resolve => setTimeout(resolve, ms));
-    setup()
-
-    async function setup() {
-
+      async function setup() {
         try {
-            let ObjData = {
-                type: "Data",
-                parameters: "inputs=0;outputs=1;width=2"
-            };
+          let ObjData = {
+            type: "Data",
+            parameters: "inputs=0;outputs=1;width=2",
+          }
 
-            let ObjOutput = {
-                type: "Output",
-                parameters: "inputs=1;outputs=0;width=1"
-            }
+          let ObjOutput = {
+            type: "Output",
+            parameters: "inputs=1;outputs=0;width=1",
+          }
 
-            addLayer(ObjData).then((id) =>
-                editor.updateNodeDataFromId(
-                    dataLayerId, { DBID: id, Connections: [], Parameters: ObjData.parameters }
-                )
-            ).then(() => addLayer(ObjOutput).then((id) =>
-                editor.updateNodeDataFromId(
-                    outputLayerId, { DBID: id, Connections: [], Parameters: ObjOutput.parameters }
-                )
-            )).then(() => 
-                console.log(`Setup completed successfully. \nUser ID: ${user_id} \nModel ID: ${model_id}`)
+          addLayer(ObjData)
+            .then(id =>
+              editor.updateNodeDataFromId(dataLayerId, {
+                DBID: id,
+                Connections: [],
+                Parameters: ObjData.parameters,
+              }),
             )
+            .then(() =>
+              addLayer(ObjOutput).then(id =>
+                editor.updateNodeDataFromId(outputLayerId, {
+                  DBID: id,
+                  Connections: [],
+                  Parameters: ObjOutput.parameters,
+                }),
+              ),
+            )
+            .then(() => console.log(`Setup completed successfully. \nUser ID: ${user_id} \nModel ID: ${model_id}`))
+        } catch (err) {
+          console.log(`Something went wrong during setup :( \nError: ${err}`)
         }
-        catch (err) {
-            console.log(`Something went wrong during setup :( \nError: ${err}`)
-        }
-    }
-</script>
+      }
+    </script>
 
-
-
-
-
-<!--Общее взаимодействие html и js-->
-<script>
-    function showMode(event){
-        var all = document.querySelectorAll(".menu ul li");
+    <!--Общее взаимодействие html и js-->
+    <script>
+      function showMode(event) {
+        var all = document.querySelectorAll(".menu ul li")
         var modes = document.querySelectorAll("div.home, div.constructor, div.terminal, div.metrics")
         for (var i = 0; i < all.length; i++) {
-            all[i].classList.remove("selected");
-            modes[i].style.display = 'none';
+          all[i].classList.remove("selected")
+          modes[i].style.display = "none"
         }
-        event.target.classList.add("selected");
-        document.getElementById(event.target.id.split("-")[1]).style.display = 'flex'
-    }
-    function showProfile(){
+        event.target.classList.add("selected")
+        document.getElementById(event.target.id.split("-")[1]).style.display = "flex"
+      }
+      function showProfile() {
         var prf = document.getElementById("profile")
-        if(prf.style.display == 'grid')
-            prf.style.display = 'none'
-        else
-            prf.style.display = 'grid'
-    }
+        if (prf.style.display == "grid") prf.style.display = "none"
+        else prf.style.display = "grid"
+      }
 
-    function changeTheme(){
+      function changeTheme() {
         var checkbox = document.getElementById("day-night-checkbox-id")
         var root = document.documentElement.style
-        if(checkbox.checked){
-            root.setProperty('--color0', '#00a1b0')
-            root.setProperty('--color1', '#01606c')
-            root.setProperty('--color2', '#00f4ff')
-            root.setProperty('--color3', '#00a7ab')
-            root.setProperty('--color4', '#1e838a')
-            root.setProperty('--background0', '#3d3d42')
-            root.setProperty('--background1', '#4b5760')
-            root.setProperty('--background2', '#343e4f')
-            root.setProperty('--background3', '#959daf')
-            root.setProperty('--background4', '#dedede')
-            root.setProperty('--border-color', '#ffffff')
-            root.setProperty('--background-color', '#0c1017')
-            root.setProperty('--background-box-title', '#424242')
-            root.setProperty('--gradient-color', '#2b2f34')
-            root.setProperty('--text-color', '#ffffff')
-            root.setProperty('--notification-color-success', '#156532')
-            root.setProperty('--notification-color-success-border', '#3fd778')
-            root.setProperty('--notification-color-fail', '#702626')
-            root.setProperty('--notification-color-fail-border', '#f66262')
+        if (checkbox.checked) {
+          root.setProperty("--color0", "#00a1b0")
+          root.setProperty("--color1", "#01606c")
+          root.setProperty("--color2", "#00f4ff")
+          root.setProperty("--color3", "#00a7ab")
+          root.setProperty("--color4", "#1e838a")
+          root.setProperty("--background0", "#3d3d42")
+          root.setProperty("--background1", "#4b5760")
+          root.setProperty("--background2", "#343e4f")
+          root.setProperty("--background3", "#959daf")
+          root.setProperty("--background4", "#dedede")
+          root.setProperty("--border-color", "#ffffff")
+          root.setProperty("--background-color", "#0c1017")
+          root.setProperty("--background-box-title", "#424242")
+          root.setProperty("--gradient-color", "#2b2f34")
+          root.setProperty("--text-color", "#ffffff")
+          root.setProperty("--notification-color-success", "#156532")
+          root.setProperty("--notification-color-success-border", "#3fd778")
+          root.setProperty("--notification-color-fail", "#702626")
+          root.setProperty("--notification-color-fail-border", "#f66262")
+        } else {
+          root.setProperty("--color0", "#ccfcff")
+          root.setProperty("--color1", "#b2f9fd")
+          root.setProperty("--color2", "#009ba2")
+          root.setProperty("--color3", "#25c6ce")
+          root.setProperty("--color4", "#20b6be")
+          root.setProperty("--background0", "#e1e1e1")
+          root.setProperty("--background1", "#b5bdc4")
+          root.setProperty("--background2", "#62738c")
+          root.setProperty("--background3", "#303744")
+          root.setProperty("--background4", "#282828")
+          root.setProperty("--border-color", "#000000")
+          root.setProperty("--background-color", "#ffffff")
+          root.setProperty("--background-box-title", "#d0d0d0")
+          root.setProperty("--gradient-color", "#aebcd2")
+          root.setProperty("--text-color", "#000000")
+          root.setProperty("--notification-color-success", "#3fd778")
+          root.setProperty("--notification-color-success-border", "#156532")
+          root.setProperty("--notification-color-fail", "#f66262")
+          root.setProperty("--notification-color-fail-border", "#702626")
         }
-        else{
-            root.setProperty('--color0', '#ccfcff')
-            root.setProperty('--color1', '#b2f9fd')
-            root.setProperty('--color2', '#009ba2')
-            root.setProperty('--color3', '#25c6ce')
-            root.setProperty('--color4', '#20b6be')
-            root.setProperty('--background0', '#e1e1e1')
-            root.setProperty('--background1', '#b5bdc4')
-            root.setProperty('--background2', '#62738c')
-            root.setProperty('--background3', '#303744')
-            root.setProperty('--background4', '#282828')
-            root.setProperty('--border-color', '#000000')
-            root.setProperty('--background-color', '#ffffff')
-            root.setProperty('--background-box-title', '#d0d0d0')
-            root.setProperty('--gradient-color', '#aebcd2')
-            root.setProperty('--text-color', '#000000')
-            root.setProperty('--notification-color-success', '#3fd778')
-            root.setProperty('--notification-color-success-border', '#156532')
-            root.setProperty('--notification-color-fail', '#f66262')
-            root.setProperty('--notification-color-fail-border', '#702626')
-        }
-    }
+      }
+    </script>
 
-
-</script>
-
-
-
-
-
-<!--Домашний экран-->
-<script>
-    function addModelBlock(name, nn_id){
-        if(name == "") name = "New Neural Network"
+    <!--Домашний экран-->
+    <script>
+      function addModelBlock(name, nn_id) {
+        if (name == "") name = "New Neural Network"
         let container = document.getElementById("nn-container")
         let str = `'            <div class="nn-block">
                 <data id="id" value="${nn_id}"></data>
@@ -995,183 +891,165 @@
                     <input type="button" class="profile-check" onclick="deleteModelBlock(this.parentElement.parentElement)">
                 </label>
             </div>'`
-        container.innerHTML += str.substring(1, str.length-1)
-    }
-    function deleteModelBlock(elem){
+        container.innerHTML += str.substring(1, str.length - 1)
+      }
+      function deleteModelBlock(elem) {
         Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!',
-            allowOutsideClick: () => !Swal.isLoading()
-        }).then((result) => {
-            if (result.isConfirmed) {
-                //delete nn from db
-                elem.remove()
-                Swal.fire(
-                    'Deleted!',
-                    'Neural network has been deleted.',
-                    'success'
-                )
-            }
+          title: "Are you sure?",
+          text: "You won't be able to revert this!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, delete it!",
+          allowOutsideClick: () => !Swal.isLoading(),
+        }).then(result => {
+          if (result.isConfirmed) {
+            //delete nn from db
+            elem.remove()
+            Swal.fire("Deleted!", "Neural network has been deleted.", "success")
+          }
         })
-    }
-    function uploadModel(){
+      }
+      function uploadModel() {
         addModelBlock()
-    }
-    function changeNNShowMode(){
-
-    }
-    function openConstructior(){
-        const all = document.querySelectorAll(".menu ul li");
-        const modes = document.querySelectorAll("div.home, div.constructor, div.terminal, div.metrics");
+      }
+      function changeNNShowMode() {}
+      function openConstructior() {
+        const all = document.querySelectorAll(".menu ul li")
+        const modes = document.querySelectorAll("div.home, div.constructor, div.terminal, div.metrics")
         for (let i = 0; i < all.length; i++) {
-            all[i].classList.remove("selected");
-            modes[i].style.display = 'none';
+          all[i].classList.remove("selected")
+          modes[i].style.display = "none"
         }
-        const constructor = document.getElementById("constructor");
-        constructor.classList.add("selected");
-        constructor.style.display = 'flex'
-    }
-</script>
+        const constructor = document.getElementById("constructor")
+        constructor.classList.add("selected")
+        constructor.style.display = "flex"
+      }
+    </script>
 
-
-
-
-
-<!--Конструктор-->
-<script>
-    // Notifications
-    const buildSuccessful = () => {
-        const success = document.getElementById('success');
-        success.style.display = 'block';
-        success.innerHTML = '<div style="font-weight: bold; font-size: 23px">Success!</div>Successfully built and trained the neural network';
+    <!--Конструктор-->
+    <script>
+      // Notifications
+      const buildSuccessful = () => {
+        const success = document.getElementById("success")
+        success.style.display = "block"
+        success.innerHTML =
+          '<div style="font-weight: bold; font-size: 23px">Success!</div>Successfully built and trained the neural network'
         setTimeout(() => {
-            success.style.display = 'none';
-        }, 3 * 1000);
-    };
-    const buildUnsuccessful = () => {
-        const error = document.getElementById('error');
-        error.style.display = 'block';
-        error.innerHTML = '<div style="font-weight: bold; font-size: 23px">Error!</div>Failed to build the neural network';
+          success.style.display = "none"
+        }, 3 * 1000)
+      }
+      const buildUnsuccessful = () => {
+        const error = document.getElementById("error")
+        error.style.display = "block"
+        error.innerHTML =
+          '<div style="font-weight: bold; font-size: 23px">Error!</div>Failed to build the neural network'
         setTimeout(() => {
-            error.style.display = 'none';
-        }, 3 * 1000);
-    }
-    const showBuildNotification = (build_status) => {
-        build_status ? buildSuccessful() : buildUnsuccessful();
-    }
-    async function csvUploaded(){
+          error.style.display = "none"
+        }, 3 * 1000)
+      }
+      const showBuildNotification = build_status => {
+        build_status ? buildSuccessful() : buildUnsuccessful()
+      }
+      async function csvUploaded() {
         const file = csv_upload.files[0]
         const text = await file.text()
         // do whatever with the `text`
         console.log(`Got goods: ${text}`)
-    }
-    const csv_upload = document.getElementById("csv-upload-button")
-    csv_upload.addEventListener("change", csvUploaded)
+        train_data = text
+        // allow user to press a train button from now on
+        button_wrapper = document.getElementById("train-button")
+        button_wrapper.getElementsByTy
+        train_button = button_wrapper.children[0]
+        button_wrapper.removeAttribute("disabled")
+        train_button.removeAttribute("disabled")
+      }
+      const csv_upload = document.getElementById("csv-upload-button")
+      csv_upload.addEventListener("change", csvUploaded)
 
-    function onTrainShowPredict(training_successful){
-        training_successful ? document.getElementById("predict").style.display = 'block'
-            : document.getElementById("predict").style.display = 'none'
-    }
-    function onPredictShowResult(res){
+      function onTrainShowPredict(training_successful) {
+        training_successful
+          ? (document.getElementById("predict").style.display = "block")
+          : (document.getElementById("predict").style.display = "none")
+      }
+      function onPredictShowResult(res) {
         document.getElementById("res-value-out").innerHTML = res
-        document.getElementById("predict-result-wrapper").style.textAlign = 'center'
-        document.getElementById("predict-result-wrapper").style.display = 'block'
-    }
-    function showLayerInfo(id){                  // id format "node-<id>"
-        const correct_id = id.split("-")[1];
-        const node = editor.getNodeFromId(correct_id);
+        document.getElementById("predict-result-wrapper").style.textAlign = "center"
+        document.getElementById("predict-result-wrapper").style.display = "block"
+      }
+      function showLayerInfo(id) {
+        // id format "node-<id>"
+        const correct_id = id.split("-")[1]
+        const node = editor.getNodeFromId(correct_id)
 
-        document.getElementById("layer-data").style.display = 'block'
+        document.getElementById("layer-data").style.display = "block"
         var layer_parameters = getParametersFromNode(correct_id)
 
         if (node.class == "linear") {
-            document.querySelector("#linear-layer-parameters").style.display = 'block';
+          document.querySelector("#linear-layer-parameters").style.display = "block"
 
-            for (i in layer_parameters) {
-                if (layer_parameters[i][0] == "bias") {
-                    document.querySelector("#bias-parameter").value = layer_parameters[i][1] == "1";
-                }
-                if (layer_parameters[i][0] == "inFeatures") {
-                    document.querySelector("#linear-inFeatures-parameter").value = layer_parameters[i][1]
-                }
-                if (layer_parameters[i][0] == "outFeatures") {
-                    document.querySelector("#linear-outFeatures-parameter").value = layer_parameters[i][1]
-                }
+          for (i in layer_parameters) {
+            if (layer_parameters[i][0] == "bias") {
+              document.querySelector("#bias-parameter").value = layer_parameters[i][1] == "1"
             }
-        }
-        else if (node.class = "special") {
-            document.querySelector("#special-layer-parameters").style.display = 'block';
-
-            for (i in layer_parameters) {
-                if (layer_parameters[i][0] == "width") {
-                    document.querySelector("#special-width-parameter").value = layer_parameters[i][1];
-                }
+            if (layer_parameters[i][0] == "inFeatures") {
+              document.querySelector("#linear-inFeatures-parameter").value = layer_parameters[i][1]
             }
+            if (layer_parameters[i][0] == "outFeatures") {
+              document.querySelector("#linear-outFeatures-parameter").value = layer_parameters[i][1]
+            }
+          }
+        } else if ((node.class = "special")) {
+          document.querySelector("#special-layer-parameters").style.display = "block"
+
+          for (i in layer_parameters) {
+            if (layer_parameters[i][0] == "width") {
+              document.querySelector("#special-width-parameter").value = layer_parameters[i][1]
+            }
+          }
         }
-        const data = getLayerInfoFromDB(id);
-    }
-    function hideLayerInfo(){
-        document.getElementById("layer-data").style.display = 'none'
+        const data = getLayerInfoFromDB(id)
+      }
+      function hideLayerInfo() {
+        document.getElementById("layer-data").style.display = "none"
 
-        document.querySelector("#linear-layer-parameters").style.display = 'none';
-        document.querySelector("#special-layer-parameters").style.display = 'none';
-    }
+        document.querySelector("#linear-layer-parameters").style.display = "none"
+        document.querySelector("#special-layer-parameters").style.display = "none"
+      }
 
-    function save() {
+      function save() {
         Swal.fire({
-            title: 'Enter the name of your neural network',
-            input: 'text',
-            inputAttributes: {
-                autocapitalize: 'off'
-            },
-            showCancelButton: true,
-            confirmButtonText: 'Save',
-            showLoaderOnConfirm: true,
-            preConfirm: (name) => {
-                return saveNN(name) //еще нужно проверить корректность name
-            },
-            allowOutsideClick: () => !Swal.isLoading()
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({
-                    position: 'top-end',
-                    icon: 'success',
-                    title: 'Neural network has been saved',
-                    showConfirmButton: false,
-                    timer: 1500
-                })
-            }
+          title: "Enter the name of your neural network",
+          input: "text",
+          inputAttributes: {
+            autocapitalize: "off",
+          },
+          showCancelButton: true,
+          confirmButtonText: "Save",
+          showLoaderOnConfirm: true,
+          preConfirm: name => {
+            return saveNN(name) //еще нужно проверить корректность name
+          },
+          allowOutsideClick: () => !Swal.isLoading(),
+        }).then(result => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              position: "top-end",
+              icon: "success",
+              title: "Neural network has been saved",
+              showConfirmButton: false,
+              timer: 1500,
+            })
+          }
         })
-    }
-</script>
+      }
+    </script>
 
+    <!--Терминал-->
+    <script></script>
 
-
-
-
-<!--Терминал-->
-<script></script>
-
-
-
-
-
-<!--Метрика-->
-<script></script>
-
-
-
-
-
-
-
-
-
-
-</body>
+    <!--Метрика-->
+    <script></script>
+  </body>
 </html>

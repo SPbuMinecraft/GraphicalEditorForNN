@@ -1,4 +1,4 @@
-.PHONY: run
+.PHONY: run test format
 .DEFAULT_GOAL = run
 
 ifndef CONFIG_PATH
@@ -32,3 +32,12 @@ run: index.html
 	@echo "Starting client server"
 	@echo "-----------------------------------------------------------"
 	npx serve -l $(port)
+
+
+formatFlags = --log-level warn
+
+test:
+	npx prettier $(formatFlags) --check .
+
+format:
+	npx prettier -w $(formatFlags) .

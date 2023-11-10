@@ -1,7 +1,7 @@
 import re
 import typing as tp
 from enum import Enum
-from collections import deque
+from collections import deque, defaultdict
 
 from flask import Response, abort
 
@@ -19,7 +19,6 @@ class DeleteStatus(Enum):
     OK = 0
     ModelNotExist = 1
     ElementNotExist = 2
-    LayerNotFree = 3
 
 
 def error(code: int, message: str) -> tp.NoReturn:
@@ -27,13 +26,10 @@ def error(code: int, message: str) -> tp.NoReturn:
 
 
 def get_edges_from_model(model_dict):
-    edges = dict()
-    for connection in model_dict["connections"]:
-        layer_from, layer_to = connection["layer_from"], connection["layer_to"]
-        if layer_from in edges.keys():
-            edges[layer_from].append(layer_to)
-        else:
-            edges[layer_from] = [layer_to]
+    edges = defaultdict(list)
+    for layer_to in model_dict["layers"]:
+        for layer_from in layer_to["parents"]:
+            edges[layer_from].append(layer_to["id"])
     return edges
 
 

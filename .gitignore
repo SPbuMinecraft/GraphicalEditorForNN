@@ -11,6 +11,10 @@ build/
 .AppleDouble
 .LSOverride
 
+# Javascript
+package-lock.json
+node_modules
+
 # Python
 __pycache__/
 *.py[cod]

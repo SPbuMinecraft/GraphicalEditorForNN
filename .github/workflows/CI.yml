@@ -14,6 +14,13 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  Client:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Format
+        run: make test.client
+
   Python:
     runs-on: ubuntu-latest
     steps:

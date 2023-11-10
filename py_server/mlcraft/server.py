@@ -1,3 +1,4 @@
+from sqlite3 import IntegrityError
 import requests
 from http import HTTPStatus
 from flask import Blueprint, request, current_app, jsonify
@@ -13,6 +14,8 @@ from .utils import (
     LayersConnectionStatus,
     DeleteStatus,
 )
+from . import errors
+
 from .db import sql_worker
 
 
@@ -23,20 +26,20 @@ app = Blueprint("make a better name", __name__)
 def add_user():
     json_data = request.get_json()
     if not json_data:
-        return jsonify({"error": "No JSON data provided"}), HTTPStatus.BAD_REQUEST
+        return {"error": "No JSON data provided"}, HTTPStatus.BAD_REQUEST
     try:
         user_id = sql_worker.add_user(json_data)
-        return jsonify({"user_id": user_id}), HTTPStatus.CREATED
+        return {"user_id": user_id}, HTTPStatus.CREATED
     except errors.UserAlreadyExistsError as e:
         return (
-            jsonify({"error": str(e), "problemPart": "username"}),
+            {"error": str(e), "problemPart": "username"},
             HTTPStatus.CONFLICT,
         )  # HTTP 409 Conflict\
     except errors.MailAlreadyExistsError as e:
-        return jsonify({"error": str(e), "problemPart": "mail"}), HTTPStatus.CONFLICT
+        return {"error": str(e), "problemPart": "mail"}, HTTPStatus.CONFLICT
     except IntegrityError as e:
         return (
-            jsonify({"error": str(e)}),
+            {"error": str(e)},
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )  # HTTP 500 Internal Server Error
 
@@ -45,18 +48,18 @@ def add_user():
 def login_user():
     json_data = request.get_json()
     if not json_data:
-        return jsonify({"error": "No JSON data provided"}), HTTPStatus.BAD_REQUEST
+        return {"error": "No JSON data provided"}, HTTPStatus.BAD_REQUEST
     try:
         user_id = sql_worker.get_user(json_data)
-        return jsonify({"user_id": user_id}), HTTPStatus.OK
+        return {"user_id": user_id}, HTTPStatus.OK
     except errors.UserNotFoundError as e:
         return (
-            jsonify({"error": str(e), "problemPart": "username"}),
+            {"error": str(e), "problemPart": "username"},
             HTTPStatus.UNAUTHORIZED,
         )
     except errors.WrongPasswordError as e:
         return (
-            jsonify({"error": str(e), "problemPart": "password"}),
+            {"error": str(e), "problemPart": "password"},
             HTTPStatus.UNAUTHORIZED,
         )
 
@@ -141,10 +144,10 @@ def add_connection(user_id: int, model_id: int):
             )
         if allowed == LayersConnectionStatus.Cycle:
             error(HTTPStatus.BAD_REQUEST, "Graph must by acyclic")
-        inserted_id = sql_worker.add_connection(layer_from_id, layer_to_id, model_id)
+        status = sql_worker.add_connection(layer_from_id, layer_to_id, model_id)
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
-    return str(inserted_id), HTTPStatus.CREATED
+    return str(status), HTTPStatus.CREATED
 
 
 @app.route("/delete_layer/<int:user_id>/<int:model_id>", methods=["POST"])
@@ -159,8 +162,6 @@ def delete_layer(user_id: int, model_id: int):
         status = sql_worker.delete_layer(int(json["id"]), model_id)
         if status == DeleteStatus.ElementNotExist:
             error(HTTPStatus.NOT_FOUND, "Layer does not exist")
-        if status == DeleteStatus.LayerNotFree:
-            error(HTTPStatus.BAD_REQUEST, "The layer contains connections")
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, message=str(e))
     return "done", HTTPStatus.OK
@@ -175,7 +176,9 @@ def delete_connection(user_id: int, model_id: int):
     if not json:
         error(HTTPStatus.BAD_REQUEST, message="No json provided")
     try:
-        status = sql_worker.delete_connection(int(json["id"]), model_id)
+        status = sql_worker.delete_connection(
+            int(json["layer_from"]), int(json["layer_to"]), model_id
+        )
         if status == DeleteStatus.ElementNotExist:
             error(HTTPStatus.NOT_FOUND, "Connection does not exist")
     except KeyError as e:
@@ -183,11 +186,21 @@ def delete_connection(user_id: int, model_id: int):
     return "done", HTTPStatus.OK
 
 
-def connectionTo(id: int, connections: list) -> int:
-    for conn in connections:
-        if conn["layer_to"] == id:
-            return conn["layer_from"]
-
+@app.route("/update_parents_order/<int:user_id>/<int:model_id>", methods=["POST"])
+def update_parents_order(user_id: int, model_id: int):
+    allowed = sql_worker.verify_access(user_id, model_id)
+    if not allowed:
+        error(HTTPStatus.FORBIDDEN, "You have no rights for changing this model")
+    json = request.json
+    if not json:
+        error(HTTPStatus.BAD_REQUEST, message="No json provided")
+    try:
+        status = sql_worker.update_parents_order(
+            json["new_parents"], int(json["layer_id"]), model_id
+        )
+    except KeyError as e:
+        error(HTTPStatus.BAD_REQUEST, message=str(e))
+    return "done", HTTPStatus.OK
 
 
 @app.route("/train/<int:user_id>/<int:model_id>/<int:safe>", methods=["POST"])
@@ -213,14 +226,13 @@ def train_model(
             error(HTTPStatus.NOT_ACCEPTABLE, "Invalid model found")
         # Convert json to another format for C++ by deleting connsetcions ids and rename layers_type
         model["connections"] = list(
-            map(
-                lambda connection: {
-                    "layer_from": connection["layer_from"],
-                    "layer_to": connection["layer_to"],
-                },
-                model["connections"],
-            )
-        )
+            {
+                "layer_from": layer_from,
+                "layer_to": layer_to["id"],
+            }
+            for layer_to in model["layers"]
+            for layer_from in layer_to["parents"]
+        )  # Create list of connections for C++ server
         model["layers"] = list(
             map(
                 lambda layer: {
@@ -231,63 +243,12 @@ def train_model(
                 model["layers"],
             )
         )
-        for key, array in json["dataset"].items():
-            json["dataset"][key] = list(filter(lambda x: bool(x), array))
-        
-        for layer in model["layers"]:
-            try:
-                tmp = layer["parameters"]["inFeatures"]
-                layer["parameters"]["inFeatures"] = layer["parameters"]["outFeatures"]
-                layer["parameters"]["outFeatures"] = tmp
-                layer["parameters"]["bias"] = True
-            except:
-                pass
 
-            if layer["type"] == "Relu":
-                layer["type"] = "ReLU"
-
-            if layer["type"] == "Output":
-                output_id = layer["id"]
-                last = connectionTo(output_id, model["connections"])
-                model["connections"].append({
-                    "layer_from": last,
-                    "layer_to": 1000
-                })
-        model["layers"].append({
-            "id": 999,
-            "type": "Data",
-            "parameters": {
-                "width": 1
-            }
-        })
-        model["connections"].append({
-            "layer_from": 999,
-            "layer_to": 1000
-        })
-        model["layers"].append({
-            "id": 1000,
-            "type": "MSELoss",
-            "parameters":{}
-        })
-        dataset: dict[int, list[float]] = {}
-        for id, array in json["dataset"].items():
-            if int(id) == output_id:
-                # output
-                dataset['999'] = array
-            else:
-                dataset[id] = array
-        
-        for id, array in dataset.items():
-            for i in range(len(array)):
-                array[i] = int(array[i])
-
-
-        model_to_send = {"graph": model, "dataset": dataset}
-        print(model_to_send)
+        model_to_send = {"graph": model, "dataset": json["dataset"]}
         response = requests.post(
             current_app.config["CPP_SERVER"] + f"/train/{model_id}",
             json=model_to_send,
-            # timeout=3,
+            timeout=3,
         )
         sql_worker.train_model(model_id)
         return response.text, response.status_code

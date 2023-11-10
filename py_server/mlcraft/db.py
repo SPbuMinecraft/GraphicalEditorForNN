@@ -1,6 +1,6 @@
 import json
 from sqlite3 import IntegrityError
-from flask import current_app, jsonify
+from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
 from .utils import (
     LayersConnectionStatus,
@@ -84,7 +84,7 @@ class SQLWorker:
             new_model = Model(
                 owner=user_id,
                 name=name,
-                content='{"layers": [], "connections": []}',
+                content='{"layers": []}',
                 is_trained=False,
             )
             db.session.add(new_model)
@@ -93,7 +93,7 @@ class SQLWorker:
 
     def add_layer(self, layer_type: str, parameters: str, model_id: int):
         with current_app.app_context():
-            model = Model.query.get(model_id)
+            model = db.session.get(Model, model_id)
             if not model:
                 return -1
             model_items = json.loads(
@@ -108,6 +108,7 @@ class SQLWorker:
                 "id": new_id,
                 "layer_type": layer_type,
                 "parameters": parameters,
+                "parents": [],
             }  # Should be refactored?
             model_items["layers"].append(new_layer)
             model.content = json.dumps(model_items)
@@ -126,74 +127,79 @@ class SQLWorker:
         layer = next(l for l in items["layers"] if l["id"] == layer_id)
         layer["parameters"] = new_params
         model.content = json.dumps(items)
+        model.is_trained = False
         with current_app.app_context():
             db.session.add(model)
             db.session.commit()
+
+    def update_parents_order(self, new_parents: list, layer_id: int, model_id: int):
+        with current_app.app_context():
+            model = db.session.get(Model, model_id)
+            if not model:
+                raise KeyError(f"No model with id {model_id}")
+            model_items = json.loads(model.content)
+            layer = next(l for l in model_items["layers"] if l["id"] == layer_id)
+            if sorted(layer["parents"]) != sorted(new_parents):
+                raise KeyError(f"Old connections does not match with new ones")
+            layer["parents"] = new_parents
+            model.content = json.dumps(model_items)
+            model.is_trained = False
+            db.session.add(model)
+            db.session.commit()
+            return 1
 
     def add_connection(
         self, layer_from: int, layer_to: int, model_id: int
     ):  # When we sure, that adding is correct
         with current_app.app_context():
-            model = Model.query.get(model_id)
+            model = db.session.get(Model, model_id)
             if not model:
                 return -1
             model_items = json.loads(model.content)
-            new_id = (
-                model_items["connections"][-1]["id"] + 1
-                if len(model_items["connections"]) > 0
-                else 0
-            )
-            new_connection = {
-                "id": new_id,
-                "layer_from": layer_from,
-                "layer_to": layer_to,
-            }
-            model_items["connections"].append(new_connection)
+            layer = next(l for l in model_items["layers"] if l["id"] == layer_to)
+            layer["parents"].append(layer_from)
             model.content = json.dumps(model_items)
             model.is_trained = False
             db.session.add(model)
             db.session.commit()
-            return new_id
+            return 1
 
     def delete_layer(self, layer_id: int, model_id: int):
         with current_app.app_context():
-            model = Model.query.get(model_id)
+            model = db.session.get(Model, model_id)
             if not model:
                 return DeleteStatus.ModelNotExist
             model_items = json.loads(model.content)
-            if any(
-                conn["layer_from"] == layer_id or conn["layer_to"] == layer_id
-                for conn in model_items["connections"]
-            ):
-                return DeleteStatus.LayerNotFree
-
-            new_layers_list = list(
-                filter(lambda layer: layer["id"] != layer_id, model_items["layers"])
+            layer = next(
+                iter(l for l in model_items["layers"] if l["id"] == layer_id), None
             )
-            if len(new_layers_list) == len(model_items["layers"]):
+            if layer is None:
                 return DeleteStatus.ElementNotExist
-            model_items["layers"] = new_layers_list
+            model_items["layers"].remove(layer)
+            for layer in model_items["layers"]:
+                layer["parents"] = list(
+                    filter(lambda layer_from: layer_id != layer_from, layer["parents"])
+                )
             model.content = json.dumps(model_items)
             model.is_trained = False
             db.session.add(model)
             db.session.commit()
             return DeleteStatus.OK
 
-    def delete_connection(self, connection_id: int, model_id: int):
+    def delete_connection(self, layer_from: int, layer_to: int, model_id: int):
         with current_app.app_context():
-            model = Model.query.get(model_id)
+            model = db.session.get(Model, model_id)
             if not model:
                 return DeleteStatus.ModelNotExist
             model_items = json.loads(model.content)
-            new_connections_list = list(
-                filter(
-                    lambda connection: connection["id"] != connection_id,
-                    model_items["connections"],
-                )
+            layer = next(
+                iter(l for l in model_items["layers"] if l["id"] == layer_to), None
             )
-            if len(new_connections_list) == len(model_items["connections"]):
+            if layer is None:
                 return DeleteStatus.ElementNotExist
-            model_items["connections"] = new_connections_list
+            if layer_from not in layer["parents"]:
+                return DeleteStatus.ElementNotExist
+            layer["parents"].remove(layer_from)
             model.content = json.dumps(model_items)
             model.is_trained = False
             db.session.add(model)
@@ -202,11 +208,10 @@ class SQLWorker:
 
     def clear_model(self, model_id: int):
         with current_app.app_context():
-            model = Model.query.get(model_id)
+            model = db.session.get(Model, model_id)
             if not model:
                 return DeleteStatus.ModelNotExist
             model_items = json.loads(model.content)
-            model_items["connections"] = []
             model_items["layers"] = []
             model.content = json.dumps(model_items)
             db.session.add(model)
@@ -224,7 +229,8 @@ class SQLWorker:
         with current_app.app_context():
             if not self.verify_access(user_id, model_id):
                 return LayersConnectionStatus.AccessDenied
-            model = Model.query.get(model_id)
+            model = db.session.get(Model, model_id)
+            assert model is not None
             model_items = json.loads(model.content)
             layers = model_items["layers"]
             layer1_candidates = list(
@@ -247,14 +253,14 @@ class SQLWorker:
 
     def verify_access(self, user_id, model_id):
         with current_app.app_context():
-            model_passport = Model.query.get(model_id)
-            if not model_passport or model_passport.owner != user_id:
+            model_passport = db.session.get(Model, model_id)
+            if model_passport is None or model_passport.owner != user_id:
                 return False
             return True
 
     def get_graph_elements(self, model_id):
         with current_app.app_context():
-            model = Model.query.get(model_id)
+            model = db.session.get(Model, model_id)
             if not model:
                 return -1
             model_items = json.loads(model.content)
@@ -262,7 +268,7 @@ class SQLWorker:
 
     def train_model(self, model_id: int):
         with current_app.app_context():
-            model = Model.query.get(model_id)
+            model = db.session.get(Model, model_id)
             if not model:
                 return -1
             model.is_trained = True
@@ -272,7 +278,7 @@ class SQLWorker:
 
     def is_model_trained(self, model_id: int):
         with current_app.app_context():
-            model = Model.query.get(model_id)
+            model = db.session.get(Model, model_id)
             if not model:
                 return False
             return model.is_trained
