@@ -9,7 +9,7 @@ ifeq ("$(wildcard $(CONFIG_PATH))","")
 $(error Not a valid config: check your CONFIG_PATH variable)
 endif
 ifeq ("$(shell which npx)","")
-$(error 'npx' not found, try installing 'node')
+$(error 'npx' not found, try installing 'node', see README about 'node')
 endif
 
 port = $(shell node -p "require('$(CONFIG_PATH)').client.PORT")

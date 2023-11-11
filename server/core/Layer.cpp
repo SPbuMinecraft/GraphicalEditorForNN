@@ -1,7 +1,6 @@
 #include <unordered_map>
 #include <functional>
 #include <string>
-#include <vector>
 
 #include "Layer.h"
 
