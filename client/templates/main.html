@@ -187,6 +187,12 @@
           </div>
         </div>
 
+        <div class="relu-layer-parameters" id="relu-layer-parameters" style="display: none">
+          <div id = "relu-input-selection">
+            <ul id="relu-inputs-sortable-list"> </ul>
+          </div>
+        </div>
+
         <div class="special-layer-parameters" id="special-layer-parameters" style="display: none">
           <label for="special-width-parameter">Width</label>
           <input id="special-width-parameter" type="number" value="1" size="4" />
@@ -1031,6 +1037,9 @@
         else if (node.class == "special") {
           sortable_list = document.querySelector("#special-inputs-sortable-list")
         }
+        else if (node.class == "relu") {
+          sortable_list = document.querySelector("#relu-inputs-sortable-list")
+        }
 
         let child = sortable_list.lastElementChild
         while (child) {
@@ -1095,7 +1104,8 @@
               document.querySelector("#linear-outFeatures-parameter").value = layer_parameters[i][1]
             }
           }
-        } else if ((node.class = "special")) {
+        }
+        else if ((node.class == "special")) {
           document.querySelector("#special-layer-parameters").style.display = "block"
 
           for (i in layer_parameters) {
@@ -1104,6 +1114,9 @@
             }
           }
         }
+        else if (node.class == "relu") {
+          document.querySelector("#relu-layer-parameters").style.display = "block"
+        }
         const data = getLayerInfoFromDB(id)
       }
       function hideLayerInfo() {
@@ -1111,6 +1124,7 @@
 
         document.querySelector("#linear-layer-parameters").style.display = "none"
         document.querySelector("#special-layer-parameters").style.display = "none"
+        document.querySelector("#relu-layer-parameters").style.display = "none"
 
         deleteIdOnConnections()
       }
@@ -1129,7 +1143,6 @@
           textElemPath.textContent = labelText
           textElem.appendChild(textElemPath)
           path.appendChild(textElem)
-          console.log(textElemPath)
           return textElemPath
         }
         catch (e) { }
