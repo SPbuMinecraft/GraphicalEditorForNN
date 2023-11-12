@@ -47,6 +47,7 @@ getObjects = $(patsubst $2/%.cpp, $(dirBuild)/%.o, $1)
 core = $(dirBin)/core
 server = $(dirBin)/server
 coreMain = $(dirCore)/main.cpp
+serverMain = $(dirApi)/server.cpp
 coreArchive = $(dirBuild)/libcore.a
 
 help:
@@ -115,17 +116,19 @@ boost = $(call getField,BOOST_ROOT)
 CPPFLAGS += -isystem $(boost)/include
 
 serverFiles = $(wildcard $(dirApi)/*.cpp)
+serverFiles := $(filter-out $(serverMain), $(serverFiles))
 serverObjects = $(call getObjects,$(serverFiles),$(dirApi))
 
 serve: $(server); $< $(host) $(port)
 
-$(server): $(serverObjects) $(coreArchive) | checkboost $(dirBin)
+$(server): $(serverObjects) $(coreArchive) $(serverMain) | checkboost $(dirBin)
 	$(LINK.cpp) -L $(boost)/lib $^ -o $@
 
 
 ### TESTS ###
 
 testFiles = $(wildcard $(dirTests)/*Tests.cpp)
+# testObects = $(call getObjects,$(testFiles),$(dirApi))
 testNames = $(testFiles:$(dirTests)/%Tests.cpp=%)
 testTargets = $(testNames:%=$(dirBin)/test%)
 
@@ -137,8 +140,8 @@ test.%: $(dirBin)/test%
 	$<
 	@echo "$* test completed"
 
-$(dirBin)/test%: $(dirBuild)/%Tests.o $(coreArchive) | $(dirBin)
-	$(LINK.cpp) $^ -o $@
+$(dirBin)/test%: $(dirBuild)/%Tests.o $(serverObjects) $(coreArchive) | checkboost $(dirBin)
+	$(LINK.cpp) -L $(boost)/lib $^ -o $@
 
 
 ### COMMON ###
