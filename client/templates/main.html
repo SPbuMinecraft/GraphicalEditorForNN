@@ -89,7 +89,7 @@
         </div>
       </div>
     </div>
-
+<!--Меню выбора блоков  -->
     <div class="constructor" id="constructor">
       <div class="col">
         <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="linear">
@@ -109,7 +109,12 @@
 
         </div>
         -->
-
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="loss">
+          <span>Loss</span>
+        </div>
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="target">
+          <span>Target</span>
+        </div>
         <div class="drag-drawflow" draggable="false" onmousedown="return false">
           <span> Coming soon</span>
         </div>
@@ -531,12 +536,16 @@
           relu: "Relu",
           data: "Data",
           output: "Output",
+          loss: "Loss",
+          target: "Target",
         }
         const parametersMap = {
           linear: "inputs=1;outputs=1;bias=0;inFeatures=1;outFeatures=2",
           relu: "inputs=1;outputs=1",
           data: "inputs=0;outputs=1;width=2",
           output: "inputs=1;outputs=0;width=1",
+          loss: "inputs:=1;outputs=0;width=1", // TODO
+          target: "inputs:=1;outputs=0;width=1", // TODO
         }
 
         const layer = {
@@ -552,20 +561,24 @@
         }
         switch (name) {
           case "linear":
-            var linear = `<div class="layer"><i class="fab moduleA"></i> Linear</div>`
+            const linear = `<div class="layer"><i class="fab moduleA"></i> Linear</div>`
             editor.addNode("linear", 1, 1, pos_x, pos_y, "linear", attrs, linear)
             break
           case "relu":
-            var relu = `<div class="layer"><i class="fab moduleA"></i> ReLU</div>`
+            const relu = `<div class="layer"><i class="fab moduleA"></i> ReLU</div>`
             editor.addNode("relu", 1, 1, pos_x, pos_y, "relu", attrs, relu)
             break
           case "data":
-            var data = '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>'
+            const data = '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>'
             editor.addNode("data", 0, 1, pos_x, pos_y, "special", attrs, data)
             break
           case "output":
-            var output = '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>'
+            const output = '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>'
             editor.addNode("Output", 1, 0, pos_x, pos_y, "special", attrs, output)
+            break
+          case "loss":
+            const loss = '<div class="title-box"><i class="fab moduleA"></i> loss </div>';
+            editor.addNode("Output", 1, 0, pos_x, pos_y, "special", attrs, loss)
             break
           default:
             throw "Unreachable"
