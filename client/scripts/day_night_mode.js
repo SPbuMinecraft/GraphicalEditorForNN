@@ -1,5 +1,5 @@
 function changeTheme() {
-    const checkbox = document.getElementById("day-night-checkbox-id");
+    const checkbox = document.getElementById("day-night-checkbox-id")
     let root = document.documentElement.style
     if (checkbox.checked) {
         root.setProperty("--color0", "#00a1b0")

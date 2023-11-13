@@ -7,7 +7,7 @@ body {
     font-family: "Roboto", sans-serif;
     /*font-family: "JetBrains Mono", monospace;*/
 }
-.button-wrapper{
+.button-wrapper {
     padding: 8px;
     border-radius: 4px;
     display: inline-block; /* Чтобы можно было встраивать в текст */
@@ -18,7 +18,6 @@ body {
     transition: all 0.3s;
 }
 .logo {
-
     position: sticky;
     top: 0;
 }
@@ -64,14 +63,14 @@ body {
 }
 
 .login-choose {
-    font-size:20px;
+    font-size: 20px;
     width: 90px;
     margin-right: 10px;
     margin-left: 10px;
 }
 
 .signup-choose {
-    font-size:20px;
+    font-size: 20px;
     width: 100px;
 }
 
@@ -129,11 +128,10 @@ input {
     transition: box-shadow 0.5s ease;
     &:focus {
         box-shadow:
-                inset 0 -5px 45px rgba(100, 100, 100, 0.4),
-                0 1px 1px rgba(255, 255, 255, 0.2);
+            inset 0 -5px 45px rgba(100, 100, 100, 0.4),
+            0 1px 1px rgba(255, 255, 255, 0.2);
     }
 }
-
 
 .services_buttons {
     padding: 10px;
@@ -156,10 +154,6 @@ input {
     margin-bottom: 20px;
 }
 
-
-
-
-
 .link {
     color: #1a264d;
     text-decoration: none;
@@ -167,7 +161,6 @@ input {
         color: #849aec;
     }
 }
-
 
 .error-area {
     color: var(--notification-color-fail-border);

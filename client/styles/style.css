@@ -85,8 +85,9 @@ header {
     font-weight: bold;
     background-color: var(--background1);
     box-shadow: inset 3px 3px 3px var(--background0);
-    transition: background-color 0.125s ease-in,
-    box-shadow ease-in 0.125s;
+    transition:
+        background-color 0.125s ease-in,
+        box-shadow ease-in 0.125s;
 }
 .menu ul li.selected {
     border-radius: var(--border-radius);
@@ -106,7 +107,7 @@ header .button-wrapper {
     border-radius: 50%;
     color: var(--text-color);
     box-shadow: inset 3px 3px 5px var(--color0);
-    text-shadow: 2px 2px 3px var(--color4);;
+    text-shadow: 2px 2px 3px var(--color4);
 }
 .profile-icon:hover {
     background-color: var(--color2);
@@ -135,8 +136,6 @@ header .button-wrapper {
     /*box-shadow: inset 0px 2px 3px var(--background3);*/
 }
 
-
-
 /*Home screen*/
 .home {
     width: 100%;
@@ -161,8 +160,9 @@ header .button-wrapper {
     display: inline-grid;
     justify-content: center;
     background-color: var(--background1);
-    box-shadow: inset 3px 3px 3px var(--background-color),
-    3px 3px 3px var(--background2);
+    box-shadow:
+        inset 3px 3px 3px var(--background-color),
+        3px 3px 3px var(--background2);
     border: var(--border-width) solid var(--background3);
     border-radius: 30px;
     overflow: hidden;
@@ -253,7 +253,7 @@ header .button-wrapper {
     transition: background-color 0.125s ease-in;
     border-color: var(--background4);
 }
-.button-wrapper:active{
+.button-wrapper:active {
     box-shadow: inset 3px 3px 3px var(--color2);
 }
 
@@ -487,8 +487,9 @@ header .button-wrapper {
     text-align: center;
     font-size: 20px;
     -webkit-box-shadow: 0 2px 15px 2px var(--color4);
-    box-shadow: 0 2px 15px 2px var(--color4),
-    inset 3px 3px 3px var(--background-color);
+    box-shadow:
+        0 2px 15px 2px var(--color4),
+        inset 3px 3px 3px var(--background-color);
     padding: 0px;
     width: 200px;
     height: 50px;
