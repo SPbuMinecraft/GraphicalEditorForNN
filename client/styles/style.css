@@ -267,6 +267,7 @@ header .button-wrapper {
 .button-wrapper:disabled,
 .button-wrapper[disabled] {
     font-weight: bold;
+    cursor: default;
     background-color: var(--disable-color);
     border-color: var(--background4);
 }
@@ -353,7 +354,7 @@ header .button-wrapper {
     height: fit-content;
     width: 200px;
     overflow: hidden;
-    left: calc((300px - 250px - var(--border-width) * 2 - 10px) / 2);
+    left: calc((300px - 200px - var(--border-width) * 2 - 20px) / 2);
     background-color: var(--background-color);
     border: var(--border-width) solid var(--background3);
     border-radius: var(--border-radius);

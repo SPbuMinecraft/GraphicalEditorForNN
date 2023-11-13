@@ -34,11 +34,9 @@ def get_edges_from_model(model_dict):
 
 
 def is_valid_model(model_dict):
-    start_candidates = list(
-        filter(lambda x: x["layer_type"] == "Data", model_dict["layers"])
-    )
+    start_candidates = list(filter(lambda x: x["type"] == "Data", model_dict["layers"]))
     stop_candidates = list(
-        filter(lambda x: x["layer_type"] == "Output", model_dict["layers"])
+        filter(lambda x: x["type"] == "Output", model_dict["layers"])
     )
     # Проверяем соединятеся ли data и loss
     loss_layer = list(filter(lambda x: x["layer_type"] == "Loss", model_dict["layers"]))
