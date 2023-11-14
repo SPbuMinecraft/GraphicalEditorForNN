@@ -109,12 +109,6 @@
 
         </div>
         -->
-        <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="loss">
-          <span>Loss</span>
-        </div>
-        <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="target">
-          <span>Target</span>
-        </div>
         <div class="drag-drawflow" draggable="false" onmousedown="return false">
           <span> Coming soon</span>
         </div>
@@ -257,7 +251,7 @@
         0,
         1,
         300,
-        363,
+        320,
         "special",
         {},
         '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>',
@@ -265,12 +259,33 @@
       editor.addNode(
         "Output",
         1,
-        0,
-        700,
-        363,
+        0, 1260,
+        320,
         "special",
         {},
         '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>',
+      )
+
+      editor.addNode(
+        "Loss",
+        0,
+        1,
+        750,
+        750,
+        "special",
+        {},
+        '<div class="title-box"><i class="fas fa-file-signature"></i> Loss </div>',
+      )
+
+      editor.addNode(
+        "Target",
+        1,
+        0,
+        1260,
+        750,
+        "special",
+        {},
+        '<div class="title-box"><i class="fas fa-file-signature"></i> Target </div>',
       )
 
       // Events!
@@ -536,8 +551,6 @@
           relu: "Relu",
           data: "Data",
           output: "Output",
-          loss: "Loss",
-          target: "Target",
         }
         const parametersMap = {
           linear: "inputs=1;outputs=1;bias=0;inFeatures=1;outFeatures=2",
@@ -575,10 +588,6 @@
           case "output":
             const output = '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>'
             editor.addNode("Output", 1, 0, pos_x, pos_y, "special", attrs, output)
-            break
-          case "loss":
-            const loss = '<div class="title-box"><i class="fab moduleA"></i> loss </div>'
-            editor.addNode("Output", 1, 0, pos_x, pos_y, "special", attrs, loss)
             break
           default:
             throw "Unreachable"
