@@ -268,9 +268,9 @@
 
       editor.addNode(
         "Loss",
-        0,
         1,
-        750,
+        0,
+        1260,
         750,
         "special",
         {},
@@ -279,9 +279,9 @@
 
       editor.addNode(
         "Target",
-        1,
         0,
-        1260,
+        1,
+        750,
         750,
         "special",
         {},
@@ -754,6 +754,8 @@
       function buildTrainData(form) {
         let input = []
         let output = []
+        let loss = []
+        let target = []
         const jsonFormData = {}
 
         for (const pair of new FormData(form)) {
@@ -766,6 +768,9 @@
 
         jsonFormData["0"] = input // 0 - id Data layer
         jsonFormData["1"] = output // 1 - id Output layer TODO: id of target block here
+        jsonFormData["2"] = loss
+        jsonFormData["3"] = target
+
         console.log(jsonFormData)
         return {dataset: jsonFormData}
       }
