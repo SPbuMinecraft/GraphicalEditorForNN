@@ -250,7 +250,7 @@ header .button-wrapper {
     color: var(--text-color);
     cursor: pointer;
     border: var(--border-width) solid var(--background3);
-    border-radius: 30px;
+    border-radius: var(--border-radius);
     & input {
         display: none;
     }

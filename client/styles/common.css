@@ -9,7 +9,7 @@ body {
 .container {
     width: 100%; /* Растягиваем div на всю ширину экрана */
     height: 100vh; /* Растягиваем div на всю высоту экрана */
-    background-color: var(--background2); /*#4b4f70;  Цвет заливки div */
+    background-color: var(--background0); /*#4b4f70;  Цвет заливки div */
     display: flex;
     justify-content: center; /* Выравниваем по горизонтали по центру */
     align-items: center; /* Выравниваем по вертикали по центру */
