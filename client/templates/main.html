@@ -60,9 +60,7 @@
     </header>
 
     <div class="profile" id="profile">
-      Coming soon!
       <a style="text-decoration: none" href="./authorization.html" onclick="signOut()">
-        <!--здесь будет ссылка на страницу регистрации-->
         <input class="button-wrapper" type="button" id="sing-out-button" value="Sign Out" />
       </a>
       <label class="day-night-mode-label">
@@ -831,8 +829,8 @@
       }
       function showProfile() {
         var prf = document.getElementById("profile")
-        if (prf.style.display == "grid") prf.style.display = "none"
-        else prf.style.display = "grid"
+        if (prf.style.display == "block") prf.style.display = "none"
+        else prf.style.display = "block"
       }
     </script>
 

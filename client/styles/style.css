@@ -134,6 +134,12 @@ header .button-wrapper {
     border-bottom: var(--border-width) solid var(--background3);
     border-bottom-right-radius: 30px;
     /*box-shadow: inset 0px 2px 3px var(--background3);*/
+    .button-wrapper {
+        margin-top: 20px;
+        margin-left: 110px;
+        font-size: 23px;
+        width: 110px;
+    }
 }
 
 /*Home screen*/

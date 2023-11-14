@@ -64,14 +64,14 @@ body {
 
 .login-choose {
     font-size: 20px;
-    width: 90px;
+    width: 110px;
     margin-right: 10px;
     margin-left: 10px;
 }
 
 .signup-choose {
     font-size: 20px;
-    width: 100px;
+    width: 110px;
 }
 
 .form-section {
@@ -163,9 +163,10 @@ input {
 }
 
 .error-area {
-    color: var(--notification-color-fail-border);
+    color: var(--auth-error-area);
+    font-weight: bold;
 }
 
 .error-alert {
-    color: var(--notification-color-fail);
+    color: var(--text-color);
 }
