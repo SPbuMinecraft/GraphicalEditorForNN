@@ -29,7 +29,7 @@ body {
     margin-top: 40px;
     color: var(--text-color);
     font-weight: bold;
-    text-shadow: 2px 2px 3px var(--color4);
+    /*text-shadow: 2px 2px 3px var(--color4);*/
 }
 
 .login_container {

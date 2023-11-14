@@ -135,9 +135,10 @@ header .button-wrapper {
     border-bottom-right-radius: 30px;
     /*box-shadow: inset 0px 2px 3px var(--background3);*/
     .button-wrapper {
+        padding: 8px;
         margin-top: 20px;
         margin-left: 110px;
-        font-size: 23px;
+        font-size: 20px;
         width: 110px;
     }
 }
@@ -243,6 +244,7 @@ header .button-wrapper {
 }
 
 .button-wrapper {
+    font-weight: bold;
     text-align: center;
     background-color: var(--color4);
     color: var(--text-color);
@@ -254,7 +256,6 @@ header .button-wrapper {
     }
 }
 .button-wrapper:hover {
-    font-weight: bold;
     background-color: var(--color1);
     transition: background-color 0.125s ease-in;
     border-color: var(--background4);
