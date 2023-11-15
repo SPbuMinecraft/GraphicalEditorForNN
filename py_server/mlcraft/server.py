@@ -1,3 +1,4 @@
+from json import dumps
 from sqlite3 import IntegrityError
 import requests
 from http import HTTPStatus
@@ -13,6 +14,7 @@ from .utils import (
 from . import errors
 
 from .db import sql_worker
+from .dataset import csv_to_data
 
 
 app = Blueprint("make a better name", __name__)
@@ -207,9 +209,9 @@ def train_model(
     allowed = sql_worker.verify_access(user_id, model_id)
     if not allowed:
         error(HTTPStatus.FORBIDDEN, "You have no rights for training this model")
-    json = request.json
-    if not json:
-        error(HTTPStatus.BAD_REQUEST, message="No json provided")
+    dataset = csv_to_data(
+        request.data, 0, 999
+    )  # need to place a target id instead of 999
     try:
         if sql_worker.is_model_trained(model_id) and safe:
             error(HTTPStatus.PRECONDITION_FAILED, "Already trained")
@@ -240,10 +242,11 @@ def train_model(
             )
         )
 
-        model_to_send = {"graph": model, "dataset": json["dataset"]}
+        model = {"graph": model, "dataset": dataset}
+        final = dumps(model)
         response = requests.post(
             current_app.config["CPP_SERVER"] + f"/train/{model_id}",
-            json=model_to_send,
+            json=final,
             timeout=3,
         )
         sql_worker.train_model(model_id)
