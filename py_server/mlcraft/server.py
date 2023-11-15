@@ -210,7 +210,7 @@ def train_model(
     if not allowed:
         error(HTTPStatus.FORBIDDEN, "You have no rights for training this model")
     dataset = csv_to_data(
-        request.data, 0, 999
+        request.data, 0, 2
     )  # need to place a target id instead of 999
     try:
         if sql_worker.is_model_trained(model_id) and safe:
