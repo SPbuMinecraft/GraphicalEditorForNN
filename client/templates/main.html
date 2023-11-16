@@ -90,7 +90,7 @@
         </div>
       </div>
     </div>
-
+    <!--Меню выбора блоков  -->
     <div class="constructor" id="constructor">
       <div class="col">
         <br />
@@ -111,7 +111,6 @@
 
         </div>
         -->
-
         <div class="drag-drawflow" draggable="false" onmousedown="return false">
           <span> Coming soon</span>
         </div>
@@ -262,7 +261,7 @@
         0,
         1,
         300,
-        363,
+        320,
         "special",
         {},
         '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>',
@@ -271,11 +270,33 @@
         "Output",
         1,
         0,
-        700,
-        363,
+        760,
+        320,
         "special",
         {},
         '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>',
+      )
+
+      editor.addNode(
+        "Target",
+        0,
+        1,
+        450,
+        450,
+        "special",
+        {},
+        '<div class="title-box"><i class="fas fa-file-signature"></i> Target </div>',
+      )
+
+      editor.addNode(
+        "Loss",
+        1,
+        0,
+        760,
+        450,
+        "special",
+        {},
+        '<div class="title-box"><i class="fas fa-file-signature"></i> Loss </div>',
       )
 
       // Events!
@@ -538,15 +559,19 @@
 
         const nameMap = {
           linear: "Linear",
-          relu: "Relu",
+          relu: "ReLU",
           data: "Data",
           output: "Output",
+          loss: "MSELoss",
+          target: "Target",
         }
         const parametersMap = {
           linear: "inputs=1;outputs=1;bias=0;inFeatures=1;outFeatures=2",
           relu: "inputs=1;outputs=1",
           data: "inputs=0;outputs=1;width=2",
           output: "inputs=1;outputs=0;width=1",
+          loss: "inputs:=1;outputs=0;width=1", // TODO
+          target: "inputs:=1;outputs=0;width=1", // TODO
         }
 
         const layer = {
@@ -562,20 +587,28 @@
         }
         switch (name) {
           case "linear":
-            var linear = `<div class="layer"><i class="fab moduleA"></i> Linear</div>`
+            const linear = `<div class="layer"><i class="fab moduleA"></i> Linear</div>`
             editor.addNode("linear", 1, 1, pos_x, pos_y, "linear", attrs, linear)
             break
           case "relu":
-            var relu = `<div class="layer"><i class="fab moduleA"></i> ReLU</div>`
-            editor.addNode("relu", 1, 1, pos_x, pos_y, "relu", attrs, relu)
+            const relu = `<div class="layer"><i class="fab moduleA"></i> ReLU</div>`
+            editor.addNode("ReLU", 1, 1, pos_x, pos_y, "relu", attrs, relu)
             break
           case "data":
-            var data = '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>'
+            const data = '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>'
             editor.addNode("data", 0, 1, pos_x, pos_y, "special", attrs, data)
             break
           case "output":
-            var output = '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>'
+            const output = '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>'
             editor.addNode("Output", 1, 0, pos_x, pos_y, "special", attrs, output)
+            break
+          case "target":
+            const target = '<div class="title-box"><i class="fas fa-file-signature"></i> Target </div>'
+            editor.addNode("Target", 0, 1, pos_x, pos_y, "special", attrs, target)
+            break
+          case "loss":
+            const loss = '<div class="title-box"><i class="fas fa-file-signature"></i> Loss </div>'
+            editor.addNode("MSELoss", 2, 0, pos_x, pos_y, "special", attrs, loss)
             break
           default:
             throw "Unreachable"
@@ -739,30 +772,37 @@
         return jsonFormData
       }
 
-      function buildTrainData(form) {
-        let input = []
-        let output = []
-        const jsonFormData = {}
+      // function buildTrainData(form) {
+      //   let input = []
+      //   let output = []
+      //   let loss = []
+      //   let target = []
+      //   const jsonFormData = {}
 
-        for (const pair of new FormData(form)) {
-          if (pair[0] == "res") {
-            output.push(Number(pair[1]))
-          } else {
-            input.push(Number(pair[1]))
-          }
-        }
+      //   for (const pair of new FormData(form)) {
+      //     if (pair[0] == "res") {
+      //       output.push(Number(pair[1]))
+      //     } else {
+      //       input.push(Number(pair[1]))
+      //     }
+      //   }
 
-        jsonFormData["0"] = input // 0 - id Data layer
-        jsonFormData["1"] = output // 1 - id Output layer TODO: id of target block here
-        console.log(jsonFormData)
-        return {dataset: jsonFormData}
-      }
+      //   jsonFormData["0"] = input // 0 - id Data layer
+      //   jsonFormData["1"] = output // 1 - id Output layer TODO: id of target block here
+      //   jsonFormData["2"] = loss
+      //   jsonFormData["3"] = target
+
+      //   console.log(jsonFormData)
+      //   return {dataset: jsonFormData}
+      // }
     </script>
 
     <!-- JS scripts -->
     <script>
       const dataLayerId = 1
       const outputLayerId = 2
+      const targetLayerId = 3
+      const lossLayerId = 4
       //import {user_id, py_server_address} from "../scripts/auth.js"
       const user_id = localStorage.getItem("user_id")
       const model_id = localStorage.getItem("model_id")
@@ -791,6 +831,16 @@
             parameters: "inputs=1;outputs=0;width=1",
           }
 
+          let ObjTarget = {
+            type: "Target",
+            parameters: "inputs=0;outputs=1;width=1",
+          }
+
+          let ObjLoss = {
+            type: "MSELoss",
+            parameters: "inputs=2;outputs=0;width=1",
+          }
+
           addLayer(ObjData)
             .then(id =>
               editor.updateNodeDataFromId(dataLayerId, {
@@ -805,6 +855,24 @@
                   DBID: id,
                   Connections: [],
                   Parameters: ObjOutput.parameters,
+                }),
+              ),
+            )
+            .then(() =>
+              addLayer(ObjTarget).then(id =>
+                editor.updateNodeDataFromId(targetLayerId, {
+                  DBID: id,
+                  Connections: [],
+                  Parameters: ObjTarget.parameters,
+                }),
+              ),
+            )
+            .then(() =>
+              addLayer(ObjLoss).then(id =>
+                editor.updateNodeDataFromId(lossLayerId, {
+                  DBID: id,
+                  Connections: [],
+                  Parameters: ObjLoss.parameters,
                 }),
               ),
             )

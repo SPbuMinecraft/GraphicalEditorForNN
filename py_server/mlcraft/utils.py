@@ -40,11 +40,23 @@ def is_valid_model(model_dict):
     stop_candidates = list(
         filter(lambda x: x["layer_type"] == "Output", model_dict["layers"])
     )
+    # Проверяем соединятеся ли data и loss
+    loss_layer = list(filter(lambda x: x["layer_type"] == "Loss", model_dict["layers"]))
+    target_layer = list(
+        filter(lambda x: x["layer_type"] == "Target", model_dict["layers"])
+    )
+
     if len(start_candidates) == 0 or len(stop_candidates) == 0:
         return False
     start_ids = list(map(lambda layer: layer["id"], start_candidates))
     stop_ids = list(map(lambda layer: layer["id"], stop_candidates))
-    return check_paths_exist(start_ids, stop_ids, model_dict)
+    loss_ids = list(map(lambda layer: layer["id"], loss_layer))
+    target_ids = list(map(lambda layer: layer["id"], target_layer))
+    return (
+        check_paths_exist(start_ids, stop_ids, model_dict)
+        and check_paths_exist(start_ids, loss_ids, model_dict)
+        and check_paths_exist(target_ids, loss_ids, model_dict)
+    )
 
 
 def check_paths_exist(start_ids: list, stop_ids: list, model_dict: dict):

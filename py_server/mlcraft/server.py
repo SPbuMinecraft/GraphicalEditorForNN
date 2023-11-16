@@ -210,7 +210,7 @@ def train_model(
     if not allowed:
         error(HTTPStatus.FORBIDDEN, "You have no rights for training this model")
     dataset = csv_to_data(
-        request.data, 0, 999
+        request.data, 0, 2
     )  # need to place a target id instead of 999
     try:
         if sql_worker.is_model_trained(model_id) and safe:
@@ -243,10 +243,9 @@ def train_model(
         )
 
         model = {"graph": model, "dataset": dataset}
-        final = dumps(model)
         response = requests.post(
             current_app.config["CPP_SERVER"] + f"/train/{model_id}",
-            json=final,
+            json=model,
             timeout=3,
         )
         sql_worker.train_model(model_id)
