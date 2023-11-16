@@ -106,7 +106,7 @@ class SQLWorker:
             )
             new_layer = {
                 "id": new_id,
-                "layer_type": layer_type,
+                "type": layer_type,
                 "parameters": parameters,
                 "parents": [],
             }  # Should be refactored?
@@ -246,7 +246,7 @@ class SQLWorker:
             layer2 = layer2_candidates[0]
             if not self.check_dimensions(layer1, layer2):
                 return LayersConnectionStatus.DimensionsMismatch
-            if layer2["layer_type"] == "Data" or layer1["layer_type"] == "Output":
+            if layer2["type"] == "Data" or layer1["type"] == "Output":
                 return LayersConnectionStatus.WrongDirection
             if check_paths_exist([layer_to], [layer_from], model_items):
                 return LayersConnectionStatus.Cycle

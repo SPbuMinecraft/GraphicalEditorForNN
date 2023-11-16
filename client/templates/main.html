@@ -118,31 +118,20 @@
 
         <label class="button-wrapper">
           Upload
-          <input type="file" id="csv-upload-button" accept=".csv" hidden />
+          <input type="file" id="csv-upload-button" accept=".csv" />
         </label>
 
-        <div class="predict-train-interface" id="train">
-          <label class="button-wrapper" id="train-button" disabled>
-            Train
-            <input type="button" onclick="trainRequest()" disabled />
-          </label>
-        </div>
-        <div class="predict-train-interface" id="predict">
-          <form class="predict-train-form" id="xy-form-predict">
-            <label for="x-value" class="x-val-label"> x </label>
-            <input type="number" class="form-control-x" id="x-value" name="x" />
+        <label class="button-wrapper" id="train-button" disabled>
+          Train
+          <input type="button" onclick="trainRequest()" disabled />
+        </label>
 
-            <label for="y-value" class="y-val-label"> y </label>
-            <input type="number" class="form-control-y" id="y-value" name="y" />
-          </form>
-          <label class="button-wrapper" id="submit-button">
-            Predict
-            <input type="submit" onclick="predictRequest()" />
-          </label>
-          <div class="predict-result-wrapper" id="predict-result-wrapper">
-            =
-            <output class="form-control-res" id="res-value-out" name="res-value" for="x-value y-value"></output>
-          </div>
+        <label class="button-wrapper" disabled>
+          Predict
+          <input type="file" accept=".csv" id="csv-predict-button" disabled />
+        </label>
+        <div class="predict-result-wrapper" id="predict-result-wrapper">
+          <output class="form-control-res" id="res-value-out" name="res-value" for="x-value y-value"></output>
         </div>
       </div>
 
@@ -382,7 +371,7 @@
         })
         console.log("Layer id " + layer_from_db_id + " connections: " + list_of_connections)
 
-        let delayed_deletion = delay(300).then(() => deleteConnection(connection_id))
+        deleteConnection(connection_id)
       })
       editor.on("nodeMoved", function (id) {
         console.log("Node moved " + id)
@@ -743,26 +732,28 @@
           headers: {"Content-Type": "text/csv"},
           body: train_data,
         }).then(response => {
-          const is_trained = response.status == 200
-          showBuildNotification(is_trained)
-          onTrainShowPredict(is_trained)
+          showBuildNotification(response.ok)
+          onTrainShowPredict(response.ok)
         })
       }
 
-      function predictRequest() {
-        const form_data = buildJsonFormData(document.querySelector("#xy-form-predict"))
-        console.log(form_data)
-
-        for (let i = 0; i < form_data.length; i++) {
-          let obj = form_data[i]
-
-          console.log(obj)
-        }
-
-        sendJson(form_data, `http://${py_server_address}/predict/${user_id}/${model_id}`, "POST").then(result => {
-          onPredictShowResult(result)
+      async function predictRequest() {
+        if (csv_predict.files.length == 0) return
+        const file = csv_predict.files[0]
+        const text = await file.text()
+        const response = await fetch(`http://${py_server_address}/predict/${user_id}/${model_id}`, {
+          method: "POST",
+          mode: "cors",
+          headers: {"Content-Type": "text/csv"},
+          body: text,
         })
+        hideResult() // hide previous predict result
+        if (response.ok) onPredictShowResult(await response.text())
+        // TODO: handle errors here
+        else console.log(`Predict failed with ${response.statusText}: ${await response.text()}`)
       }
+      const csv_predict = document.getElementById("csv-predict-button")
+      csv_predict.addEventListener("change", predictRequest)
 
       function buildJsonFormData(form) {
         const jsonFormData = {}
@@ -993,6 +984,7 @@
         build_status ? buildSuccessful() : buildUnsuccessful()
       }
       async function csvUploaded() {
+        if (csv_upload.files.length == 0) return
         const file = csv_upload.files[0]
         const text = await file.text()
         // do whatever with the `text`
@@ -1009,14 +1001,23 @@
       csv_upload.addEventListener("change", csvUploaded)
 
       function onTrainShowPredict(training_successful) {
-        training_successful
-          ? (document.getElementById("predict").style.display = "block")
-          : (document.getElementById("predict").style.display = "none")
+        const predict_button = document.getElementById("csv-predict-button")
+        hideResult() // hide result when new training results arrive
+        if (training_successful) {
+          predict_button.removeAttribute("disabled")
+          predict_button.parentElement.removeAttribute("disabled")
+        } else {
+          predict_button.setAttribute("disabled", "")
+          predict_button.parentElement.setAttribute("disabled", "")
+        }
       }
       function onPredictShowResult(res) {
-        document.getElementById("res-value-out").innerHTML = res
+        document.getElementById("res-value-out").innerHTML = res.replace(/[^\d.-]/g, "") // extract number from it for now
         document.getElementById("predict-result-wrapper").style.textAlign = "center"
         document.getElementById("predict-result-wrapper").style.display = "block"
+      }
+      function hideResult() {
+        document.getElementById("predict-result-wrapper").style.display = "none"
       }
       function showLayerInfo(id) {
         // id format "node-<id>"

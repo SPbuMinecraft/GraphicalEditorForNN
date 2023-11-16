@@ -143,6 +143,7 @@ async function registerUser() {
 
     const userRegistrationData = buildJsonFormData(signupForm)
     try {
+        // TODO: should be fixed in swagger branch
         let add_data_response = await sendJson(
             userRegistrationData,
             `http://${py_server_address}/add_user`,

@@ -14,7 +14,7 @@ from .utils import (
 from . import errors
 
 from .db import sql_worker
-from .dataset import csv_to_data
+from .dataset import extract_predict_data, extract_train_data
 
 
 app = Blueprint("make a better name", __name__)
@@ -209,9 +209,9 @@ def train_model(
     allowed = sql_worker.verify_access(user_id, model_id)
     if not allowed:
         error(HTTPStatus.FORBIDDEN, "You have no rights for training this model")
-    dataset = csv_to_data(
-        request.data, 0, 2
-    )  # need to place a target id instead of 999
+    if not request.data:
+        error(HTTPStatus.BAD_REQUEST, "No csv file provided")
+    dataset = extract_train_data(request.data, model_id)
     try:
         if sql_worker.is_model_trained(model_id) and safe:
             error(HTTPStatus.PRECONDITION_FAILED, "Already trained")
@@ -235,7 +235,7 @@ def train_model(
             map(
                 lambda layer: {
                     "id": layer["id"],
-                    "type": layer["layer_type"],
+                    "type": layer["type"],
                     "parameters": layer["parameters"],
                 },
                 model["layers"],
@@ -250,6 +250,8 @@ def train_model(
         )
         sql_worker.train_model(model_id)
         return response.text, response.status_code
+    except requests.exceptions.ConnectionError as e:
+        error(HTTPStatus.INTERNAL_SERVER_ERROR, "No c++ server found")
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, str(e))
     except TimeoutError as e:
@@ -261,19 +263,20 @@ def predict(user_id: int, model_id: int):
     allowed = sql_worker.verify_access(user_id, model_id)
     if not allowed:
         error(HTTPStatus.FORBIDDEN, "You have no rights for training this model")
-    json = request.json
-    if not json:
-        error(HTTPStatus.BAD_REQUEST, message="No json provided")
+    if not request.data:
+        error(HTTPStatus.BAD_REQUEST, message="No csv file provided")
+    json = extract_predict_data(request.data, model_id)
     try:
         if not sql_worker.is_model_trained(model_id):
             error(HTTPStatus.PRECONDITION_FAILED, "Not trained")
-        json = {"0": [float(json["x"]), float(json["y"])]}
         response = requests.post(
             current_app.config["CPP_SERVER"] + f"/predict/{model_id}",
             json=json,
             # timeout=3,
         )
         return response.text, response.status_code
+    except requests.exceptions.ConnectionError as e:
+        error(HTTPStatus.INTERNAL_SERVER_ERROR, "No c++ server found")
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, str(e))
     except TimeoutError as e:
