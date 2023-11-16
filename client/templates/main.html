@@ -371,7 +371,7 @@
         })
         console.log("Layer id " + layer_from_db_id + " connections: " + list_of_connections)
 
-        let delayed_deletion = delay(300).then(() => deleteConnection(connection_id))
+        deleteConnection(connection_id)
       })
       editor.on("nodeMoved", function (id) {
         console.log("Node moved " + id)

@@ -19,7 +19,7 @@ def get_target_id(model_id: int) -> int:
 def extract_train_data(bytes: bytes, model_id: int) -> dict:
     # TODO: when we define formats, errors will be handled
     data_id = get_data_id(model_id)
-    target_id = 999  # get_target_id(model_id) TODO: need target layer in db
+    target_id = get_target_id(model_id)
 
     reader = csv.reader(StringIO(bytes.decode()))
 

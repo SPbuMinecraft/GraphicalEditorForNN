@@ -276,6 +276,7 @@ header .button-wrapper {
     display: block;
     position: relative;
     padding-top: 10px;
+    margin-bottom: 10px;
     top: 0px;
     left: calc((300px - 80px - var(--border-width) * 2) / 2);
     height: 30px;

@@ -275,6 +275,8 @@ def predict(user_id: int, model_id: int):
             # timeout=3,
         )
         return response.text, response.status_code
+    except requests.exceptions.ConnectionError as e:
+        error(HTTPStatus.INTERNAL_SERVER_ERROR, "No c++ server found")
     except KeyError as e:
         error(HTTPStatus.BAD_REQUEST, str(e))
     except TimeoutError as e:

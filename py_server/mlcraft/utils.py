@@ -39,10 +39,9 @@ def is_valid_model(model_dict):
         filter(lambda x: x["type"] == "Output", model_dict["layers"])
     )
     # Проверяем соединятеся ли data и loss
-    loss_layer = list(filter(lambda x: x["layer_type"] == "Loss", model_dict["layers"]))
-    target_layer = list(
-        filter(lambda x: x["layer_type"] == "Target", model_dict["layers"])
-    )
+    # TODO: MSELoss -> Loss
+    loss_layer = list(filter(lambda x: x["type"] == "MSELoss", model_dict["layers"]))
+    target_layer = list(filter(lambda x: x["type"] == "Target", model_dict["layers"]))
 
     if len(start_candidates) == 0 or len(stop_candidates) == 0:
         return False
