@@ -243,10 +243,9 @@ def train_model(
         )
 
         model = {"graph": model, "dataset": dataset}
-        final = dumps(model)
         response = requests.post(
             current_app.config["CPP_SERVER"] + f"/train/{model_id}",
-            json=final,
+            json=model,
             timeout=3,
         )
         sql_worker.train_model(model_id)

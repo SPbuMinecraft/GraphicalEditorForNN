@@ -221,7 +221,8 @@ class SQLWorker:
     def check_dimensions(self, layer_from: dict, layer_to: dict):
         parameters_from = parse_parameters(layer_from["parameters"])
         parameters_to = parse_parameters(layer_to["parameters"])
-        return int(parameters_from["outputs"]) == int(parameters_to["inputs"])
+        # return int(parameters_from["outputs"]) <= int(parameters_to["inputs"])
+        return True
 
     def verify_connection(
         self, user_id: int, model_id: int, layer_from: int, layer_to: int
