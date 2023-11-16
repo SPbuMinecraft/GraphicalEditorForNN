@@ -1,29 +1,4 @@
-/*глобальные переменные и палитра*/
-:root {
-    --border-color: #000000;
-    --background-color: #ffffff;
-    --background-box-title: #d0d0d0;
-    --gradient-color: #aebcd2;
-    --text-color: #000000;
-    --disable-color: #aaa;
-    --notification-color-success: #3fd778;
-    --notification-color-success-border: #156532;
-    --notification-color-fail: #f66262;
-    --notification-color-fail-border: #702626;
-    --color0: #ccfcff; /* #ccfcff */
-    --color1: #b2f9fd; /* #b2f9fd */
-    --color2: #009ba2; /* #00f4ff */
-    --color3: #25c6ce; /* #25c6ce */
-    --color4: #20b6be; /* #18989f */
-    --background0: #e1e1e1; /* #e0e0e0 */
-    --background1: #b5bdc4; /* #c2c2c2 */
-    --background2: #62738c; /* #9d9d9d */
-    --background3: #303744; /* #525252 */
-    --background4: #282828; /* #333333 */
-    --border-width: 3px;
-    --connection-width: 4px;
-    --header-height: 65px;
-}
+@import "palette.css";
 
 html,
 body {
@@ -51,7 +26,7 @@ body {
     z-index: 2;
     color: var(--text-color);
     font-size: 20px;
-    border-radius: 15px;
+    border-radius: var(--border-radius);
     &#success {
         background-color: var(--notification-color-success);
         border: var(--border-width) solid
@@ -64,6 +39,13 @@ body {
 }
 
 /*элементы верхней части окна*/
+h2 {
+    font-size: 40px;
+    margin-top: 10px;
+    color: var(--text-color);
+    font-weight: bold;
+    /*text-shadow: 2px 2px 3px var(--color4);*/
+}
 header {
     height: var(--header-height);
     border-bottom: var(--border-width) solid var(--background3);
@@ -99,15 +81,19 @@ header {
     background-color: var(--background2);
 }
 .menu ul li:hover {
-    border-radius: 15px;
+    border-radius: var(--border-radius);
     font-weight: bold;
     background-color: var(--background1);
-    transition: background-color 0.125s ease-in;
+    box-shadow: inset 3px 3px 3px var(--background0);
+    transition:
+        background-color 0.125s ease-in,
+        box-shadow ease-in 0.125s;
 }
 .menu ul li.selected {
-    border-radius: 15px;
+    border-radius: var(--border-radius);
     font-weight: bold;
     background-color: var(--background1);
+    box-shadow: inset 3px 3px 3px var(--background0);
 }
 
 /*Profile*/
@@ -120,6 +106,8 @@ header .button-wrapper {
     overflow: hidden;
     border-radius: 50%;
     color: var(--text-color);
+    box-shadow: inset 3px 3px 5px var(--color0);
+    text-shadow: 2px 2px 3px var(--color4);
 }
 .profile-icon:hover {
     background-color: var(--color2);
@@ -145,70 +133,13 @@ header .button-wrapper {
     border-right: var(--border-width) solid var(--background3);
     border-bottom: var(--border-width) solid var(--background3);
     border-bottom-right-radius: 30px;
-}
-
-.day-night-mode-label {
-    display: block;
-    position: absolute;
-    bottom: 15px;
-    left: 10px;
-    cursor: pointer;
-    font-size: 11px;
-    height: 25px;
-    width: 50px;
-    border: var(--border-width) solid var(--background3);
-    border-radius: 50px;
-
-    .day-night-checkbox {
-        display: none;
-    }
-    & input:checked ~ .control {
-        background-color: var(--color4);
-        &::before {
-            background: var(--color4);
-            left: calc(50px - (20px * 1.4) - 2px);
-            transform: scale(1);
-        }
-        &::after {
-            background: white;
-            left: calc(50px - 20px - 2px);
-        }
-    }
-    .control {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 25px;
-        width: 50px;
-        border-radius: 50px;
-        background-color: var(--color1);
-        transition: background-color 0.125s ease-in;
-
-        &::before {
-            content: "";
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            left: 0;
-            top: 0;
-            border-radius: 50%;
-            transform: scale(0);
-            background: var(--background3);
-            z-index: 5;
-            transition: all 0.125s ease-in;
-        }
-
-        &::after {
-            content: "";
-            position: absolute;
-            left: 2px;
-            top: 2px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #fff89e;
-            transition: all 0.125s ease-in;
-        }
+    /*box-shadow: inset 0px 2px 3px var(--background3);*/
+    .button-wrapper {
+        padding: 8px;
+        margin-top: 20px;
+        margin-left: 110px;
+        font-size: 20px;
+        width: 110px;
     }
 }
 
@@ -236,6 +167,9 @@ header .button-wrapper {
     display: inline-grid;
     justify-content: center;
     background-color: var(--background1);
+    box-shadow:
+        inset 3px 3px 3px var(--background-color),
+        3px 3px 3px var(--background2);
     border: var(--border-width) solid var(--background3);
     border-radius: 30px;
     overflow: hidden;
@@ -253,8 +187,9 @@ header .button-wrapper {
         text-align: center;
         padding: 10px 30px;
         border: var(--border-width) solid var(--background3);
-        border-radius: 30px;
+        border-radius: 15px;
         background-color: var(--background-color);
+        box-shadow: inset 3px 3px 3px var(--background0);
     }
 }
 #new-nn {
@@ -309,22 +244,26 @@ header .button-wrapper {
 }
 
 .button-wrapper {
+    font-weight: bold;
     text-align: center;
     background-color: var(--color4);
     color: var(--text-color);
     cursor: pointer;
     border: var(--border-width) solid var(--background3);
-    border-radius: 30px;
+    border-radius: var(--border-radius);
     & input {
         display: none;
     }
 }
 .button-wrapper:hover {
-    font-weight: bold;
     background-color: var(--color1);
     transition: background-color 0.125s ease-in;
     border-color: var(--background4);
 }
+.button-wrapper:active {
+    box-shadow: inset 3px 3px 3px var(--color2);
+}
+
 .button-wrapper:disabled,
 .button-wrapper[disabled] {
     font-weight: bold;
@@ -372,7 +311,7 @@ header .button-wrapper {
     width: calc(230px - var(--border-width) * 2);
     background-color: var(--background-color);
     border: var(--border-width) solid var(--background3);
-    border-radius: 15px;
+    border-radius: var(--border-radius);
     margin: 10px 0;
 
     font-size: 23px;
@@ -417,7 +356,7 @@ header .button-wrapper {
     left: calc((300px - 250px - var(--border-width) * 2 - 10px) / 2);
     background-color: var(--background-color);
     border: var(--border-width) solid var(--background3);
-    border-radius: 15px;
+    border-radius: var(--border-radius);
     display: none;
     margin: 10px 0;
     font-size: 23px;
@@ -440,7 +379,8 @@ header .button-wrapper {
     font-size: 20px;
     border: var(--border-width) solid var(--background3);
     background-color: var(--background0);
-    border-radius: 15px;
+    border-radius: var(--border-radius);
+    box-shadow: inset 3px 3px 3px var(--background-color);
     left: 20px;
     top: 10%;
     cursor: move;
@@ -550,11 +490,13 @@ header .button-wrapper {
     color: var(--text-color);
     background: var(--background0);
     border: var(--border-width) solid var(--background3);
-    border-radius: 15px;
+    border-radius: var(--border-radius);
     text-align: center;
     font-size: 20px;
     -webkit-box-shadow: 0 2px 15px 2px var(--color4);
-    box-shadow: 0 2px 15px 2px var(--color4);
+    box-shadow:
+        0 2px 15px 2px var(--color4),
+        inset 3px 3px 3px var(--background-color);
     padding: 0px;
     width: 200px;
     height: 50px;
