@@ -116,7 +116,7 @@ Graph::Graph(crow::json::rvalue modelJson,
             auto params = ParseLinear(layerDicts[layer_id]["parameters"]);
             layers_.emplace(layer_id, new LinearLayer{params, prevLayers, randomInit});
             SGD.append(layers_[layer_id]->layerOperationParams);
-        } else if (type == "Relu") {
+        } else if (type == "ReLU") {
             layers_.emplace(layer_id, new ReLULayer{prevLayers});
         } else if (type == "Data" || type == "Target") {
             CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");

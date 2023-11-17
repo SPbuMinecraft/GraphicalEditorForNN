@@ -1,0 +1,781 @@
+openapi: 3.0.0
+info:
+  title: Swagger MLCraft - OpenAPI 3.0
+  description: |-
+    This is a sample MLCraft Server based on the OpenAPI 3.0 specification.  You can find out more about
+    Swagger at [https://swagger.io](https://swagger.io). With MLCraft you can build, train and use you own
+    neural networks using only GUI, withou any programming. Out service is created to make machine learning
+    approachable for everyone needs it!
+
+    Some useful links:
+    - To be added
+
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: http://localhost:3000
+tags:
+- name: "ours"
+  description: "Something useful here"
+- name: "user"
+  description: "Operations about user"
+- name: "build"
+  description: "Operations for building neural networks"
+- name: "use"
+  description: "Operations for training / evaluationg models"
+paths:
+  /user:
+    post:
+      tags:
+      - user
+      summary: "Adds a user"
+      description: "Adds a USER"
+      operationId: "add_user"
+      requestBody:
+        description: "User parameters"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: "User created"
+          content:
+            application/json:
+              schema:
+                properties:
+                  user_id:
+                    description: "ID of a new user"
+                    type: integer
+                    example: 1
+        '400':
+          description: "Json isn't provided or required fields missing"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: "On invalid username or password"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '500':
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+      - user
+      summary: "Logins a user"
+      description: "Starts a new user session"
+      operationId: "login_user"
+      requestBody:
+        description: "Login  parameters"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+      responses:
+        '200':
+          description: "Login succeeded"
+          content:
+            application/json:
+              schema:
+                properties:
+                  user_id:
+                    description: "User's ID"
+                    type: integer
+                    example: 1
+        '400':
+          description: "Json isn't provided or required fields missing"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: "Can't login: user not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+  /model/{user_id}:
+    post:
+      tags:
+      - build
+      summary: "Adds a new model for a certain user"
+      description: "Adds a MODEL"
+      operationId: "add_model"
+      parameters:
+        - name: user_id
+          in: path
+          description: new model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: "Model  parameters"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Model'
+      responses:
+        '201':
+          description: "A new model created"
+          content:
+            application/json:
+              schema:
+                properties:
+                  model_id:
+                    description: "ID of a new model"
+                    type: integer
+                    example: 1
+        '400':
+          description: "Json isn't provided or required fields missing"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "No user with such ID"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /layer/{user_id}/{model_id}:
+    post:
+      tags:
+      - build
+      summary: "Adds a new layer for a certain Model"
+      description: "Adds a LAYER"
+      operationId: "add_layer"
+      parameters:
+        - name: user_id
+          in: path
+          description: model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: model_id
+          in: path
+          description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: "Layer parameters (create)"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LayerCreate'
+      responses:
+        '201':
+          description: "A new layer created"
+          content:
+            application/json:
+              schema:
+                properties:
+                  layer_id:
+                    description: "ID of a new layer"
+                    type: integer
+                    example: 1
+        '400':
+          description: "Json isn't provided or required fields missing"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "The model does not exist or you have no rights for changing it"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "No user / model with such ID"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+      - build
+      summary: "Updates a certain layer of a certain model"
+      description: "Adds a LAYER"
+      operationId: "update_layer"
+      parameters:
+        - name: user_id
+          in: path
+          description: model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: model_id
+          in: path
+          description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: "Layer parameters (update)"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LayerUpdate'
+      responses:
+        '200':
+          description: "Layer successfully updated"
+        '400':
+          description: "Json isn't provided or required fields missing"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "The model does not exist or you have no rights for changing it"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "No user / mode / layer with such ID"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /delete_layer/{user_id}/{model_id}:
+    put:
+      tags:
+      - build
+      summary: "Deletes a model's layer"
+      description: "DELETES a LAYER"
+      operationId: "delete_layer"
+      parameters:
+        - name: user_id
+          in: path
+          description: model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: model_id
+          in: path
+          description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: "Parameters of the layer to be deleted"
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  example: 1
+      responses:
+        '200':
+          description: "Layer deleted successfully"
+        '400':
+          description: "Json isn't provided or required fields missing"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "The model does not exist or you have no rights for changing it"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "Layer you want to delete does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: "You need to delete layer's connections first"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /clear_model/{user_id}/{model_id}:
+    post:
+      tags:
+      - build
+      summary: "Clears the model"
+      description: "Deletes all model's layers and connections"
+      operationId: "clear_model"
+      parameters:
+        - name: user_id
+          in: path
+          description: model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: model_id
+          in: path
+          description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: "Model successfully cleared"
+        '403':
+          description: "The model does not exist or you have no rights for changing it"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "No model with such ID"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /connection/{user_id}/{model_id}:
+    post:
+      tags:
+      - build
+      summary: "Adds a new between-layers connection to the model"
+      description: "Adds a new CONNECTION between layers"
+      operationId: "add_connection"
+      parameters:
+        - name: user_id
+          in: path
+          description: model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: model_id
+          in: path
+          description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: "Connection parameters"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Connection'
+      responses:
+        '201':
+          description: "A new connection created"
+        '400':
+          description: "Json isn't provided or required fields missing"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "The model does not exist or you have no rights for changing it"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "Impossible to create a connection due to at least obe of layers is not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: "Issue with model graph structure"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /delete_connection/{user_id}/{model_id}:
+    put:
+      tags:
+      - build
+      summary: "Deletes a model's connection"
+      description: "DELETES a CONNECTION"
+      operationId: "delete_connection"
+      parameters:
+        - name: user_id
+          in: path
+          description: model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: model_id
+          in: path
+          description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: "Parameters of the connection to be deleted"
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  example: 1
+      responses:
+        '200':
+          description: "Connection deleted successfully"
+        '400':
+          description: "Json isn't provided or required fields missing"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "The model does not exist or you have no rights for changing it"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "Connection you wand to delete does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /update_parents_order/{user_id}/{model_id}:
+    put:
+      tags:
+      - build
+      summary: "Reorders layer's parents"
+      description: "REORDERS parents"
+      operationId: "updates_parents_order"
+      parameters:
+        - name: user_id
+          in: path
+          description: model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: model_id
+          in: path
+          description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: "Parameters of the connection to be deleted"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateParentsOrder'
+      responses:
+        '200':
+          description: "Parents order updated successfully"
+        '400':
+          description: "Json isn't provided or required fields missing"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "The model does not exist or you have no rights for changing it"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "Model / layer does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /train/{user_id}/{model_id}/{safe}:
+    put:
+      tags:
+      - use
+      summary: "Trains a model"
+      description: "TRAINS a model"
+      operationId: "train_model"
+      parameters:
+        - name: user_id
+          in: path
+          description: model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: model_id
+          in: path
+          description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: safe
+          in: path
+          description: flag, if 1, then the training process will be started even if the model is already trained
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: "Data for training"
+        required: true
+        content:
+          text/csv:
+            schema:
+              $ref: '#/components/schemas/TrainData'
+      responses:
+        '200':
+          description: "Model is trained"
+        '400':
+          description: "Some problems with model"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "You have no rights for training this model"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "The model you want to train does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '406':
+          description: "Model you want to train is not valid"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '408':
+          description: "Training time limit exceeded"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: "Model is already trained. Maybe you want to change 'safe' to 0"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /predict/{user_id}/{model_id}:
+    put:
+      tags:
+      - use
+      summary: "Makes prediction with a model"
+      description: "EXPLOITS a model"
+      operationId: "model_predict"
+      parameters:
+        - name: user_id
+          in: path
+          description: model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: model_id
+          in: path
+          description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: "Data for predictions"
+        required: true
+        content:
+          text/csv:
+            schema:
+              $ref: '#/components/schemas/PredictData'
+      responses:
+        '200':
+          description: "Prediction was successful"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictResult'
+        '400':
+          description: "Some problems with model"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "You have no rights for using this model"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "The model you want to use does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '408':
+          description: "Evaluating time limit exceeded"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: "Model is not trained. You have to train the model first"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        login:
+          type: string
+          example: "JohnDoe"
+        password:
+          type: string
+          example: "qwerty12345"
+        mail:
+          type: string
+          example: "johnd@e.com"
+    Model:
+      type: object
+      properties:
+        name:
+          type: string
+          example: MCS-GPT
+    Login:
+      type: object
+      properties:
+        login:
+          type: string
+          example: "JohnDoe"
+        password:
+          type: string
+          example: "qwerty12345"
+    Connection:
+      type: object
+      properties:
+        layer_from:
+          type: integer
+          format: int64
+          example: 0
+        layer_to:
+          type: integer
+          format: int64
+          example: 1
+    LayerCreate:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "Linear"
+        parameters:
+          type: string
+          example: "inFeatures=2;outFeatures=10;bias=true"
+    LayerUpdate:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 0
+        parameters:
+          type: string
+          example: "inFeatures=2;outFeatures=10;bias=true"
+    UpdateParentsOrder:
+      type: object
+      properties:
+        new_parents:
+          type: array
+          items:
+            type: integer
+            format: int64
+          example: [0, 1]
+        layer_id:
+          type: integer
+          format: int64
+          example: 2
+    Data:
+      type: object
+      properties:
+        dataset:
+          type: array
+          items:
+            type: number
+            example: [0.0, 0.0, 0.0, 1.0]
+    TrainData:
+      type: string
+      description: |-
+        Last column is for the target value 
+        and all other columns are features values
+      example: |-
+        0,0,0
+        0,1,1
+        1,0,1
+        1,1,1
+    PredictData:
+      type: string
+      description: Only ONE row for now, a column for every feature
+      example: |-
+        1,1
+    PredictResult:
+      type: array
+      descriptoin: Array with 1 element for now
+      items:
+        type: number
+        format: float
+      example: [1.0]
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Something whent wrong"
+    DetailedError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Something whent wrong"
+        problemPart:
+          type: string
+          example: "The problem is in the Retrograde Mercury"

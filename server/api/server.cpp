@@ -60,8 +60,8 @@ int main(int argc, char *argv[]) {
     CROW_ROUTE(app, "/predict/<int>").methods(HTTPMethod::POST)
     ([&](const request& req, int model_id) -> response {
         auto body = json::load(req.body);
-        if (!body) return response(status::BAD_REQUEST, "Invalid body");
-        if (sessions.find(model_id) == sessions.end()) return response(status::BAD_REQUEST, "Not trained");
+        if (!body) return response(status::BAD_REQUEST, "No model provided");
+        if (sessions.find(model_id) == sessions.end()) return response(status::METHOD_NOT_ALLOWED, "Not trained");
         std::vector<float> answer;
         try {
             predict(body, sessions[model_id], answer);

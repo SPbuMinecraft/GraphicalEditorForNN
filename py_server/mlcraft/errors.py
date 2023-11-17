@@ -12,3 +12,7 @@ class UserNotFoundError(Exception):
 
 class WrongPasswordError(Exception):
     pass
+
+
+class ObjectNotFoundError(Exception):
+    pass

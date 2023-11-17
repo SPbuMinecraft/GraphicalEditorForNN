@@ -213,12 +213,19 @@
           }).then(result => {
             if (result.isConfirmed) {
               super.clear()
+              hideResult()
+              onTrainShowPredict(false)
               //add success verification
               clearModel().then(() => {
                 console.log("adding one node")
+                // TODO: WHY IS THIS, FIX PARALLEL DB
                 addNodeToConstructor("data", 600, 430).then(() => {
                   console.log("adding the other")
-                  addNodeToConstructor("output", 1000, 430)
+                  addNodeToConstructor("output", 1000, 430).then(() => {
+                    addNodeToConstructor("target", 550, 550).then(() => {
+                      addNodeToConstructor("loss", 860, 550)
+                    })
+                  })
                 })
               })
               Swal.fire({
@@ -322,56 +329,46 @@
           layer_to: data2.DBID,
         }
 
-        // "id = <connection ID in database>; next = <connected layer ID in database>"
-        addConnection(layers_connection).then(id => {
-          editor.updateNodeDataFromId(connection.output_id, {
-            DBID: data1.DBID,
-            Connections: data1.Connections.concat({
-              id: id,
-              next: data2.DBID,
-            }),
-            Parameters: data1.Parameters,
+        console.log(layers_connection)
+
+        addConnection(layers_connection).then(() => {
+          editor.updateNodeDataFromId(connection.input_id, {
+            DBID: data2.DBID,
+            Connections: data2.Connections.concat(`${data1.DBID};${connection.output_id}`), // "db_id;drawflow_id"
+            Parameters: data2.Parameters,
           })
         })
       })
       editor.on("connectionRemoved", function (connection) {
         console.log("Connection removed")
-
         const data1 = editor.getNodeFromId(connection.output_id).data
         const data2 = editor.getNodeFromId(connection.input_id).data
 
-        let layer_from_db_id = data1.DBID
-        let layer_to_db_id = data2.DBID
-        let list_of_connections = data1.Connections
-        let layer_parameters = data1.parameters
-
-        let parsed_connection = null
-        let i = 0
-        let connection_id = {
-          // id of connection we are deleting
-          id: null,
+        let connection_info = {
+          layer_from: data1.DBID,
+          layer_to: data2.DBID,
         }
+        deleteConnection(connection_info)
+
+        let list_of_connections = data2.Connections
+        let layer_parameters = data2.Parameters
         let cur_elem_index = null
 
-        while (i < list_of_connections.length) {
-          parsed_connection = list_of_connections[i]
-          if (parsed_connection.next == layer_to_db_id) {
-            connection_id.id = parsed_connection.id
+        for (var i = 0; i < list_of_connections.length; i++) {
+          let parsed_dbid = list_of_connections[i].split(";")[0]
+          if (parsed_dbid == data1.DBID) {
             cur_elem_index = i
             break
           }
-          i++
         }
 
         list_of_connections.splice(cur_elem_index, 1) // deletes connection from list
-        editor.updateNodeDataFromId(connection.output_id, {
-          DBID: layer_from_db_id,
+        editor.updateNodeDataFromId(connection.input_id, {
+          DBID: data2.DBID,
           Connections: list_of_connections,
           Parameters: layer_parameters,
         })
-        console.log("Layer id " + layer_from_db_id + " connections: " + list_of_connections)
-
-        deleteConnection(connection_id)
+        console.log(list_of_connections)
       })
       editor.on("nodeMoved", function (id) {
         console.log("Node moved " + id)
@@ -546,6 +543,8 @@
           editor.precanvas.getBoundingClientRect().y *
             (editor.precanvas.clientHeight / (editor.precanvas.clientHeight * editor.zoom))
 
+        pos_x -= 100
+        pos_y -= 25
         const nameMap = {
           linear: "Linear",
           relu: "ReLU",
@@ -555,12 +554,12 @@
           target: "Target",
         }
         const parametersMap = {
-          linear: "inputs=1;outputs=1;bias=0;inFeatures=1;outFeatures=2",
-          relu: "inputs=1;outputs=1",
-          data: "inputs=0;outputs=1;width=2",
-          output: "inputs=1;outputs=0;width=1",
-          loss: "inputs:=1;outputs=0;width=1", // TODO
-          target: "inputs:=1;outputs=0;width=1", // TODO
+          linear: "bias=0;inFeatures=2;outFeatures=1",
+          relu: "",
+          data: "width=2",
+          output: "width=1",
+          loss: "width=1",
+          target: "width=1",
         }
 
         const layer = {
@@ -597,7 +596,7 @@
             break
           case "loss":
             const loss = '<div class="title-box"><i class="fas fa-file-signature"></i> Loss </div>'
-            editor.addNode("MSELoss", 2, 0, pos_x, pos_y, "special", attrs, loss)
+            editor.addNode("MSELoss", 1, 0, pos_x, pos_y, "special", attrs, loss)
             break
           default:
             throw "Unreachable"
@@ -684,25 +683,30 @@
           body: JSON.stringify(sending_object),
         })
 
-        return await resp.text()
+        return resp
       }
 
       async function addLayer(sending_obj) {
-        return await sendJson(sending_obj, `http://${py_server_address}/add_layer/${user_id}/${model_id}`, "POST")
+        const response = await sendJson(sending_obj, `http://${py_server_address}/layer/${user_id}/${model_id}`, "POST")
+        // TODO: handle errors here
+        const data = await response.json()
+        return data.layer_id
       }
 
       async function addConnection(layers_connection) {
-        return await sendJson(
+        const response = await sendJson(
           layers_connection,
-          `http://${py_server_address}/add_connection/${user_id}/${model_id}`,
+          `http://${py_server_address}/connection/${user_id}/${model_id}`,
           "POST",
         )
+        // TODO: handle errors here
+        return 0 // TODO: handle new connection format
       }
 
       async function updateLayerParameter(sending_obj) {
         console.log(
           "Server response for updating parameter: " +
-            (await sendJson(sending_obj, `http://${py_server_address}/update_layer/${user_id}/${model_id}`, "PUT")),
+            (await sendJson(sending_obj, `http://${py_server_address}/layer/${user_id}/${model_id}`, "PUT")),
         )
       }
 
@@ -713,13 +717,13 @@
 
       function deleteLayer(sending_object) {
         ;(async () => {
-          await sendJson(sending_object, `http://${py_server_address}/delete_layer/${user_id}/${model_id}`, "POST")
+          await sendJson(sending_object, `http://${py_server_address}/delete_layer/${user_id}/${model_id}`, "PUT")
         })()
       }
 
       function deleteConnection(sending_object) {
         ;(async () => {
-          await sendJson(sending_object, `http://${py_server_address}/delete_connection/${user_id}/${model_id}`, "POST")
+          await sendJson(sending_object, `http://${py_server_address}/delete_connection/${user_id}/${model_id}`, "PUT")
         })()
         console.log(`Deleted connection with DBID: ${sending_object.id}`)
       }
@@ -727,7 +731,7 @@
       function trainRequest() {
         console.assert(train_data, "no training data was set")
         fetch(`http://${py_server_address}/train/${user_id}/${model_id}/0`, {
-          method: "POST",
+          method: "PUT",
           mode: "cors",
           headers: {"Content-Type": "text/csv"},
           body: train_data,
@@ -742,7 +746,7 @@
         const file = csv_predict.files[0]
         const text = await file.text()
         const response = await fetch(`http://${py_server_address}/predict/${user_id}/${model_id}`, {
-          method: "POST",
+          method: "PUT",
           mode: "cors",
           headers: {"Content-Type": "text/csv"},
           body: text,
@@ -750,10 +754,16 @@
         hideResult() // hide previous predict result
         if (response.ok) onPredictShowResult(await response.text())
         // TODO: handle errors here
-        else console.log(`Predict failed with ${response.statusText}: ${await response.text()}`)
+        else {
+          buildUnsuccessful()
+          console.log(`Predict failed with ${response.statusText}: ${await response.text()}`)
+        }
       }
       const csv_predict = document.getElementById("csv-predict-button")
-      csv_predict.addEventListener("change", predictRequest)
+      csv_predict.onclick = () => {
+        csv_predict.value = null
+      }
+      csv_predict.addEventListener("input", predictRequest)
 
       function buildJsonFormData(form) {
         const jsonFormData = {}

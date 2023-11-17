@@ -6,6 +6,12 @@ from collections import deque, defaultdict
 from flask import Response, abort
 
 
+class VerificationStatus(Enum):
+    OK = 0
+    NotFound = 1
+    Forbidden = 2
+
+
 class LayersConnectionStatus(Enum):
     OK = 0
     DoNotExist = 1
@@ -19,6 +25,7 @@ class DeleteStatus(Enum):
     OK = 0
     ModelNotExist = 1
     ElementNotExist = 2
+    LayerNotFree = 3
 
 
 def error(code: int, message: str) -> tp.NoReturn:
