@@ -286,7 +286,7 @@ def train_model(
         response = requests.post(
             current_app.config["CPP_SERVER"] + f"/train/{model_id}",
             json=model,
-            timeout=3,
+            # timeout=3,
         )
         sql_worker.train_model(model_id)
         return response.text, response.status_code

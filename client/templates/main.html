@@ -213,12 +213,19 @@
           }).then(result => {
             if (result.isConfirmed) {
               super.clear()
+              hideResult()
+              onTrainShowPredict(false)
               //add success verification
               clearModel().then(() => {
                 console.log("adding one node")
+                // TODO: WHY IS THIS, FIX PARALLEL DB
                 addNodeToConstructor("data", 600, 430).then(() => {
                   console.log("adding the other")
-                  addNodeToConstructor("output", 1000, 430)
+                  addNodeToConstructor("output", 1000, 430).then(() => {
+                    addNodeToConstructor("target", 550, 550).then(() => {
+                      addNodeToConstructor("loss", 860, 550)
+                    })
+                  })
                 })
               })
               Swal.fire({
@@ -547,12 +554,12 @@
           target: "Target",
         }
         const parametersMap = {
-          linear: "inputs=1;outputs=1;bias=0;inFeatures=1;outFeatures=2",
-          relu: "inputs=1;outputs=1",
-          data: "inputs=0;outputs=1;width=2",
-          output: "inputs=1;outputs=0;width=1",
-          loss: "inputs:=1;outputs=0;width=1", // TODO
-          target: "inputs:=1;outputs=0;width=1", // TODO
+          linear: "bias=0;inFeatures=2;outFeatures=1",
+          relu: "",
+          data: "width=2",
+          output: "width=1",
+          loss: "width=1",
+          target: "width=1",
         }
 
         const layer = {
@@ -589,7 +596,7 @@
             break
           case "loss":
             const loss = '<div class="title-box"><i class="fas fa-file-signature"></i> Loss </div>'
-            editor.addNode("MSELoss", 2, 0, pos_x, pos_y, "special", attrs, loss)
+            editor.addNode("MSELoss", 1, 0, pos_x, pos_y, "special", attrs, loss)
             break
           default:
             throw "Unreachable"
@@ -739,7 +746,7 @@
         const file = csv_predict.files[0]
         const text = await file.text()
         const response = await fetch(`http://${py_server_address}/predict/${user_id}/${model_id}`, {
-          method: "POST",
+          method: "PUT",
           mode: "cors",
           headers: {"Content-Type": "text/csv"},
           body: text,
@@ -747,10 +754,16 @@
         hideResult() // hide previous predict result
         if (response.ok) onPredictShowResult(await response.text())
         // TODO: handle errors here
-        else console.log(`Predict failed with ${response.statusText}: ${await response.text()}`)
+        else {
+          buildUnsuccessful()
+          console.log(`Predict failed with ${response.statusText}: ${await response.text()}`)
+        }
       }
       const csv_predict = document.getElementById("csv-predict-button")
-      csv_predict.addEventListener("change", predictRequest)
+      csv_predict.onclick = () => {
+        csv_predict.value = null
+      }
+      csv_predict.addEventListener("input", predictRequest)
 
       function buildJsonFormData(form) {
         const jsonFormData = {}
