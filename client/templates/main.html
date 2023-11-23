@@ -218,15 +218,10 @@
               //add success verification
               clearModel().then(() => {
                 console.log("adding one node")
-                // TODO: WHY IS THIS, FIX PARALLEL DB
-                addNodeToConstructor("data", 600, 430).then(() => {
-                  console.log("adding the other")
-                  addNodeToConstructor("output", 1000, 430).then(() => {
-                    addNodeToConstructor("target", 550, 550).then(() => {
-                      addNodeToConstructor("loss", 860, 550)
-                    })
-                  })
-                })
+                addNodeToConstructor("data", 600, 430)
+                addNodeToConstructor("output", 1000, 430)
+                addNodeToConstructor("target", 550, 550)
+                addNodeToConstructor("loss", 860, 550)
               })
               Swal.fire({
                 position: "top-end",

@@ -1,3 +1,4 @@
+from threading import Lock  # fuck it, just using old robust methods
 import json
 from sqlite3 import IntegrityError
 from flask import current_app
@@ -35,7 +36,14 @@ class Model(db.Model):  # type: ignore
 
 
 class SQLWorker:
+    """
+    Important: whenever you work with 'content' column of the model,
+    you must first acquire content_lock, release it after you commit the session
+    Tip: with mutex: ...  # also works
+    """
+
     def __init__(self, app):
+        self.content_lock = Lock()
         with app.app_context():
             db.create_all()
 
@@ -93,7 +101,7 @@ class SQLWorker:
             return new_model.id
 
     def add_layer(self, layer_type: str, parameters: str, model_id: int):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
                 raise errors.ObjectNotFoundError(f"No model with id {model_id}")
@@ -119,21 +127,22 @@ class SQLWorker:
             return new_id
 
     def update_layer(self, new_params: str, layer_id: int, model_id: int):
-        with current_app.app_context():
-            model = db.session.get(Model, model_id)
-        if not model:
-            raise errors.ObjectNotFoundError(f"No model with id {model_id}")
-        items = json.loads(model.content)
-        layer = next(l for l in items["layers"] if l["id"] == layer_id)
-        layer["parameters"] = new_params
-        model.content = json.dumps(items)
-        model.is_trained = False
-        with current_app.app_context():
-            db.session.add(model)
-            db.session.commit()
+        with self.content_lock:
+            with current_app.app_context():
+                model = db.session.get(Model, model_id)
+            if not model:
+                raise errors.ObjectNotFoundError(f"No model with id {model_id}")
+            items = json.loads(model.content)
+            layer = next(l for l in items["layers"] if l["id"] == layer_id)
+            layer["parameters"] = new_params
+            model.content = json.dumps(items)
+            model.is_trained = False
+            with current_app.app_context():
+                db.session.add(model)
+                db.session.commit()
 
     def update_parents_order(self, new_parents: list, layer_id: int, model_id: int):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
                 raise errors.ObjectNotFoundError(f"No model with id {model_id}")
@@ -151,7 +160,7 @@ class SQLWorker:
     def add_connection(
         self, layer_from: int, layer_to: int, model_id: int
     ):  # When we sure, that adding is correct
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
                 return -1
@@ -165,7 +174,7 @@ class SQLWorker:
             return 1
 
     def delete_layer(self, layer_id: int, model_id: int):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
                 return DeleteStatus.ModelNotExist
@@ -187,7 +196,7 @@ class SQLWorker:
             return DeleteStatus.OK
 
     def delete_connection(self, layer_from: int, layer_to: int, model_id: int):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
                 return DeleteStatus.ModelNotExist
@@ -207,7 +216,7 @@ class SQLWorker:
             return DeleteStatus.OK
 
     def clear_model(self, model_id: int):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
                 return DeleteStatus.ModelNotExist
@@ -227,7 +236,7 @@ class SQLWorker:
     def verify_connection(
         self, user_id: int, model_id: int, layer_from: int, layer_to: int
     ):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             if not self.verify_access(user_id, model_id):
                 return LayersConnectionStatus.AccessDenied
             model = db.session.get(Model, model_id)
@@ -263,7 +272,7 @@ class SQLWorker:
             return VerificationStatus.OK
 
     def get_graph_elements(self, model_id):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
                 return -1
