@@ -8,9 +8,11 @@ from .utils import (
     error,
     parse_parameters,
     is_valid_model,
+    check_dimensions,
     LayersConnectionStatus,
     DeleteStatus,
     VerificationStatus,
+    DimensionsCheckStatus,
 )
 from . import errors
 
@@ -152,8 +154,6 @@ def add_connection(user_id: int, model_id: int):
             return {
                 "error": "You have no rights for changing this model"
             }, HTTPStatus.FORBIDDEN
-        if allowed == LayersConnectionStatus.DimensionsMismatch:
-            return {"error": "Dimensions do not match"}, HTTPStatus.PRECONDITION_FAILED
         if allowed == LayersConnectionStatus.WrongDirection:
             return {
                 "error": "Wrong direction in data or output layer"
@@ -263,14 +263,6 @@ def train_model(
         if not is_valid_model(model):
             return {"error": "Invalid model found"}, HTTPStatus.NOT_ACCEPTABLE
         # Convert json to another format for C++ by deleting connsetcions ids and rename layers_type
-        model["connections"] = list(
-            {
-                "layer_from": layer_from,
-                "layer_to": layer_to["id"],
-            }
-            for layer_to in model["layers"]
-            for layer_from in layer_to["parents"]
-        )  # Create list of connections for C++ server
         model["layers"] = list(
             map(
                 lambda layer: {
@@ -281,6 +273,20 @@ def train_model(
                 model["layers"],
             )
         )
+        dimensions_status, layer_id = check_dimensions(model["layers"])
+        if dimensions_status == DimensionsCheckStatus.InvalidNumberOfInputs:
+            return {"error": f"Invalid number of inputs for layer {layer_id}"}, HTTPStatus.NOT_ACCEPTABLE
+        elif dimensions_status == DimensionsCheckStatus.DimensionsMismatch:
+            return {"error": f"Layer {layer_id} does not match with it's parents in dimensions"}, \
+                                                                                HTTPStatus.NOT_ACCEPTABLE
+        model["connections"] = list(
+            {
+                "layer_from": layer_from,
+                "layer_to": layer_to["id"],
+            }
+            for layer_to in model["layers"]
+            for layer_from in layer_to["parents"]
+        )  # Create list of connections for C++ server
 
         model = {"graph": model, "dataset": dataset}
         response = requests.post(
