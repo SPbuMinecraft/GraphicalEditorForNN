@@ -12,6 +12,7 @@ maxErrors = 4 # number of errors compiler will print to the console
 CXXFLAGS = -std=c++17 -pthread
 CXXFLAGS += -Wall -Wextra -pedantic 
 CXXFLAGS += -fmax-errors=$(maxErrors) # for g++
+CXXFLAGS += -lX11
 # CXXFLAGS += -ferror-limit=$(maxErrors) # uncomment for clang
 CXXFLAGS += -Wno-sign-compare
 CXXFLAGS += -Wno-unused-parameter
