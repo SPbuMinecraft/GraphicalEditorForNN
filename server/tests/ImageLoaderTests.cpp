@@ -1,0 +1,57 @@
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+#include "../api/ImageLoader.h"
+#include <vector>
+
+TEST_CASE("one_pixel") {
+    std::vector<float> white_pixel = {255, 255, 255};
+    std::vector<float> black_pixel = {0, 0, 0};
+    std::vector<float> lazure_pixel = {159, 252, 253};
+    auto img = ImageLoader();
+
+    SUBCASE("white_pixel") {
+        auto result = img.load_image("data/white_pixel.png");
+        CHECK(result.size() == white_pixel.size());
+        for (int i = 0; i < white_pixel.size(); ++i) {
+            CHECK(white_pixel[i] == result[i]);
+        }
+    }
+
+    SUBCASE("black_pixel") {
+        auto result = img.load_image("data/black_pixel.png");
+        CHECK(result.size() == black_pixel.size());
+        for (int i = 0; i < black_pixel.size(); ++i) {
+            CHECK(black_pixel[i] == result[i]);
+        }
+    }
+
+    SUBCASE("lazure_pixel") {
+        auto result = img.load_image("data/lazure_pixel.png");
+        CHECK(result.size() == lazure_pixel.size());
+        for (int i = 0; i < lazure_pixel.size(); ++i) {
+            CHECK(lazure_pixel[i] == result[i]);
+        }
+    }
+}
+
+TEST_CASE("big_picture") {
+    std::vector<float> traffic_light = {255, 0, 0, 255, 255, 0, 0, 255, 0};
+    std::vector<float> picture = {0, 0, 0, 255, 174, 201, 100, 100, 100, 153, 217, 234, 136, 0, 21, 255, 255, 255};
+    auto img = ImageLoader();
+
+    SUBCASE("traffic_light") {
+        auto result = img.load_image("data/traffic_light.png");
+        CHECK(result.size() == traffic_light.size());
+        for (int i = 0; i < traffic_light.size(); ++i) {
+            CHECK(traffic_light[i] == result[i]);
+        }
+    }
+
+    SUBCASE("random_picture") {
+        auto result = img.load_image("data/picture.png");
+        CHECK(result.size() == picture.size());
+        for (int i = 0; i < picture.size(); ++i) {
+            CHECK(picture[i] == result[i]);
+        }
+    }
+}
