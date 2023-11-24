@@ -6,6 +6,6 @@
 
 class ImageLoader {
 public:
-    std::vector<float> load_image(char* path);
-    std::vector<float> get_pixels(cimg_library::CImg<unsigned char>);
+    static std::vector<float> load_image(char* path);
+    static std::vector<float> get_pixels(cimg_library::CImg<unsigned char>);
 };
