@@ -1,4 +1,14 @@
+from enum import Enum
+from collections import defaultdict
+import typing as tp
+
 from .utils import topology_sort
+
+
+class DimensionsCheckStatus(Enum):
+    OK = 0
+    InvalidNumberOfInputs = 1
+    DimensionsMismatch = 2
 
 
 class Data2dChecker:
@@ -51,14 +61,16 @@ class MSEChecker:
             return False
         self.output_shape = input_shape[0]
         return True
-    
+
 
 def create_checker(layer: dict):
     if layer["type"] in ("Data", "Target"):
         print(layer)
         return Data2dChecker(layer["parameters"]["width"])
     elif layer["type"] == "Linear":
-        return LinearChecker(layer["parameters"]["inFeatures"], layer["parameters"]["outFeatures"])
+        return LinearChecker(
+            layer["parameters"]["inFeatures"], layer["parameters"]["outFeatures"]
+        )
     elif layer["type"] == "ReLU":
         return ReLUChecker()
     elif layer["type"] == "MSELoss":
@@ -66,14 +78,16 @@ def create_checker(layer: dict):
     elif layer["type"] == "Sum":
         return SumChecker()
     else:
-        raise TypeError(f"Unknown layer type: {layer["type"]}")
+        raise TypeError(f"Unknown layer type: {layer['type']}")
 
 
-def check_dimensions(layers: list[dict]) -> DimensionsCheckStatus:
+def check_dimensions(
+    layers: list[dict],
+) -> tuple[DimensionsCheckStatus, tp.Optional[int]]:
     layer_checkers = {}
     data_layers = []
 
-    #TODO: maybe it's possible to optimize memory usage is some nice way?
+    # TODO: maybe it's possible to optimize memory usage is some nice way?
     edges = defaultdict(list)
     parents = defaultdict(list)
 
@@ -92,8 +106,12 @@ def check_dimensions(layers: list[dict]) -> DimensionsCheckStatus:
     try:
         for layer_id in layers_order:
             current_layer_id = layer_id
-            acceptable = layer_checkers[layer_id](*[layer_checkers[parent_id].output_shape
-                                                        for parent_id in parents[layer_id]])
+            acceptable = layer_checkers[layer_id](
+                *[
+                    layer_checkers[parent_id].output_shape
+                    for parent_id in parents[layer_id]
+                ]
+            )
             if not acceptable:
                 return DimensionsCheckStatus.DimensionsMismatch, layer_id
     except TypeError as e:

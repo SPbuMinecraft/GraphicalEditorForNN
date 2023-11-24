@@ -11,7 +11,7 @@ def CHECK(edges: dict[int, list[int]], all_nodes: list[int], ordered_nodes: list
     back_map = dict(zip(ordered_nodes, list(range(len(ordered_nodes)))))
     assert len(result_set) == len(ordered_nodes)
     assert result_set == set(all_nodes)
-    for node_from in endges:
+    for node_from in edges:
         for node_to in edges[node_from]:
             assert back_map[node_from] < back_map[node_to]
 

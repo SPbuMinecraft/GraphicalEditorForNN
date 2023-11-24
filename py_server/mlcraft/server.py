@@ -11,9 +11,12 @@ from .utils import (
     LayersConnectionStatus,
     DeleteStatus,
     VerificationStatus,
-    DimensionsCheckStatus,
 )
-from .check_dimensions import check_dimensions
+from .check_dimensions import (
+    DimensionsCheckStatus,
+    check_dimensions,
+)
+
 from . import errors
 
 from .db import sql_worker

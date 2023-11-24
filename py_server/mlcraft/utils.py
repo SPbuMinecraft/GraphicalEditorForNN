@@ -27,12 +27,6 @@ class DeleteStatus(Enum):
     LayerNotFree = 3
 
 
-class DimensionsCheckStatus(Enum):
-    OK = 0
-    InvalidNumberOfInputs = 1
-    DimensionsMismatch = 2
-
-
 def error(code: int, message: str) -> tp.NoReturn:
     abort(Response(message, code))
 
@@ -122,40 +116,4 @@ def topology_sort(entry_nodes: list[int], edges: dict[int, list[int]]) -> list[i
                 final_order.append(current_node)
                 closed.add(current_node)
                 dfs_stack.pop()
-    return reversed(final_order)
-
-
-def check_dimensions(layers: list[dict]) -> DimensionsCheckStatus:
-    layer_checkers = {}
-    data_layers = []
-
-    # TODO: maybe it's possible to optimize memory usage is some nice way?
-    edges = defaultdict(list)
-    parents = defaultdict(list)
-
-    for layer in layers:
-        if layer["type"] == "Output":
-            continue
-        if layer["type"] in ("Data", "Target"):
-            data_layers.append(layer["id"])
-        layer_checkers[layer["id"]] = create_checker(layer)
-        for prev in layer["parents"]:
-            edges[prev].append(layer["id"])
-            parents[layer["id"]].append(prev)
-
-    layers_order = topology_sort(data_layers, edges)
-    current_layer_id = None
-    try:
-        for layer_id in layers_order:
-            current_layer_id = layer_id
-            acceptable = layer_checkers[layer_id](
-                *[
-                    layer_checkers[parent_id].output_shape
-                    for parent_id in parents[layer_id]
-                ]
-            )
-            if not acceptable:
-                return DimensionsCheckStatus.DimensionsMismatch, layer_id
-    except TypeError as e:
-        return DimensionsCheckStatus.InvalidNumberOfInputs, current_layer_id
-    return DimensionsCheckStatus.OK, None
+    return list(reversed(final_order))
