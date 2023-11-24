@@ -379,10 +379,10 @@
       })
 
       const linear_bias_selector = document.getElementById("bias-parameter")
-      linear_bias_selector.addEventListener("change", function () {
-        var parameters = getParametersFromNode(last_selected_node_id)
+      linear_bias_selector.addEventListener("change", () => {
+        const parameters = getParametersFromNode(last_selected_node_id)
         console.log("last id: " + last_selected_layer_id)
-        var new_value = document.getElementById("bias-parameter").value
+        const new_value = document.getElementById("bias-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "bias") {
@@ -400,48 +400,57 @@
       })
 
       const linear_inFeatures_input = document.getElementById("linear-inFeatures-parameter")
-      linear_inFeatures_input.addEventListener("change", function () {
-        var parameters = getParametersFromNode(last_selected_node_id)
+      linear_inFeatures_input.addEventListener("change", () => {
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
         console.log("last id: " + last_selected_layer_id)
-        var new_value = document.getElementById("linear-inFeatures-parameter").value
+        const new_value = document.getElementById("linear-inFeatures-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "inFeatures") {
             parameters[i][1] = new_value
-            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
             break
           }
         }
       })
+      linear_inFeatures_input.addEventListener("input", () => {
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
 
       const linear_outFeatures_input = document.getElementById("linear-outFeatures-parameter")
-      linear_outFeatures_input.addEventListener("change", function () {
-        var parameters = getParametersFromNode(last_selected_node_id)
+      linear_outFeatures_input.addEventListener("change", () => {
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
         console.log("last id: " + last_selected_layer_id)
-        var new_value = document.getElementById("linear-outFeatures-parameter").value
+        const new_value = document.getElementById("linear-outFeatures-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "outFeatures") {
             parameters[i][1] = new_value
-            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
             break
           }
         }
       })
+      linear_outFeatures_input.addEventListener("input", () => {
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
 
       const special_width_input = document.getElementById("special-width-parameter")
-      special_width_input.addEventListener("change", function () {
-        var parameters = getParametersFromNode(last_selected_node_id)
+      special_width_input.addEventListener("change", () => {
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
         console.log("last id: " + last_selected_layer_id)
-        var new_value = document.getElementById("special-width-parameter").value
+        const new_value = document.getElementById("special-width-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "width") {
             parameters[i][1] = new_value
-            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
             break
           }
         }
+      })
+      special_width_input.addEventListener("input", () => {
+        last_changed_parameters_layer_id = last_selected_node_id
       })
 
       /* DRAG EVENT */
@@ -808,6 +817,7 @@
       console.log(`current address ${py_server_address}`)
 
       let last_selected_layer_id // layer's db id
+      let last_changed_parameters_layer_id
       let train_status = false
       var last_selected_node_id // not db id
 
