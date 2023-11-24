@@ -5,7 +5,7 @@ from collections import deque, defaultdict
 
 from flask import Response, abort
 
-from dimension_checkers import create_checker
+from .dimension_checkers import create_checker
 
 
 class VerificationStatus(Enum):
@@ -143,7 +143,7 @@ def check_dimensions(layers: list[dict]):
         layer_checkers[layer["id"]] = create_checker(layer)
         for prev in layer["parents"]:
             edges[prev].append(layer["id"])
-            parents[layer_id].append(prev)
+            parents[layer["id"]].append(prev)
 
     layers_order = topology_sort(data_layers, edges)
     current_layer_id = None

@@ -41,9 +41,10 @@ class MSEChecker:
 
 def create_checker(layer: dict):
     if layer["type"] in ("Data", "Target"):
-        return Data2dChecker(layer["width"])
+        print(layer)
+        return Data2dChecker(layer["parameters"]["width"])
     elif layer["type"] == "Linear":
-        return LinearChecker(layer["inFeatures"], layer["outFeatures"])
+        return LinearChecker(layer["parameters"]["inFeatures"], layer["parameters"]["outFeatures"])
     elif layer["type"] == "ReLU":
         return ReLUChecker()
     elif layer["type"] == "MSELoss":
