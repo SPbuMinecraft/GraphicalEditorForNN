@@ -197,39 +197,81 @@
           }
           var r = confirm("Delete this layer?")
           if (r === true) {
-            super.removeNodeId(id)
+            const layer_dbid = Object.values(this.getNodeFromId(id.split("-")[1])["data"])[0]
+            let layer_to_delete = {
+              id: layer_dbid,
+            }
+            deleteLayer(layer_to_delete).then(response => {
+              if (response.status == 200 || response.status == 201) {
+                super.removeNodeId(id)
+              }
+              else {
+                Swal.fire("Error!", "Server is not responding now.", "error")
+              }
+            })
           }
+        }
+        addNode(name, inputs, outputs, posx, posy, classoverride, data, html) {
+          const nameMap = {
+            linear: "Linear",
+            relu: "ReLU",
+            data: "Data",
+            output: "Output",
+            loss: "MSELoss",
+            target: "Target",
+          }
+          const parametersMap = {
+            linear: "inputs=1;outputs=1;bias=0;inFeatures=1;outFeatures=2",
+            relu: "inputs=1;outputs=1",
+            data: "inputs=0;outputs=1;width=2",
+            output: "inputs=1;outputs=0;width=1",
+            loss: "width=1",
+            target: "width=1",
+          }
+          const layer = {
+            type: nameMap[name],
+            parameters: parametersMap[name],
+          }
+
+          addLayer(layer).then(id => {
+            if (id.status != 400) {
+              const attrs = {
+                DBID: id,
+                Connections: [],
+                Parameters: layer.parameters,
+              }
+              super.addNode(name, inputs, outputs, posx, posy, classoverride, attrs, html)
+            } else {
+              Swal.fire("Error!", "Server is not responding now.", "error")
+            }
+          })
         }
         clear() {
           Swal.fire({
-            title: "Clear the workspace?",
+            title: "Are you sure?",
             text: "You won't be able to revert this!",
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, clear it!",
+            confirmButtonText: "Yes, clear the workspace!",
             allowOutsideClick: () => !Swal.isLoading(),
           }).then(result => {
             if (result.isConfirmed) {
-              super.clear()
               hideResult()
               onTrainShowPredict(false)
-              //add success verification
-              clearModel().then(() => {
-                console.log("adding one node")
-                addNodeToConstructor("data", 600, 430)
-                addNodeToConstructor("output", 1000, 430)
-                addNodeToConstructor("target", 550, 550)
-                addNodeToConstructor("loss", 860, 550)
-              })
-              Swal.fire({
-                position: "top-end",
-                icon: "success",
-                title: "Cleared!",
-                text: "Workspace has been cleared",
-                showConfirmButton: false,
-                timer: 1500,
+              clearModel().then(response => {
+                if (response.status == 200 || response.status == 201) {
+                  super.clear()
+                  console.log("adding nodes")
+                  addNodeToConstructor("data", 600, 430)
+                  addNodeToConstructor("output", 1000, 430)
+                  addNodeToConstructor("target", 550, 550)
+                  addNodeToConstructor("loss", 860, 550)
+                  Swal.fire("Deleted!", "Workspace has been cleared.", "success")
+                } else {
+                  Swal.fire("Error!", "Server doesn't responding now.", "error")
+                }
               })
             }
           })
@@ -247,60 +289,28 @@
       var id = document.getElementById("drawflow")
       const editor = new CustomDrawflow(id)
       editor.start()
-      editor.addNode(
-        "Data",
-        0,
-        1,
-        300,
-        320,
-        "special",
-        {},
-        '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>',
-      )
-      editor.addNode(
-        "Output",
-        1,
-        0,
-        760,
-        320,
-        "special",
-        {},
-        '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>',
-      )
 
-      editor.addNode(
-        "Target",
-        0,
-        1,
-        450,
-        450,
-        "special",
-        {},
-        '<div class="title-box"><i class="fas fa-file-signature"></i> Target </div>',
-      )
+      const delay = async ms => await new Promise(resolve => setTimeout(resolve, ms))
+      delay(25).then(() => setup())
 
-      editor.addNode(
-        "Loss",
-        1,
-        0,
-        760,
-        450,
-        "special",
-        {},
-        '<div class="title-box"><i class="fas fa-file-signature"></i> Loss </div>',
-      )
+      async function setup() {
+        try {
+          addNodeToConstructor("data", 600, 430)
+          addNodeToConstructor("output", 1000, 430)
+          addNodeToConstructor("target", 550, 550)
+          addNodeToConstructor("loss", 860, 550)
+          console.log(`Setup completed successfully. \nUser ID: ${user_id} \nModel ID: ${model_id}`)
+        } catch (err) {
+          console.log(`Something went wrong during setup :( \nError: ${err}`)
+        }
+      }
 
       // Events!
       editor.on("nodeCreated", function (id) {
-        // Добавление нового слоя (блока)
         console.log("Node created " + id)
       })
       editor.on("nodeRemoved", function (id) {
         console.log("Node removed " + id)
-        let layer_to_delete = {
-          id: last_selected_layer_id,
-        }
-        deleteLayer(layer_to_delete)
       })
       editor.on("nodeSelected", function (id) {
         last_selected_node_id = id
@@ -469,7 +479,7 @@
       }
       function drop(ev) {
         if (ev.type === "touchend") {
-          var parentdrawflow = document
+          const parentdrawflow = document
             .elementFromPoint(mobile_last_move.touches[0].clientX, mobile_last_move.touches[0].clientY)
             .closest("#drawflow")
           if (parentdrawflow != null) {
@@ -482,15 +492,15 @@
           mobile_item_selec = ""
         } else {
           ev.preventDefault()
-          var data = ev.dataTransfer.getData("node")
+          const data = ev.dataTransfer.getData("node")
           addNodeToConstructor(data, ev.clientX, ev.clientY)
         }
       }
 
       function getParametersFromNode(id) {
-        var layer_parameters = Object.values(editor.getNodeFromId(id)["data"])[2]
-        var splited_parameters = layer_parameters.split(";")
-        var parameters_array = new Array()
+        const layer_parameters = Object.values(editor.getNodeFromId(id)["data"])[2]
+        const splited_parameters = layer_parameters.split(";")
+        let parameters_array = []
 
         for (i in splited_parameters) {
           parameters_array.push(splited_parameters[i].split("="))
@@ -499,10 +509,10 @@
       }
 
       function joinUpdatedLayerParameters(new_parameters, id) {
-        var temp_array = []
-        var new_parameters_string = null
-        var dbid = Object.values(editor.getNodeFromId(id)["data"])[0]
-        var connections = Object.values(editor.getNodeFromId(id)["data"])[1]
+        let temp_array = []
+        let new_parameters_string = null
+        const dbid = Object.values(editor.getNodeFromId(id)["data"])[0]
+        const connections = Object.values(editor.getNodeFromId(id)["data"])[1]
 
         let parameters_to_send = {
           id: dbid,
@@ -540,58 +550,32 @@
 
         pos_x -= 100
         pos_y -= 25
-        const nameMap = {
-          linear: "Linear",
-          relu: "ReLU",
-          data: "Data",
-          output: "Output",
-          loss: "MSELoss",
-          target: "Target",
-        }
-        const parametersMap = {
-          linear: "bias=0;inFeatures=2;outFeatures=1",
-          relu: "",
-          data: "width=2",
-          output: "width=1",
-          loss: "width=1",
-          target: "width=1",
-        }
 
-        const layer = {
-          type: nameMap[name],
-          parameters: parametersMap[name],
-        }
-
-        id = await addLayer(layer)
-        const attrs = {
-          DBID: id,
-          Connections: [],
-          Parameters: layer.parameters,
-        }
+        const empty_data = {}
         switch (name) {
           case "linear":
             const linear = `<div class="layer"><i class="fab moduleA"></i> Linear</div>`
-            editor.addNode("linear", 1, 1, pos_x, pos_y, "linear", attrs, linear)
+            editor.addNode("linear", 1, 1, pos_x, pos_y, "linear", empty_data, linear)
             break
           case "relu":
             const relu = `<div class="layer"><i class="fab moduleA"></i> ReLU</div>`
-            editor.addNode("ReLU", 1, 1, pos_x, pos_y, "relu", attrs, relu)
+            editor.addNode("relu", 1, 1, pos_x, pos_y, "relu", empty_data, relu)
             break
           case "data":
             const data = '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>'
-            editor.addNode("data", 0, 1, pos_x, pos_y, "special", attrs, data)
+            editor.addNode("data", 0, 1, pos_x, pos_y, "special", empty_data, data)
             break
           case "output":
             const output = '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>'
-            editor.addNode("Output", 1, 0, pos_x, pos_y, "special", attrs, output)
+            editor.addNode("output", 1, 0, pos_x, pos_y, "special", empty_data, output)
             break
           case "target":
             const target = '<div class="title-box"><i class="fas fa-file-signature"></i> Target </div>'
-            editor.addNode("Target", 0, 1, pos_x, pos_y, "special", attrs, target)
+            editor.addNode("target", 0, 1, pos_x, pos_y, "special", empty_data, target)
             break
           case "loss":
             const loss = '<div class="title-box"><i class="fas fa-file-signature"></i> Loss </div>'
-            editor.addNode("MSELoss", 1, 0, pos_x, pos_y, "special", attrs, loss)
+            editor.addNode("loss", 1, 0, pos_x, pos_y, "special", empty_data, loss)
             break
           default:
             throw "Unreachable"
@@ -671,19 +655,24 @@
     <!--JSON requests handling-->
     <script>
       async function sendJson(sending_object, url, method) {
-        const resp = await fetch(url, {
-          method: method,
-          mode: "cors",
-          headers: {"content-type": "application/json"},
-          body: JSON.stringify(sending_object),
-        })
-
-        return resp
+        try {
+          return await fetch(url, {
+            method: method,
+            mode: "cors",
+            headers: {"content-type": "application/json"},
+            body: JSON.stringify(sending_object),
+          })
+        } catch (e) {
+          console.log("ERROR: " + e)
+          return failed_request
+        }
       }
 
       async function addLayer(sending_obj) {
         const response = await sendJson(sending_obj, `http://${py_server_address}/layer/${user_id}/${model_id}`, "POST")
-        // TODO: handle errors here
+        if (response.status != 200 && response.status != 201) {
+          return failed_request
+        }
         const data = await response.json()
         return data.layer_id
       }
@@ -708,12 +697,11 @@
       async function clearModel() {
         const response = await sendJson(null, `http://${py_server_address}/clear_model/${user_id}/${model_id}`, "POST")
         console.log(`cleared: ${response}`)
+        return response
       }
 
-      function deleteLayer(sending_object) {
-        ;(async () => {
-          await sendJson(sending_object, `http://${py_server_address}/delete_layer/${user_id}/${model_id}`, "PUT")
-        })()
+      async function deleteLayer(sending_object) {
+        return await sendJson(sending_object, `http://${py_server_address}/delete_layer/${user_id}/${model_id}`, "PUT")
       }
 
       function deleteConnection(sending_object) {
@@ -795,88 +783,20 @@
 
     <!-- JS scripts -->
     <script>
-      const dataLayerId = 1
-      const outputLayerId = 2
-      const targetLayerId = 3
-      const lossLayerId = 4
       //import {user_id, py_server_address} from "../scripts/auth.js"
       const user_id = localStorage.getItem("user_id")
       const model_id = localStorage.getItem("model_id")
       const py_server_address = localStorage.getItem("py_server_address")
+      const failed_request = {
+        status: 400
+      }
 
       console.log(`current user id: ${user_id}`)
       console.log(`current address ${py_server_address}`)
 
       let last_selected_layer_id // layer's db id
       let train_status = false
-      var last_selected_node_id // not db id
-
-      // Функция, позволяющая вызывать другю функцию через ms времени
-      const delay = async ms => await new Promise(resolve => setTimeout(resolve, ms))
-      setup()
-
-      async function setup() {
-        try {
-          let ObjData = {
-            type: "Data",
-            parameters: "inputs=0;outputs=1;width=2",
-          }
-
-          let ObjOutput = {
-            type: "Output",
-            parameters: "inputs=1;outputs=0;width=1",
-          }
-
-          let ObjTarget = {
-            type: "Target",
-            parameters: "inputs=0;outputs=1;width=1",
-          }
-
-          let ObjLoss = {
-            type: "MSELoss",
-            parameters: "inputs=2;outputs=0;width=1",
-          }
-
-          addLayer(ObjData)
-            .then(id =>
-              editor.updateNodeDataFromId(dataLayerId, {
-                DBID: id,
-                Connections: [],
-                Parameters: ObjData.parameters,
-              }),
-            )
-            .then(() =>
-              addLayer(ObjOutput).then(id =>
-                editor.updateNodeDataFromId(outputLayerId, {
-                  DBID: id,
-                  Connections: [],
-                  Parameters: ObjOutput.parameters,
-                }),
-              ),
-            )
-            .then(() =>
-              addLayer(ObjTarget).then(id =>
-                editor.updateNodeDataFromId(targetLayerId, {
-                  DBID: id,
-                  Connections: [],
-                  Parameters: ObjTarget.parameters,
-                }),
-              ),
-            )
-            .then(() =>
-              addLayer(ObjLoss).then(id =>
-                editor.updateNodeDataFromId(lossLayerId, {
-                  DBID: id,
-                  Connections: [],
-                  Parameters: ObjLoss.parameters,
-                }),
-              ),
-            )
-            .then(() => console.log(`Setup completed successfully. \nUser ID: ${user_id} \nModel ID: ${model_id}`))
-        } catch (err) {
-          console.log(`Something went wrong during setup :( \nError: ${err}`)
-        }
-      }
+      let last_selected_node_id // not db id
     </script>
 
     <!--Общее взаимодействие html и js-->
@@ -1030,7 +950,7 @@
         const node = editor.getNodeFromId(correct_id)
 
         document.getElementById("layer-data").style.display = "block"
-        var layer_parameters = getParametersFromNode(correct_id)
+        const layer_parameters = getParametersFromNode(correct_id)
 
         if (node.class == "linear") {
           document.querySelector("#linear-layer-parameters").style.display = "block"
