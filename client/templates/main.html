@@ -94,10 +94,10 @@
     <div class="constructor" id="constructor">
       <div class="col">
         <br />
-        <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="linear">
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `linear`)" data-node="linear">
           <span> Linear</span>
         </div>
-        <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="relu">
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `relu`)" data-node="relu">
           <span> ReLU</span>
         </div>
 
@@ -460,7 +460,16 @@
       function allowDrop(ev) {
         ev.preventDefault()
       }
-      function drag(ev) {
+      function drag(ev, layer) {
+        if (layer == "linear") {
+          layer_drag_offset_X = ev.clientX - 50 // Linear layer offset X coord
+          layer_drag_offset_Y = ev.clientY - 97 // Linear layer offset Y coord
+        }
+        if (layer == "relu") {
+          layer_drag_offset_X = ev.clientX - 50 // Relu layer offset X coord
+          layer_drag_offset_Y = ev.clientY - 163 // Relu layer offset Y coord
+        }
+
         if (ev.type === "touchstart") {
           mobile_item_selec = ev.target.closest(".drag-drawflow").getAttribute("data-node")
         } else {
@@ -538,8 +547,8 @@
           editor.precanvas.getBoundingClientRect().y *
             (editor.precanvas.clientHeight / (editor.precanvas.clientHeight * editor.zoom))
 
-        pos_x -= 100
-        pos_y -= 25
+        pos_x -= layer_drag_offset_X
+        pos_y -= layer_drag_offset_Y
         const nameMap = {
           linear: "Linear",
           relu: "ReLU",
@@ -810,6 +819,8 @@
       let last_selected_layer_id // layer's db id
       let train_status = false
       var last_selected_node_id // not db id
+      let layer_drag_offset_X = 0
+      let layer_drag_offset_Y = 0
 
       // Функция, позволяющая вызывать другю функцию через ms времени
       const delay = async ms => await new Promise(resolve => setTimeout(resolve, ms))
