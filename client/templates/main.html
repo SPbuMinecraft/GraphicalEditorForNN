@@ -379,10 +379,10 @@
       })
 
       const linear_bias_selector = document.getElementById("bias-parameter")
-      linear_bias_selector.addEventListener("change", function () {
-        let parameters = getParametersFromNode(last_selected_node_id)
+      linear_bias_selector.addEventListener("change", () =>  {
+        const parameters = getParametersFromNode(last_selected_node_id)
         console.log("last id: " + last_selected_layer_id)
-        let new_value = document.getElementById("bias-parameter").value
+        const new_value = document.getElementById("bias-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "bias") {
@@ -401,9 +401,9 @@
 
       const linear_inFeatures_input = document.getElementById("linear-inFeatures-parameter")
       linear_inFeatures_input.addEventListener("change", () => {
-        let parameters = getParametersFromNode(last_changed_parameters_layer_id)
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
         console.log("last id: " + last_selected_layer_id)
-        let new_value = document.getElementById("linear-inFeatures-parameter").value
+        const new_value = document.getElementById("linear-inFeatures-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "inFeatures") {
@@ -413,15 +413,15 @@
           }
         }
       })
-      linear_inFeatures_input.addEventListener("input", function () {
+      linear_inFeatures_input.addEventListener("input", () =>  {
         last_changed_parameters_layer_id = last_selected_node_id
       })
 
       const linear_outFeatures_input = document.getElementById("linear-outFeatures-parameter")
       linear_outFeatures_input.addEventListener("change", () => {
-        let parameters = getParametersFromNode(last_changed_parameters_layer_id)
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
         console.log("last id: " + last_selected_layer_id)
-        let new_value = document.getElementById("linear-outFeatures-parameter").value
+        const new_value = document.getElementById("linear-outFeatures-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "outFeatures") {
@@ -431,15 +431,15 @@
           }
         }
       })
-      linear_outFeatures_input.addEventListener("input", function () {
+      linear_outFeatures_input.addEventListener("input", () =>  {
         last_changed_parameters_layer_id = last_selected_node_id
       })
 
       const special_width_input = document.getElementById("special-width-parameter")
       special_width_input.addEventListener("change", () => {
-        let parameters = getParametersFromNode(last_changed_parameters_layer_id)
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
         console.log("last id: " + last_selected_layer_id)
-        let new_value = document.getElementById("special-width-parameter").value
+        const new_value = document.getElementById("special-width-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "width") {
