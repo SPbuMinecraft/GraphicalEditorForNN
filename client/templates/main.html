@@ -379,7 +379,7 @@
       })
 
       const linear_bias_selector = document.getElementById("bias-parameter")
-      linear_bias_selector.addEventListener("change", () =>  {
+      linear_bias_selector.addEventListener("change", () => {
         const parameters = getParametersFromNode(last_selected_node_id)
         console.log("last id: " + last_selected_layer_id)
         const new_value = document.getElementById("bias-parameter").value
@@ -413,7 +413,7 @@
           }
         }
       })
-      linear_inFeatures_input.addEventListener("input", () =>  {
+      linear_inFeatures_input.addEventListener("input", () => {
         last_changed_parameters_layer_id = last_selected_node_id
       })
 
@@ -431,7 +431,7 @@
           }
         }
       })
-      linear_outFeatures_input.addEventListener("input", () =>  {
+      linear_outFeatures_input.addEventListener("input", () => {
         last_changed_parameters_layer_id = last_selected_node_id
       })
 
