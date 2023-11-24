@@ -186,6 +186,28 @@
 
     <!--Работа с Drawflow-->
     <script>
+      function saveCanvasToLocalStorage(editorObj) {
+        // Переводим объект в строку JSON
+
+        let jsonString = JSON.stringify(editorObj.export())
+        // Сохраняем строку в LocalStorage с определенным ключом
+        localStorage.setItem("canvas", jsonString)
+      }
+
+      function setCanvasFromLocalStorage(editorObj) {
+        // Получаем строку из LocalStorage по ключу
+        const jsonString = localStorage.getItem("canvas")
+        // Если строка не пуста, преобразуем её в объект
+        if (jsonString) {
+          let json = JSON.parse(jsonString)
+          editorObj.import(json)
+          return json
+        } else {
+          // Если строка пуста (ключ отсутствует или значение null), возвращаем null или другое значение по умолчанию
+          return null
+        }
+      }
+
       class CustomDrawflow extends Drawflow {
         constructor(id) {
           super(id)
@@ -249,56 +271,67 @@
         }
       }
 
-      var id = document.getElementById("drawflow")
-      const editor = new CustomDrawflow(id)
+      id = document.getElementById("drawflow")
+      let editor = new CustomDrawflow(id)
+      let localStorageUsed = false
       editor.start()
-      editor.addNode(
-        "Data",
-        0,
-        1,
-        300,
-        320,
-        "special",
-        {},
-        '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>',
-      )
-      editor.addNode(
-        "Output",
-        1,
-        0,
-        760,
-        320,
-        "special",
-        {},
-        '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>',
-      )
+      let editor_info = setCanvaFromLocalStorage(editor)
+      if (editor_info != null) {
+        console.log(editor_info)
+        localStorageUsed = true
+      }
+      if (!localStorageUsed) {
+        editor.addNode(
+          "Data",
+          0,
+          1,
+          300,
+          320,
+          "special",
+          {},
+          '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>',
+        )
+        editor.addNode(
+          "Output",
+          1,
+          0,
+          760,
+          320,
+          "special",
+          {},
+          '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>',
+        )
 
-      editor.addNode(
-        "Target",
-        0,
-        1,
-        450,
-        450,
-        "special",
-        {},
-        '<div class="title-box"><i class="fas fa-file-signature"></i> Target </div>',
-      )
+        editor.addNode(
+          "Target",
+          0,
+          1,
+          450,
+          450,
+          "special",
+          {},
+          '<div class="title-box"><i class="fas fa-file-signature"></i> Target </div>',
+        )
 
-      editor.addNode(
-        "Loss",
-        1,
-        0,
-        760,
-        450,
-        "special",
-        {},
-        '<div class="title-box"><i class="fas fa-file-signature"></i> Loss </div>',
-      )
+        editor.addNode(
+          "Loss",
+          1,
+          0,
+          760,
+          450,
+          "special",
+          {},
+          '<div class="title-box"><i class="fas fa-file-signature"></i> Loss </div>',
+        )
+      }
+
+      saveCanvaToLocalStorage(editor)
 
       // Events!
       editor.on("nodeCreated", function (id) {
         // Добавление нового слоя (блока)
         console.log("Node created " + id)
+        saveCanvaToLocalStorage(editor)
       })
       editor.on("nodeRemoved", function (id) {
         console.log("Node removed " + id)
@@ -306,18 +339,22 @@
           id: last_selected_layer_id,
         }
         deleteLayer(layer_to_delete)
+        saveCanvaToLocalStorage(editor)
       })
       editor.on("nodeSelected", function (id) {
         last_selected_node_id = id
         console.log("selected layer DBID: " + Object.values(editor.getNodeFromId(id)["data"])[0]) // DBID -- database id
         last_selected_layer_id = Object.values(editor.getNodeFromId(id)["data"])[0] // database id of last selected layer
         console.log("layer parameters: " + Object.values(editor.getNodeFromId(id)["data"])[2])
+        saveCanvaToLocalStorage(editor)
       })
       editor.on("moduleCreated", function (name) {
         console.log("Module Created " + name)
+        saveCanvaToLocalStorage(editor)
       })
       editor.on("moduleChanged", function (name) {
         console.log("Module Changed " + name)
+        saveCanvaToLocalStorage(editor)
       })
       editor.on("connectionCreated", function (connection) {
         console.log("Connection created")
@@ -338,6 +375,7 @@
             Parameters: data2.Parameters,
           })
         })
+        saveCanvaToLocalStorage(editor)
       })
       editor.on("connectionRemoved", function (connection) {
         console.log("Connection removed")
@@ -369,18 +407,23 @@
           Parameters: layer_parameters,
         })
         console.log(list_of_connections)
+        saveCanvaToLocalStorage(editor)
       })
       editor.on("nodeMoved", function (id) {
         console.log("Node moved " + id)
+        saveCanvaToLocalStorage(editor)
       })
       editor.on("zoom", function (zoom) {
         console.log("Zoom level " + zoom)
+        saveCanvaToLocalStorage(editor)
       })
       editor.on("addReroute", function (id) {
         console.log("Reroute added " + id)
+        saveCanvaToLocalStorage(editor)
       })
       editor.on("removeReroute", function (id) {
         console.log("Reroute removed " + id)
+        saveCanvaToLocalStorage(editor)
       })
 
       const linear_bias_selector = document.getElementById("bias-parameter")
