@@ -5,8 +5,6 @@ from collections import deque, defaultdict
 
 from flask import Response, abort
 
-from .dimension_checkers import create_checker
-
 
 class VerificationStatus(Enum):
     OK = 0
@@ -103,7 +101,7 @@ def parse_parameters(layer_string: str) -> dict[str, tp.Any]:
     return params_dict
 
 
-def topology_sort(entry_nodes: list[int], edges: dict[int, list[int]]):
+def topology_sort(entry_nodes: list[int], edges: dict[int, list[int]]) -> list[int]:
     closed = set()
     dfs_stack = []
     is_final = False
@@ -127,11 +125,11 @@ def topology_sort(entry_nodes: list[int], edges: dict[int, list[int]]):
     return reversed(final_order)
 
 
-def check_dimensions(layers: list[dict]):
+def check_dimensions(layers: list[dict]) -> DimensionsCheckStatus:
     layer_checkers = {}
     data_layers = []
 
-    #TODO: maybe it's possible to optimize memory usage is some nice way?
+    # TODO: maybe it's possible to optimize memory usage is some nice way?
     edges = defaultdict(list)
     parents = defaultdict(list)
 
@@ -150,11 +148,14 @@ def check_dimensions(layers: list[dict]):
     try:
         for layer_id in layers_order:
             current_layer_id = layer_id
-            acceptable = layer_checkers[layer_id](*[layer_checkers[parent_id].output_shape
-                                                        for parent_id in parents[layer_id]])
+            acceptable = layer_checkers[layer_id](
+                *[
+                    layer_checkers[parent_id].output_shape
+                    for parent_id in parents[layer_id]
+                ]
+            )
             if not acceptable:
                 return DimensionsCheckStatus.DimensionsMismatch, layer_id
     except TypeError as e:
         return DimensionsCheckStatus.InvalidNumberOfInputs, current_layer_id
     return DimensionsCheckStatus.OK, None
-    

@@ -8,12 +8,12 @@ from .utils import (
     error,
     parse_parameters,
     is_valid_model,
-    check_dimensions,
     LayersConnectionStatus,
     DeleteStatus,
     VerificationStatus,
     DimensionsCheckStatus,
 )
+from .check_dimensions import check_dimensions
 from . import errors
 
 from .db import sql_worker
@@ -264,10 +264,13 @@ def train_model(
             return {"error": "Invalid model found"}, HTTPStatus.NOT_ACCEPTABLE
         dimensions_status, layer_id = check_dimensions(model["layers"])
         if dimensions_status == DimensionsCheckStatus.InvalidNumberOfInputs:
-            return {"error": f"Invalid number of inputs for layer {layer_id}"}, HTTPStatus.NOT_ACCEPTABLE
+            return {
+                "error": f"Invalid number of inputs for layer {layer_id}"
+            }, HTTPStatus.NOT_ACCEPTABLE
         elif dimensions_status == DimensionsCheckStatus.DimensionsMismatch:
-            return {"error": f"Layer {layer_id} does not match with it's parents in dimensions"}, \
-                                                                                HTTPStatus.NOT_ACCEPTABLE
+            return {
+                "error": f"Layer {layer_id} does not match with it's parents in dimensions"
+            }, HTTPStatus.NOT_ACCEPTABLE
         # Convert json to another format for C++ by deleting connsetcions ids and rename layers_type
         model["connections"] = list(
             {
@@ -302,6 +305,8 @@ def train_model(
         return {"error": str(e)}, HTTPStatus.BAD_REQUEST
     except TimeoutError as e:
         return {"error": "Training time limit exceeded"}, HTTPStatus.REQUEST_TIMEOUT
+    except TypeError as e:
+        return {"error": str(e)}, HTTPStatus.NOT_ACCEPTABLE
 
 
 @app.route("/predict/<int:user_id>/<int:model_id>", methods=["PUT"])
