@@ -9,7 +9,7 @@ using namespace std;
 
 Allocator* Allocator::instance = NULL;
 
-#define TMP_BUFF_SIZE 1024
+#define TMP_BUFF_SIZE 2048
 
 void Allocator::startVirtualMode() {
     assert(!instance);
@@ -38,13 +38,13 @@ void Allocator::endVirtualMode() {
 
 void Allocator::start(dict<Shape, size_t> counts) {
     size_t total = 0;
-    for (auto const [shape, count]: counts) {
+    for (auto const &[shape, count]: counts) {
         total += count * shape.size();
     }
     float* base = new float[total];
 
     size_t offset = 0;
-    for (auto const [shape, count]: counts) {
+    for (auto const &[shape, count]: counts) {
         Stack s;
         for (int i = 0; i < count; ++i) {
             float* ptr = base + offset + i * shape.size();
@@ -184,17 +184,3 @@ void Allocator::printPointersInfo() {
     }
     printf("Total %d/%d pointers used\n", used, total);
 }
-
-inline void hash_combine(std::size_t& seed, size_t v) {
-    seed ^= v + 0x9e3779b9 + (seed<<6) + (seed>>2);
-}
-
-size_t hash<Shape>::operator()(const Shape& shape) const {
-    size_t seed = 1843;
-
-    hash_combine(seed, hash<size_t>()(shape.size()));
-    // hash_combine(seed, hash<size_t>()(shape.rows));
-    // hash_combine(seed, hash<size_t>()(shape.cols));
-
-    return seed;
-};

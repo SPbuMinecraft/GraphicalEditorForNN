@@ -20,11 +20,6 @@ public:
     Stack(): top(0) {};
 };
 
-template<>
-struct std::hash<Shape> {
-    std::size_t operator()(const Shape& k) const;
-};
-
 class SessionBuffer {
     char* base = NULL;
     std::size_t top = 0;

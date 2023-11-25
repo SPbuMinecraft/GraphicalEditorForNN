@@ -6,7 +6,7 @@
 #include "Layer.h"
 
 static Blob dataInit(size_t h, size_t w, RandomObject* randomInit) {
-    return Blob::constBlobRandom(Shape {h, w}, randomInit);
+    return Blob::constRandomBlob(Shape {{h, w}}, randomInit);
 }
 
 LinearLayer::LinearLayer(std::unordered_map<std::string, float> params,
@@ -28,8 +28,10 @@ ReLULayer::ReLULayer(std::unordered_map<std::string, float> params,
     result = Tensor(relu, {args[0]});
 }
 
-MSELoss::MSELoss(std::unordered_map<std::string, float> params,
-                 const std::vector<TensorRef>& args, RandomObject* randomInit) {
+MSELoss::MSELoss(
+    std::unordered_map<std::string, float> params,
+    const std::vector<TensorRef>& args, RandomObject* randomInit
+) : mean({0, 1, 2, 3}) {
     pipeline.reserve(2);
 
     Tensor diff(sub, {args[0], args[1]});

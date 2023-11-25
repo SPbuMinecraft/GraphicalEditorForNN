@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <optional>
 
 #include "Shape.h"
 
@@ -14,9 +15,9 @@ typedef std::reference_wrapper<const LazyBlob> LazyBlobRef;
 class Blob;
 class LazyBlob {
 public:
-    std::size_t rows() const { return shape().rows; };
-    std::size_t cols() const { return shape().cols; };
-    virtual Shape shape() const = 0;
+    const Shape& shape() const;
+    mutable std::optional<Shape> shape_ = {};
+    virtual void initShape() const = 0;
     virtual float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const = 0;
 
     float operator() (std::size_t l, std::size_t i, std::size_t j) const { return (*this)(0, l, i, j); };
@@ -26,9 +27,12 @@ public:
     const LazyBlob& dot(const LazyBlob& b) const;
     const LazyBlob& transposed() const;
     const LazyBlob& applying(const UnaryTransform t) const;
-    const LazyBlob& sum(std::vector<std::size_t> axis) const;
-    const LazyBlob& mean(std::vector<std::size_t> axis) const;
+    const LazyBlob& sum(std::vector<short> axis) const;
+    const LazyBlob& mean(std::vector<short> axis) const;
 
+    /// To repeat some dimensions several times
+    /// - Parameter shape: the size we want to get
+    const LazyBlob& fill(Shape shape) const;
 
     friend const LazyBlob& operator + (const LazyBlob &a, const LazyBlob &b);
     friend const LazyBlob& operator - (const LazyBlob &a, const LazyBlob &b);
@@ -52,7 +56,7 @@ private:
 public:
     LazyBlobView(const Blob &ref);
 
-    Shape shape() const override;
+    void initShape() const override;
 
     float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override;
 };

@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 
+#include "Stretch.h"
 #include "Allocator.h"
 #include "Blob.h"
 
@@ -44,6 +45,7 @@ struct Multiply: Operation {
 };
 
 struct BiasSum: Operation {
+    mutable std::optional<Stretch*> stretch = std::nullopt;
     std::string name = "BiasSum";
     Blob compute(const std::vector<LazyBlobRef>& args) const override;
     std::vector<LazyBlobRef> grad(const Blob& gradient, const std::vector<LazyBlobRef>& args) const override;
@@ -58,7 +60,9 @@ struct Square: Operation {
 };
 
 struct Mean: Operation {
+    std::vector<short> axis;
     std::string name = "Mean";
+    Mean(std::vector<short> axis);
     Blob compute(const std::vector<LazyBlobRef>& args) const override;
     std::vector<LazyBlobRef> grad(const Blob& gradient, const std::vector<LazyBlobRef>& args) const override;
     Shape computeDim(const std::vector<LazyBlobRef>& args) const override;

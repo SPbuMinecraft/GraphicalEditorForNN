@@ -15,6 +15,8 @@ private:
     float* data = NULL;
     Blob(Shape shape, const float* data, bool constMemory = false);
     Blob(Shape shape, bool constMemory, RandomObject* object = nullptr);
+
+    float* getAddress(size_t k, size_t l, size_t i, size_t j) const;
 public:
     /// Keep it `const`, PLEASE
     const Shape shape;
@@ -29,16 +31,11 @@ public:
     Blob(const LazyBlob& other);
     ~Blob();
 
-    float* get_address(size_t k, size_t l, size_t i, size_t j) const;
-    float* get_address(size_t l, size_t i, size_t j) const;
-    float* get_address(size_t i, size_t j) const;
-    float* get_address(size_t j) const;
-
     static Blob fill(Shape shape, float value);
     static Blob zeros(Shape shape);
-    static Blob ones(Shape shape = Shape());
+    static Blob ones(Shape shape);
     static Blob constBlob(Shape shape, const float* data);
-    static Blob constBlobRandom(Shape shape, RandomObject* object = nullptr);
+    static Blob constRandomBlob(Shape shape, RandomObject* object = nullptr);
 
     /// Convert to lazy with these
     operator const LazyBlob&() const;
@@ -48,6 +45,11 @@ public:
     float operator() (std::size_t l, std::size_t i, std::size_t j) const;
     float operator() (std::size_t i, std::size_t j) const;
     float operator() (std::size_t j) const;
+
+    float& operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j);
+    float& operator() (std::size_t l, std::size_t i, std::size_t j);
+    float& operator() (std::size_t i, std::size_t j);
+    float& operator() (std::size_t j);
 
     void clear();
 
