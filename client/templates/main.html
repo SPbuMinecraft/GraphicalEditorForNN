@@ -204,13 +204,60 @@
             deleteLayer(layer_to_delete).then(response => {
               if (response.status == 200 || response.status == 201) {
                 super.removeNodeId(id)
-              }
-              else {
+              } else {
                 Swal.fire("Error!", "Server is not responding now.", "error")
               }
             })
           }
         }
+
+        removeConnection() {
+          const selectedConnection = this.connection_selected
+          const connection_name = this.connection_selected.parentElement.className.animVal
+          const parsed_connection_name = connection_name.split(" ")
+          const layerInId = parsed_connection_name[1].split("-")[1]
+          const layerOutId = parsed_connection_name[2].split("-")[1]
+
+          const data1 = editor.getNodeFromId(layerOutId).data
+          const data2 = editor.getNodeFromId(layerInId).data
+          console.log("OUT: " + layerOutId + " IN: " + layerInId)
+
+          let connectionToDelete = {
+            layer_from: data1.DBID,
+            layer_to: data2.DBID,
+          }
+
+          console.log("Connection to delete: " + data1.DBID + " " + data2.DBID)
+
+          deleteConnection(connectionToDelete).then(response => {
+            if (response.status == 200 || response.status == 201) {
+              this.connection_selected = selectedConnection
+              super.removeConnection()
+
+              let listOfConnections = data2.Connections
+              let layerParameters = data2.Parameters
+              let currentElemIndex = null
+
+              for (var i = 0; i < listOfConnections.length; i++) {
+                let parsedDBID = listOfConnections[i].split(";")[0]
+                if (parsedDBID == data1.DBID) {
+                  currentElemIndex = i
+                  break
+                }
+              }
+              listOfConnections.splice(currentElemIndex, 1) // deletes connection from list
+              editor.updateNodeDataFromId(layerInId, {
+                DBID: data2.DBID,
+                Connections: listOfConnections,
+                Parameters: layerParameters,
+              })
+              console.log(listOfConnections)
+            } else {
+              Swal.fire("Error!", "Server is not responding now.", "error")
+            }
+          })
+        }
+
         addNode(name, inputs, outputs, posx, posy, classoverride, data, html) {
           const nameMap = {
             linear: "Linear",
@@ -346,34 +393,6 @@
       })
       editor.on("connectionRemoved", function (connection) {
         console.log("Connection removed")
-        const data1 = editor.getNodeFromId(connection.output_id).data
-        const data2 = editor.getNodeFromId(connection.input_id).data
-
-        let connection_info = {
-          layer_from: data1.DBID,
-          layer_to: data2.DBID,
-        }
-        deleteConnection(connection_info)
-
-        let list_of_connections = data2.Connections
-        let layer_parameters = data2.Parameters
-        let cur_elem_index = null
-
-        for (var i = 0; i < list_of_connections.length; i++) {
-          let parsed_dbid = list_of_connections[i].split(";")[0]
-          if (parsed_dbid == data1.DBID) {
-            cur_elem_index = i
-            break
-          }
-        }
-
-        list_of_connections.splice(cur_elem_index, 1) // deletes connection from list
-        editor.updateNodeDataFromId(connection.input_id, {
-          DBID: data2.DBID,
-          Connections: list_of_connections,
-          Parameters: layer_parameters,
-        })
-        console.log(list_of_connections)
       })
       editor.on("nodeMoved", function (id) {
         console.log("Node moved " + id)
@@ -403,7 +422,7 @@
               console.log("bias false")
               parameters[i][1] = "0"
             }
-            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            joinUpdatedLayerParameters(parameters, last_selected_node_id, "bias-parameter")
             break
           }
         }
@@ -418,7 +437,7 @@
         for (i in parameters) {
           if (parameters[i][0] == "inFeatures") {
             parameters[i][1] = new_value
-            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            joinUpdatedLayerParameters(parameters, last_selected_node_id, "linear-inFeatures-parameter")
             break
           }
         }
@@ -433,7 +452,7 @@
         for (i in parameters) {
           if (parameters[i][0] == "outFeatures") {
             parameters[i][1] = new_value
-            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            joinUpdatedLayerParameters(parameters, last_selected_node_id, "linear-outFeatures-parameter")
             break
           }
         }
@@ -448,7 +467,7 @@
         for (i in parameters) {
           if (parameters[i][0] == "width") {
             parameters[i][1] = new_value
-            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            joinUpdatedLayerParameters(parameters, last_selected_node_id, "special-width-parameter")
             break
           }
         }
@@ -508,7 +527,7 @@
         return parameters_array
       }
 
-      function joinUpdatedLayerParameters(new_parameters, id) {
+      function joinUpdatedLayerParameters(new_parameters, id, changedParameter) {
         let temp_array = []
         let new_parameters_string = null
         const dbid = Object.values(editor.getNodeFromId(id)["data"])[0]
@@ -523,16 +542,23 @@
           temp_array.push(new_parameters[i].join("="))
         }
         new_parameters_string = temp_array.join(";")
-
-        editor.updateNodeDataFromId(id, {
-          DBID: dbid,
-          Connections: connections,
-          Parameters: new_parameters_string,
-        })
         parameters_to_send["parameters"] = new_parameters_string
         console.log(parameters_to_send)
 
-        updateLayerParameter(parameters_to_send)
+        updateLayerParameter(parameters_to_send).then(response => {
+          if (response.status == 200 || response.status == 201) {
+            editor.updateNodeDataFromId(id, {
+              DBID: dbid,
+              Connections: connections,
+              Parameters: new_parameters_string,
+            })
+          } else {
+            Swal.fire("Error!", "Server is not responding now.", "error")
+            console.log(changedParameter)
+            hideLayerInfo(id)
+            showLayerInfo(id)
+          }
+        })
       }
 
       async function addNodeToConstructor(name, pos_x, pos_y) {
@@ -688,15 +714,16 @@
       }
 
       async function updateLayerParameter(sending_obj) {
-        console.log(
-          "Server response for updating parameter: " +
-            (await sendJson(sending_obj, `http://${py_server_address}/layer/${user_id}/${model_id}`, "PUT")),
-        )
+        const response = await sendJson(sending_obj, `http://${py_server_address}/layer/${user_id}/${model_id}`, "PUT")
+        if (response.status != 200 && response.status != 201) {
+          return failed_request
+        }
+        return response
       }
 
       async function clearModel() {
         const response = await sendJson(null, `http://${py_server_address}/clear_model/${user_id}/${model_id}`, "POST")
-        console.log(`cleared: ${response}`)
+        console.log(`cleared with status: ${response.status}`)
         return response
       }
 
@@ -704,11 +731,14 @@
         return await sendJson(sending_object, `http://${py_server_address}/delete_layer/${user_id}/${model_id}`, "PUT")
       }
 
-      function deleteConnection(sending_object) {
-        ;(async () => {
-          await sendJson(sending_object, `http://${py_server_address}/delete_connection/${user_id}/${model_id}`, "PUT")
-        })()
-        console.log(`Deleted connection with DBID: ${sending_object.id}`)
+      async function deleteConnection(sending_object) {
+        const response = await sendJson(
+          sending_object,
+          `http://${py_server_address}/delete_connection/${user_id}/${model_id}`,
+          "PUT",
+        )
+        console.log(`deleted with status: ${response.status}`)
+        return response
       }
 
       function trainRequest() {
@@ -788,7 +818,7 @@
       const model_id = localStorage.getItem("model_id")
       const py_server_address = localStorage.getItem("py_server_address")
       const failed_request = {
-        status: 400
+        status: 400,
       }
 
       console.log(`current user id: ${user_id}`)
@@ -946,7 +976,10 @@
       }
       function showLayerInfo(id) {
         // id format "node-<id>"
-        const correct_id = id.split("-")[1]
+        let correct_id = id
+        if (id.includes("node")) {
+          correct_id = id.split("-")[1]
+        }
         const node = editor.getNodeFromId(correct_id)
 
         document.getElementById("layer-data").style.display = "block"
@@ -975,7 +1008,7 @@
             }
           }
         }
-        const data = getLayerInfoFromDB(id)
+        //const data = getLayerInfoFromDB(id)
       }
       function hideLayerInfo() {
         document.getElementById("layer-data").style.display = "none"
