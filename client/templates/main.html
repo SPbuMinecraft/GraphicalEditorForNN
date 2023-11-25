@@ -220,7 +220,6 @@
 
           const data1 = editor.getNodeFromId(layerOutId).data
           const data2 = editor.getNodeFromId(layerInId).data
-          console.log("OUT: " + layerOutId + " IN: " + layerInId)
 
           let connectionToDelete = {
             layer_from: data1.DBID,
@@ -372,7 +371,6 @@
         console.log("Module Changed " + name)
       })
       editor.on("connectionCreated", function (connection) {
-        console.log("Connection created")
         const data1 = editor.getNodeFromId(connection.output_id).data
         const data2 = editor.getNodeFromId(connection.input_id).data
 
@@ -383,12 +381,22 @@
 
         console.log(layers_connection)
 
-        addConnection(layers_connection).then(() => {
-          editor.updateNodeDataFromId(connection.input_id, {
-            DBID: data2.DBID,
-            Connections: data2.Connections.concat(`${data1.DBID};${connection.output_id}`), // "db_id;drawflow_id"
-            Parameters: data2.Parameters,
-          })
+        addConnection(layers_connection).then(response => {
+          if (response.status == 200 || response.status == 201) {
+            editor.updateNodeDataFromId(connection.input_id, {
+              DBID: data2.DBID,
+              Connections: data2.Connections.concat(`${data1.DBID};${connection.output_id}`), // "db_id;drawflow_id"
+              Parameters: data2.Parameters,
+            })
+          } else {
+            Swal.fire("Error!", "Server is not responding now.", "error")
+            editor.removeSingleConnection(
+              connection.output_id,
+              connection.input_id,
+              connection.output_class,
+              connection.input_class,
+            )
+          }
         })
       })
       editor.on("connectionRemoved", function (connection) {
@@ -709,8 +717,8 @@
           `http://${py_server_address}/connection/${user_id}/${model_id}`,
           "POST",
         )
-        // TODO: handle errors here
-        return 0 // TODO: handle new connection format
+        console.log("Connection added with status: " + response.status)
+        return response
       }
 
       async function updateLayerParameter(sending_obj) {
@@ -819,6 +827,7 @@
       const py_server_address = localStorage.getItem("py_server_address")
       const failed_request = {
         status: 400,
+        ok: false,
       }
 
       console.log(`current user id: ${user_id}`)
