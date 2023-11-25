@@ -70,7 +70,6 @@ def test_mismatch_simple():
     ]
     check_code, problem_node = check_dimensions(layers)
     assert check_code == DimensionsCheckStatus.DimensionsMismatch
-    assert problem_node is not None
     assert problem_node == 4
 
 
@@ -105,5 +104,4 @@ def test_mismatch_harder():
     ]
     check_code, problem_node = check_dimensions(layers)
     assert check_code == DimensionsCheckStatus.DimensionsMismatch
-    assert problem_node is not None
     assert problem_node == 6

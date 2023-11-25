@@ -1,6 +1,5 @@
 from enum import Enum
 from collections import defaultdict
-import typing as tp
 
 from .utils import topology_sort
 
@@ -64,26 +63,26 @@ class MSEChecker:
 
 
 def create_checker(layer: dict):
-    if layer["type"] in ("Data", "Target"):
-        print(layer)
-        return Data2dChecker(layer["parameters"]["width"])
-    elif layer["type"] == "Linear":
-        return LinearChecker(
-            layer["parameters"]["inFeatures"], layer["parameters"]["outFeatures"]
-        )
-    elif layer["type"] == "ReLU":
-        return ReLUChecker()
-    elif layer["type"] == "MSELoss":
-        return MSEChecker()
-    elif layer["type"] == "Sum":
-        return SumChecker()
-    else:
-        raise TypeError(f"Unknown layer type: {layer['type']}")
+    match layer["type"]:
+        case "Data" | "Target":
+            return Data2dChecker(layer["parameters"]["width"])
+        case "Linear":
+            return LinearChecker(
+                layer["parameters"]["inFeatures"], layer["parameters"]["outFeatures"]
+            )
+        case "ReLU":
+            return ReLUChecker()
+        case "MSELoss":
+            return MSEChecker()
+        case "Sum":
+            return SumChecker()
+        case _:
+            raise TypeError(f"Unknown layer type: {layer['type']}")
 
 
 def check_dimensions(
     layers: list[dict],
-) -> tuple[DimensionsCheckStatus, tp.Optional[int]]:
+) -> tuple[DimensionsCheckStatus, int | None]:
     layer_checkers = {}
     data_layers = []
 
