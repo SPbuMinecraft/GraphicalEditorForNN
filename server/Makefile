@@ -128,7 +128,6 @@ $(server): $(serverObjects) $(coreArchive) $(serverMain) | checkboost $(dirBin)
 ### TESTS ###
 
 testFiles = $(wildcard $(dirTests)/*Tests.cpp)
-# testObects = $(call getObjects,$(testFiles),$(dirApi))
 testNames = $(testFiles:$(dirTests)/%Tests.cpp=%)
 testTargets = $(testNames:%=$(dirBin)/test%)
 
