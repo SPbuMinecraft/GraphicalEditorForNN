@@ -49,6 +49,7 @@ getObjects = $(patsubst $2/%.cpp, $(dirBuild)/%.o, $1)
 core = $(dirBin)/core
 server = $(dirBin)/server
 coreMain = $(dirCore)/main.cpp
+serverMain = $(dirApi)/server.cpp
 coreArchive = $(dirBuild)/libcore.a
 
 help:
@@ -117,9 +118,11 @@ boost = $(call getField,BOOST_ROOT)
 CPPFLAGS += -isystem $(boost)/include
 
 serverFiles = $(wildcard $(dirApi)/*.cpp)
+serverFiles := $(filter-out $(serverMain), $(serverFiles))
 serverObjects = $(call getObjects,$(serverFiles),$(dirApi))
 
 serve: $(server); $< $(host) $(port)
+
 
 $(server): $(serverObjects) $(coreArchive) | checkboost $(dirBin)
 	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11
@@ -139,8 +142,8 @@ test.%: $(dirBin)/test%
 	$<
 	@echo "$* test completed"
 
-$(dirBin)/test%: $(dirBuild)/%Tests.o $(coreArchive) | $(dirBin)
-	$(LINK.cpp) $^ -o $@
+$(dirBin)/test%: $(dirBuild)/%Tests.o $(serverObjects) $(coreArchive) | checkboost $(dirBin)
+	$(LINK.cpp) -L $(boost)/lib $^ -o $@
 
 
 ### COMMON ###

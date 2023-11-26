@@ -94,10 +94,10 @@
     <div class="constructor" id="constructor">
       <div class="col">
         <br />
-        <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="linear">
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `linear`)" data-node="linear">
           <span> Linear</span>
         </div>
-        <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="relu">
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `relu`)" data-node="relu">
           <span> ReLU</span>
         </div>
 
@@ -218,15 +218,10 @@
               //add success verification
               clearModel().then(() => {
                 console.log("adding one node")
-                // TODO: WHY IS THIS, FIX PARALLEL DB
-                addNodeToConstructor("data", 600, 430).then(() => {
-                  console.log("adding the other")
-                  addNodeToConstructor("output", 1000, 430).then(() => {
-                    addNodeToConstructor("target", 550, 550).then(() => {
-                      addNodeToConstructor("loss", 860, 550)
-                    })
-                  })
-                })
+                addNodeToConstructor("data", 600, 430)
+                addNodeToConstructor("output", 1000, 430)
+                addNodeToConstructor("target", 550, 550)
+                addNodeToConstructor("loss", 860, 550)
               })
               Swal.fire({
                 position: "top-end",
@@ -384,10 +379,10 @@
       })
 
       const linear_bias_selector = document.getElementById("bias-parameter")
-      linear_bias_selector.addEventListener("change", function () {
-        var parameters = getParametersFromNode(last_selected_node_id)
+      linear_bias_selector.addEventListener("change", () => {
+        const parameters = getParametersFromNode(last_selected_node_id)
         console.log("last id: " + last_selected_layer_id)
-        var new_value = document.getElementById("bias-parameter").value
+        const new_value = document.getElementById("bias-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "bias") {
@@ -405,48 +400,57 @@
       })
 
       const linear_inFeatures_input = document.getElementById("linear-inFeatures-parameter")
-      linear_inFeatures_input.addEventListener("change", function () {
-        var parameters = getParametersFromNode(last_selected_node_id)
+      linear_inFeatures_input.addEventListener("change", () => {
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
         console.log("last id: " + last_selected_layer_id)
-        var new_value = document.getElementById("linear-inFeatures-parameter").value
+        const new_value = document.getElementById("linear-inFeatures-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "inFeatures") {
             parameters[i][1] = new_value
-            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
             break
           }
         }
       })
+      linear_inFeatures_input.addEventListener("input", () => {
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
 
       const linear_outFeatures_input = document.getElementById("linear-outFeatures-parameter")
-      linear_outFeatures_input.addEventListener("change", function () {
-        var parameters = getParametersFromNode(last_selected_node_id)
+      linear_outFeatures_input.addEventListener("change", () => {
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
         console.log("last id: " + last_selected_layer_id)
-        var new_value = document.getElementById("linear-outFeatures-parameter").value
+        const new_value = document.getElementById("linear-outFeatures-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "outFeatures") {
             parameters[i][1] = new_value
-            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
             break
           }
         }
       })
+      linear_outFeatures_input.addEventListener("input", () => {
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
 
       const special_width_input = document.getElementById("special-width-parameter")
-      special_width_input.addEventListener("change", function () {
-        var parameters = getParametersFromNode(last_selected_node_id)
+      special_width_input.addEventListener("change", () => {
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
         console.log("last id: " + last_selected_layer_id)
-        var new_value = document.getElementById("special-width-parameter").value
+        const new_value = document.getElementById("special-width-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "width") {
             parameters[i][1] = new_value
-            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
             break
           }
         }
+      })
+      special_width_input.addEventListener("input", () => {
+        last_changed_parameters_layer_id = last_selected_node_id
       })
 
       /* DRAG EVENT */
@@ -465,7 +469,16 @@
       function allowDrop(ev) {
         ev.preventDefault()
       }
-      function drag(ev) {
+      function drag(ev, layer) {
+        if (layer == "linear") {
+          layer_drag_offset_X = ev.clientX - 50 // Linear layer offset X coord
+          layer_drag_offset_Y = ev.clientY - 97 // Linear layer offset Y coord
+        }
+        if (layer == "relu") {
+          layer_drag_offset_X = ev.clientX - 50 // Relu layer offset X coord
+          layer_drag_offset_Y = ev.clientY - 163 // Relu layer offset Y coord
+        }
+
         if (ev.type === "touchstart") {
           mobile_item_selec = ev.target.closest(".drag-drawflow").getAttribute("data-node")
         } else {
@@ -543,8 +556,8 @@
           editor.precanvas.getBoundingClientRect().y *
             (editor.precanvas.clientHeight / (editor.precanvas.clientHeight * editor.zoom))
 
-        pos_x -= 100
-        pos_y -= 25
+        pos_x -= layer_drag_offset_X
+        pos_y -= layer_drag_offset_Y
         const nameMap = {
           linear: "Linear",
           relu: "ReLU",
@@ -813,8 +826,11 @@
       console.log(`current address ${py_server_address}`)
 
       let last_selected_layer_id // layer's db id
+      let last_changed_parameters_layer_id
       let train_status = false
       var last_selected_node_id // not db id
+      let layer_drag_offset_X = 0
+      let layer_drag_offset_Y = 0
 
       // Функция, позволяющая вызывать другю функцию через ms времени
       const delay = async ms => await new Promise(resolve => setTimeout(resolve, ms))
