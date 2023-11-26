@@ -6,15 +6,18 @@ let signupForm = document.getElementById("signup-form")
 let loginButton = document.getElementById("login_button")
 let sinupButton = document.getElementById("sign_up_button")
 
-const getSHA256Hash = async (input) => {
-    const textAsBuffer = new TextEncoder().encode(input);
-    const hashBuffer = await window.crypto.subtle.digest("SHA-256", textAsBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
+const getSHA256Hash = async input => {
+    const textAsBuffer = new TextEncoder().encode(input)
+    const hashBuffer = await window.crypto.subtle.digest(
+        "SHA-256",
+        textAsBuffer,
+    )
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
     const hash = hashArray
-        .map((item) => item.toString(16).padStart(2, "0"))
-        .join("");
-    return hash;
-};
+        .map(item => item.toString(16).padStart(2, "0"))
+        .join("")
+    return hash
+}
 
 const py_server_address = localStorage.getItem("py_server_address")
 
@@ -154,8 +157,12 @@ async function registerUser() {
 
     const userRegistrationData = buildJsonFormData(signupForm)
     try {
-        userRegistrationData.password = await getSHA256Hash(userRegistrationData.password)
-        userRegistrationData["password-confirm"] = await getSHA256Hash(userRegistrationData["password-confirm"])
+        userRegistrationData.password = await getSHA256Hash(
+            userRegistrationData.password,
+        )
+        userRegistrationData["password-confirm"] = await getSHA256Hash(
+            userRegistrationData["password-confirm"],
+        )
         let responseJson = await sendJson(
             userRegistrationData,
             `http://${py_server_address}/user`,
