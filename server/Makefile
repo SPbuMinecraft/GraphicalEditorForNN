@@ -123,9 +123,8 @@ serverObjects = $(call getObjects,$(serverFiles),$(dirApi))
 
 serve: $(server); $< $(host) $(port)
 
-
-$(server): $(serverObjects) $(coreArchive) | checkboost $(dirBin)
-	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11
+$(server): $(serverMain) $(serverObjects) $(coreArchive) | checkboost $(dirBin)
+	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11 -lpng
 
 
 ### TESTS ###
@@ -143,7 +142,7 @@ test.%: $(dirBin)/test%
 	@echo "$* test completed"
 
 $(dirBin)/test%: $(dirBuild)/%Tests.o $(serverObjects) $(coreArchive) | checkboost $(dirBin)
-	$(LINK.cpp) -L $(boost)/lib $^ -o $@
+	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11 -lpng
 
 
 ### COMMON ###
