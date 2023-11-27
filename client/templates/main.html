@@ -6,6 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>MLCraft</title>
     <meta name="description" content="none yet" />
+    <script src="../scripts/storage.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"></script>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js"
@@ -32,9 +33,6 @@
   </head>
   <body>
     <!-- HTML parts -->
-    <div class="notification" id="error">Error</div>
-    <div class="notification" id="success">Success</div>
-
     <header>
       <label class="button-wrapper">
         <input type="button" class="profile-check" onclick="showProfile()" />
@@ -193,24 +191,21 @@
           super(id)
         }
         removeNodeId(id) {
-          var nodeClassFromId = this.getNodeFromId(id.slice(5)).class
+          let nodeClassFromId = this.getNodeFromId(id.slice(5)).class
           if (nodeClassFromId === "special") {
             return
           }
-          var r = confirm("Delete this layer?")
-          if (r === true) {
-            const layer_dbid = Object.values(this.getNodeFromId(id.split("-")[1])["data"])[0]
-            let layer_to_delete = {
-              id: layer_dbid,
-            }
-            deleteLayer(layer_to_delete).then(response => {
-              if (response.status == 200 || response.status == 201) {
-                super.removeNodeId(id)
-              } else {
-                errorNotification("Failed to delete layer.\n Server is not responding now.")
-              }
-            })
+          const layer_dbid = this.getNodeFromId(id.split("-")[1]).data.DBID
+          let layer_to_delete = {
+            id: layer_dbid,
           }
+          deleteLayer(layer_to_delete).then(response => {
+            if (response.ok) {
+              super.removeNodeId(id)
+            } else {
+              errorNotification("Failed to delete layer.\n Server is not responding now.")
+            }
+          })
         }
 
         removeConnection() {
@@ -231,28 +226,26 @@
           console.log("Connection to delete: " + data1.DBID + " " + data2.DBID)
 
           deleteConnection(connectionToDelete).then(response => {
-            if (response.status == 200 || response.status == 201) {
+            if (response.ok) {
               this.connection_selected = selectedConnection
               super.removeConnection()
 
               let listOfConnections = data2.Connections
               let layerParameters = data2.Parameters
-              let currentElemIndex = null
 
-              for (var i = 0; i < listOfConnections.length; i++) {
+              for (let i = 0; i < listOfConnections.length; i++) {
                 let parsedDBID = listOfConnections[i].split(";")[0]
                 if (parsedDBID == data1.DBID) {
-                  currentElemIndex = i
+                  listOfConnections.splice(i, 1) // deletes connection from list
                   break
                 }
               }
-              listOfConnections.splice(currentElemIndex, 1) // deletes connection from list
+
               editor.updateNodeDataFromId(layerInId, {
                 DBID: data2.DBID,
                 Connections: listOfConnections,
                 Parameters: layerParameters,
               })
-              console.log(listOfConnections)
             } else {
               errorNotification("Failed to delete connection.\n Server is not responding now.")
             }
@@ -269,10 +262,10 @@
             target: "Target",
           }
           const parametersMap = {
-            linear: "inputs=1;outputs=1;bias=0;inFeatures=1;outFeatures=2",
-            relu: "inputs=1;outputs=1",
-            data: "inputs=0;outputs=1;width=2",
-            output: "inputs=1;outputs=0;width=1",
+            linear: "bias=0;inFeatures=1;outFeatures=2",
+            relu: "",
+            data: "width=2",
+            output: "width=1",
             loss: "width=1",
             target: "width=1",
           }
@@ -280,11 +273,11 @@
             type: nameMap[name],
             parameters: parametersMap[name],
           }
-
-          addLayer(layer).then(id => {
-            if (id.status != 500) {
+          addLayer(layer).then(async response => {
+            if (response.ok) {
+              const responseJson = await response.json()
               const attrs = {
-                DBID: id,
+                DBID: responseJson.layer_id,
                 Connections: [],
                 Parameters: layer.parameters,
               }
@@ -309,7 +302,7 @@
               hideResult()
               onTrainShowPredict(false)
               clearModel().then(response => {
-                if (response.status == 200 || response.status == 201) {
+                if (response.ok) {
                   super.clear()
                   console.log("adding nodes")
                   addNodeToConstructor("data", 600, 430)
@@ -334,7 +327,7 @@
         }
       }
 
-      var id = document.getElementById("drawflow")
+      let id = document.getElementById("drawflow")
       const editor = new CustomDrawflow(id)
       editor.start()
 
@@ -372,9 +365,9 @@
       })
       editor.on("nodeSelected", function (id) {
         last_selected_node_id = id
-        console.log("selected layer DBID: " + Object.values(editor.getNodeFromId(id)["data"])[0]) // DBID -- database id
-        last_selected_layer_id = Object.values(editor.getNodeFromId(id)["data"])[0] // database id of last selected layer
-        console.log("layer parameters: " + Object.values(editor.getNodeFromId(id)["data"])[2])
+        console.log("selected layer DBID: " + editor.getNodeFromId(id).data.DBID) // DBID -- database id
+        last_selected_layer_id = editor.getNodeFromId(id).data.DBID // database id of last selected layer
+        console.log("layer parameters: " + editor.getNodeFromId(id).data.Parameters)
       })
       editor.on("moduleCreated", function (name) {
         console.log("Module Created " + name)
@@ -391,10 +384,8 @@
           layer_to: data2.DBID,
         }
 
-        console.log(layers_connection)
-
         addConnection(layers_connection).then(response => {
-          if (response.status == 200 || response.status == 201) {
+          if (response.ok) {
             editor.updateNodeDataFromId(connection.input_id, {
               DBID: data2.DBID,
               Connections: data2.Connections.concat(`${data1.DBID};${connection.output_id}`), // "db_id;drawflow_id"
@@ -429,9 +420,9 @@
 
       const linear_bias_selector = document.getElementById("bias-parameter")
       linear_bias_selector.addEventListener("change", function () {
-        var parameters = getParametersFromNode(last_selected_node_id)
+        const parameters = getParametersFromNode(last_selected_node_id)
         console.log("last id: " + last_selected_layer_id)
-        var new_value = document.getElementById("bias-parameter").value
+        let new_value = document.getElementById("bias-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "bias") {
@@ -450,9 +441,9 @@
 
       const linear_inFeatures_input = document.getElementById("linear-inFeatures-parameter")
       linear_inFeatures_input.addEventListener("change", function () {
-        var parameters = getParametersFromNode(last_selected_node_id)
+        const parameters = getParametersFromNode(last_selected_node_id)
         console.log("last id: " + last_selected_layer_id)
-        var new_value = document.getElementById("linear-inFeatures-parameter").value
+        let new_value = document.getElementById("linear-inFeatures-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "inFeatures") {
@@ -465,9 +456,9 @@
 
       const linear_outFeatures_input = document.getElementById("linear-outFeatures-parameter")
       linear_outFeatures_input.addEventListener("change", function () {
-        var parameters = getParametersFromNode(last_selected_node_id)
+        const parameters = getParametersFromNode(last_selected_node_id)
         console.log("last id: " + last_selected_layer_id)
-        var new_value = document.getElementById("linear-outFeatures-parameter").value
+        let new_value = document.getElementById("linear-outFeatures-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "outFeatures") {
@@ -480,9 +471,9 @@
 
       const special_width_input = document.getElementById("special-width-parameter")
       special_width_input.addEventListener("change", function () {
-        var parameters = getParametersFromNode(last_selected_node_id)
+        const parameters = getParametersFromNode(last_selected_node_id)
         console.log("last id: " + last_selected_layer_id)
-        var new_value = document.getElementById("special-width-parameter").value
+        let new_value = document.getElementById("special-width-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "width") {
@@ -495,14 +486,14 @@
 
       /* DRAG EVENT */
       /* Mouse and Touch Actions */
-      var elements = document.getElementsByClassName("drag-drawflow")
-      for (var i = 0; i < elements.length; i++) {
+      let elements = document.getElementsByClassName("drag-drawflow")
+      for (let i = 0; i < elements.length; i++) {
         elements[i].addEventListener("touchend", drop, false)
         elements[i].addEventListener("touchmove", positionMobile, false)
         elements[i].addEventListener("touchstart", drag, false)
       }
-      var mobile_item_selec = ""
-      var mobile_last_move = null
+      let mobile_item_selec = ""
+      let mobile_last_move = null
       function positionMobile(ev) {
         mobile_last_move = ev
       }
@@ -537,7 +528,7 @@
       }
 
       function getParametersFromNode(id) {
-        const layer_parameters = Object.values(editor.getNodeFromId(id)["data"])[2]
+        const layer_parameters = editor.getNodeFromId(id).data.Parameters
         const splited_parameters = layer_parameters.split(";")
         let parameters_array = []
 
@@ -550,8 +541,8 @@
       function joinUpdatedLayerParameters(new_parameters, id, changedParameter) {
         let temp_array = []
         let new_parameters_string = null
-        const dbid = Object.values(editor.getNodeFromId(id)["data"])[0]
-        const connections = Object.values(editor.getNodeFromId(id)["data"])[1]
+        const dbid = editor.getNodeFromId(id).data.DBID
+        const connections = editor.getNodeFromId(id).data.Connections
 
         let parameters_to_send = {
           id: dbid,
@@ -566,7 +557,7 @@
         console.log(parameters_to_send)
 
         updateLayerParameter(parameters_to_send).then(response => {
-          if (response.status == 200 || response.status == 201) {
+          if (response.ok) {
             editor.updateNodeDataFromId(id, {
               DBID: dbid,
               Connections: connections,
@@ -628,7 +619,7 @@
         }
       }
 
-      var transform = ""
+      let transform = ""
       function showpopup(e) {
         e.target.closest(".drawflow-node").style.zIndex = "9999"
         e.target.children[0].style.display = "block"
@@ -741,29 +732,16 @@
 
     <!-- JS scripts -->
     <script>
-      //import {user_id, py_server_address} from "../scripts/auth.js"
-      const user_id = localStorage.getItem("user_id")
-      const model_id = localStorage.getItem("model_id")
-      const py_server_address = localStorage.getItem("py_server_address")
-      const failed_request = {
-        status: 500,
-        ok: false,
-      }
-
       console.log(`current user id: ${user_id}`)
       console.log(`current address ${py_server_address}`)
-
-      let last_selected_layer_id // layer's db id
-      let train_status = false
-      let last_selected_node_id // not db id
     </script>
 
     <!--Общее взаимодействие html и js-->
     <script>
       function showMode(event) {
-        var all = document.querySelectorAll(".menu ul li")
-        var modes = document.querySelectorAll("div.home, div.constructor, div.terminal, div.metrics")
-        for (var i = 0; i < all.length; i++) {
+        let all = document.querySelectorAll(".menu ul li")
+        let modes = document.querySelectorAll("div.home, div.constructor, div.terminal, div.metrics")
+        for (let i = 0; i < all.length; i++) {
           all[i].classList.remove("selected")
           modes[i].style.display = "none"
         }
@@ -771,7 +749,7 @@
         document.getElementById(event.target.id.split("-")[1]).style.display = "flex"
       }
       function showProfile() {
-        var prf = document.getElementById("profile")
+        let prf = document.getElementById("profile")
         if (prf.style.display == "block") prf.style.display = "none"
         else prf.style.display = "block"
       }
@@ -847,22 +825,22 @@
     <script>
       // Notifications
       const buildSuccessful = () => {
-        const success = document.getElementById("success")
-        success.style.display = "block"
-        success.innerHTML =
-          '<div style="font-weight: bold; font-size: 23px">Success!</div>Successfully built and trained the neural network'
-        setTimeout(() => {
-          success.style.display = "none"
-        }, 3 * 1000)
+        Swal.fire({
+          position: "top-end",
+          icon: "success",
+          title: "Neural network has been built",
+          showConfirmButton: false,
+          timer: 1500,
+        })
       }
       const buildUnsuccessful = () => {
-        const error = document.getElementById("error")
-        error.style.display = "block"
-        error.innerHTML =
-          '<div style="font-weight: bold; font-size: 23px">Error!</div>Failed to build the neural network'
-        setTimeout(() => {
-          error.style.display = "none"
-        }, 3 * 1000)
+        Swal.fire({
+          position: "top-end",
+          icon: "error",
+          title: "Failed to build neural network",
+          showConfirmButton: false,
+          timer: 1500,
+        })
       }
       const showBuildNotification = build_status => {
         build_status ? buildSuccessful() : buildUnsuccessful()
@@ -937,7 +915,6 @@
             }
           }
         }
-        //const data = getLayerInfoFromDB(id)
       }
       function hideLayerInfo() {
         document.getElementById("layer-data").style.display = "none"

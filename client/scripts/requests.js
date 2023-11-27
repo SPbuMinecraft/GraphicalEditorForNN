@@ -1,3 +1,8 @@
+const failed_request = {
+    status: 500,
+    ok: false,
+}
+
 async function sendJson(sending_object, url, method) {
     try {
         return await fetch(url, {
@@ -12,17 +17,18 @@ async function sendJson(sending_object, url, method) {
     }
 }
 
-async function addLayer(sending_obj) {
+async function addLayer(sending_object) {
     const response = await sendJson(
-        sending_obj,
+        sending_object,
         `http://${py_server_address}/layer/${user_id}/${model_id}`,
         "POST",
     )
-    if (response.status != 200 && response.status != 201) {
+    if (!response.ok) {
+        console.log("Failed to add layer with type: " + sending_object.type + ", parameters: " + sending_object.parameters)
         return failed_request
     }
-    const data = await response.json()
-    return data.layer_id
+    console.log("Added layer with type: " + sending_object.type + ", parameters:  " + sending_object.parameters)
+    return response
 }
 
 async function addConnection(layers_connection) {
@@ -31,17 +37,22 @@ async function addConnection(layers_connection) {
         `http://${py_server_address}/connection/${user_id}/${model_id}`,
         "POST",
     )
-    console.log("Connection added with status: " + response.status)
+    if (!response.ok) {
+        console.log("Failed to add connection from " + layers_connection.layer_from + " to " + layers_connection.layer_to)
+        return response
+    }
+    console.log("Added connection from " + layers_connection.layer_from + " to " + layers_connection.layer_to)
     return response
+
 }
 
-async function updateLayerParameter(sending_obj) {
+async function updateLayerParameter(sending_object) {
     const response = await sendJson(
-        sending_obj,
+        sending_object,
         `http://${py_server_address}/layer/${user_id}/${model_id}`,
         "PUT",
     )
-    if (response.status != 200 && response.status != 201) {
+    if (!response.ok) {
         return failed_request
     }
     return response
@@ -58,11 +69,17 @@ async function clearModel() {
 }
 
 async function deleteLayer(sending_object) {
-    return await sendJson(
+    const response =  await sendJson(
         sending_object,
         `http://${py_server_address}/delete_layer/${user_id}/${model_id}`,
         "PUT",
     )
+    if (!response.ok) {
+        console.log("Failed to delete layer with ID " + sending_object.id)
+        return response
+    }
+    console.log("Deleted layer with ID " + sending_object.id)
+    return response
 }
 
 async function deleteConnection(sending_object) {
@@ -76,7 +93,6 @@ async function deleteConnection(sending_object) {
 }
 
 function trainRequest() {
-    console.assert(train_data, "no training data was set")
     if (!train_data) {
         errorNotification("No training data was set.")
     } else {
@@ -108,17 +124,17 @@ async function predictRequest() {
             body: text,
         },
     )
+    const responseJson = await response.json()
     hideResult() // hide previous predict result
-    if (response.ok) onPredictShowResult(await response.text())
+    if (response.ok) onPredictShowResult(responseJson)
     else {
-        const responseText = await response.text()
         Swal.fire("Error!", "Server is not responding now.", "error")
         errorNotification(
-            "Failed to predict.\n" + responseText.split(":")[1].split('"')[1],
+            "Failed to predict.\n" + responseJson.error,
         )
         console.log(
             `Predict failed with ${response.statusText}: ${
-                responseText.split(":")[1].split('"')[1]
+                responseJson.error
             }`,
         )
     }
