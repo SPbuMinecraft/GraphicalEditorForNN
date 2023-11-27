@@ -34,8 +34,8 @@ TEST_CASE("one_pixel") {
 }
 
 TEST_CASE("big_picture") {
-    std::vector<float> traffic_light = {255, 0, 0, 255, 255, 0, 0, 255, 0};
-    std::vector<float> picture = {0, 0, 0, 255, 174, 201, 100, 100, 100, 153, 217, 234, 136, 0, 21, 255, 255, 255};
+    std::vector<float> traffic_light = {255, 255, 0, 0, 255, 255, 0, 0, 0};
+    std::vector<float> picture = {0, 255, 100, 153, 136, 255, 0, 174, 100, 217, 0, 255, 0, 201, 100, 234, 21, 255};
 
     SUBCASE("traffic_light") {
         auto result = ImageLoader::load_image("tests/data/traffic_light.png");
