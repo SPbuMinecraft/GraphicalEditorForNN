@@ -13,7 +13,11 @@ async function sendJson(sending_object, url, method) {
 }
 
 async function addLayer(sending_obj) {
-    const response = await sendJson(sending_obj, `http://${py_server_address}/layer/${user_id}/${model_id}`, "POST")
+    const response = await sendJson(
+        sending_obj,
+        `http://${py_server_address}/layer/${user_id}/${model_id}`,
+        "POST",
+    )
     if (response.status != 200 && response.status != 201) {
         return failed_request
     }
@@ -32,7 +36,11 @@ async function addConnection(layers_connection) {
 }
 
 async function updateLayerParameter(sending_obj) {
-    const response = await sendJson(sending_obj, `http://${py_server_address}/layer/${user_id}/${model_id}`, "PUT")
+    const response = await sendJson(
+        sending_obj,
+        `http://${py_server_address}/layer/${user_id}/${model_id}`,
+        "PUT",
+    )
     if (response.status != 200 && response.status != 201) {
         return failed_request
     }
@@ -40,13 +48,21 @@ async function updateLayerParameter(sending_obj) {
 }
 
 async function clearModel() {
-    const response = await sendJson(null, `http://${py_server_address}/clear_model/${user_id}/${model_id}`, "POST")
+    const response = await sendJson(
+        null,
+        `http://${py_server_address}/clear_model/${user_id}/${model_id}`,
+        "POST",
+    )
     console.log(`cleared with status: ${response.status}`)
     return response
 }
 
 async function deleteLayer(sending_object) {
-    return await sendJson(sending_object, `http://${py_server_address}/delete_layer/${user_id}/${model_id}`, "PUT")
+    return await sendJson(
+        sending_object,
+        `http://${py_server_address}/delete_layer/${user_id}/${model_id}`,
+        "PUT",
+    )
 }
 
 async function deleteConnection(sending_object) {
@@ -63,8 +79,7 @@ function trainRequest() {
     console.assert(train_data, "no training data was set")
     if (!train_data) {
         errorNotification("No training data was set.")
-    }
-    else {
+    } else {
         fetch(`http://${py_server_address}/train/${user_id}/${model_id}/0`, {
             method: "PUT",
             mode: "cors",
@@ -84,18 +99,27 @@ async function predictRequest() {
     }
     const file = csv_predict.files[0]
     const text = await file.text()
-    const response = await fetch(`http://${py_server_address}/predict/${user_id}/${model_id}`, {
-        method: "PUT",
-        mode: "cors",
-        headers: {"Content-Type": "text/csv"},
-        body: text,
-    })
+    const response = await fetch(
+        `http://${py_server_address}/predict/${user_id}/${model_id}`,
+        {
+            method: "PUT",
+            mode: "cors",
+            headers: {"Content-Type": "text/csv"},
+            body: text,
+        },
+    )
     hideResult() // hide previous predict result
     if (response.ok) onPredictShowResult(await response.text())
     else {
         const responseText = await response.text()
         Swal.fire("Error!", "Server is not responding now.", "error")
-        errorNotification("Failed to predict.\n" + responseText.split(":")[1].split("\"")[1])
-        console.log(`Predict failed with ${response.statusText}: ${responseText.split(":")[1].split("\"")[1]}`)
+        errorNotification(
+            "Failed to predict.\n" + responseText.split(":")[1].split('"')[1],
+        )
+        console.log(
+            `Predict failed with ${response.statusText}: ${
+                responseText.split(":")[1].split('"')[1]
+            }`,
+        )
     }
 }
