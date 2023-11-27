@@ -1,6 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
-#include "../api/ImageLoader.h"
+#include "ImageLoader.h"
 #include <vector>
 
 TEST_CASE("one_pixel") {
