@@ -16,9 +16,8 @@ class LayersConnectionStatus(Enum):
     OK = 0
     DoNotExist = 1
     AccessDenied = 2
-    DimensionsMismatch = 3
-    WrongDirection = 4
-    Cycle = 5
+    WrongDirection = 3
+    Cycle = 4
 
 
 class DeleteStatus(Enum):
@@ -94,3 +93,27 @@ def parse_parameters(layer_string: str) -> dict[str, tp.Any]:
         else:
             params_dict[param_name] = param_value  # type: ignore
     return params_dict
+
+
+def topology_sort(entry_nodes: list[int], edges: dict[int, list[int]]) -> list[int]:
+    closed = set()
+    dfs_stack = []
+    is_final = False
+    final_order = []
+
+    for entry_node in entry_nodes:
+        dfs_stack.append(entry_node)
+        while dfs_stack:
+            current_node = dfs_stack[-1]
+            is_final = True
+            if current_node in edges:
+                for next_node in edges[current_node]:
+                    if next_node in closed:
+                        continue
+                    is_final = False
+                    dfs_stack.append(next_node)
+            if is_final:
+                final_order.append(current_node)
+                closed.add(current_node)
+                dfs_stack.pop()
+    return list(reversed(final_order))
