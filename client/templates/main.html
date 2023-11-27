@@ -22,11 +22,13 @@
       integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ="
       crossorigin="anonymous"
     />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
     <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
     <script src="../scripts/day_night_mode.js"></script>
+    <script src="../scripts/requests.js"></script>
   </head>
   <body>
     <!-- HTML parts -->
@@ -205,7 +207,7 @@
               if (response.status == 200 || response.status == 201) {
                 super.removeNodeId(id)
               } else {
-                Swal.fire("Error!", "Server is not responding now.", "error")
+                errorNotification("Failed to delete layer.\n Server is not responding now.")
               }
             })
           }
@@ -252,7 +254,7 @@
               })
               console.log(listOfConnections)
             } else {
-              Swal.fire("Error!", "Server is not responding now.", "error")
+              errorNotification("Failed to delete connection.\n Server is not responding now.")
             }
           })
         }
@@ -288,7 +290,7 @@
               }
               super.addNode(name, inputs, outputs, posx, posy, classoverride, attrs, html)
             } else {
-              Swal.fire("Error!", "Server is not responding now.", "error")
+              errorNotification("Failed to add layer.\n Server is not responding now.")
             }
           })
         }
@@ -316,7 +318,7 @@
                   addNodeToConstructor("loss", 860, 550)
                   Swal.fire("Deleted!", "Workspace has been cleared.", "success")
                 } else {
-                  Swal.fire("Error!", "Server doesn't responding now.", "error")
+                  errorNotification("Failed to clear.\n Server is not responding now.")
                 }
               })
             }
@@ -349,6 +351,16 @@
         } catch (err) {
           console.log(`Something went wrong during setup :( \nError: ${err}`)
         }
+      }
+
+      function errorNotification(errorText) {
+        Swal.fire({
+          position: "center",
+          icon: "error",
+          title: errorText,
+          showConfirmButton: false,
+          timer: 1500,
+        })
       }
 
       // Events!
@@ -389,7 +401,7 @@
               Parameters: data2.Parameters,
             })
           } else {
-            Swal.fire("Error!", "Server is not responding now.", "error")
+            errorNotification("Failed to add connection.\n Server is not responding now.")
             editor.removeSingleConnection(
               connection.output_id,
               connection.input_id,
@@ -561,7 +573,7 @@
               Parameters: new_parameters_string,
             })
           } else {
-            Swal.fire("Error!", "Server is not responding now.", "error")
+            errorNotification("Failed to update parameters.\n Server is not responding now.")
             console.log(changedParameter)
             hideLayerInfo(id)
             showLayerInfo(id)
@@ -688,98 +700,7 @@
 
     <!--JSON requests handling-->
     <script>
-      async function sendJson(sending_object, url, method) {
-        try {
-          return await fetch(url, {
-            method: method,
-            mode: "cors",
-            headers: {"content-type": "application/json"},
-            body: JSON.stringify(sending_object),
-          })
-        } catch (e) {
-          console.log("ERROR: " + e)
-          return failed_request
-        }
-      }
 
-      async function addLayer(sending_obj) {
-        const response = await sendJson(sending_obj, `http://${py_server_address}/layer/${user_id}/${model_id}`, "POST")
-        if (response.status != 200 && response.status != 201) {
-          return failed_request
-        }
-        const data = await response.json()
-        return data.layer_id
-      }
-
-      async function addConnection(layers_connection) {
-        const response = await sendJson(
-          layers_connection,
-          `http://${py_server_address}/connection/${user_id}/${model_id}`,
-          "POST",
-        )
-        console.log("Connection added with status: " + response.status)
-        return response
-      }
-
-      async function updateLayerParameter(sending_obj) {
-        const response = await sendJson(sending_obj, `http://${py_server_address}/layer/${user_id}/${model_id}`, "PUT")
-        if (response.status != 200 && response.status != 201) {
-          return failed_request
-        }
-        return response
-      }
-
-      async function clearModel() {
-        const response = await sendJson(null, `http://${py_server_address}/clear_model/${user_id}/${model_id}`, "POST")
-        console.log(`cleared with status: ${response.status}`)
-        return response
-      }
-
-      async function deleteLayer(sending_object) {
-        return await sendJson(sending_object, `http://${py_server_address}/delete_layer/${user_id}/${model_id}`, "PUT")
-      }
-
-      async function deleteConnection(sending_object) {
-        const response = await sendJson(
-          sending_object,
-          `http://${py_server_address}/delete_connection/${user_id}/${model_id}`,
-          "PUT",
-        )
-        console.log(`deleted with status: ${response.status}`)
-        return response
-      }
-
-      function trainRequest() {
-        console.assert(train_data, "no training data was set")
-        fetch(`http://${py_server_address}/train/${user_id}/${model_id}/0`, {
-          method: "PUT",
-          mode: "cors",
-          headers: {"Content-Type": "text/csv"},
-          body: train_data,
-        }).then(response => {
-          showBuildNotification(response.ok)
-          onTrainShowPredict(response.ok)
-        })
-      }
-
-      async function predictRequest() {
-        if (csv_predict.files.length == 0) return
-        const file = csv_predict.files[0]
-        const text = await file.text()
-        const response = await fetch(`http://${py_server_address}/predict/${user_id}/${model_id}`, {
-          method: "PUT",
-          mode: "cors",
-          headers: {"Content-Type": "text/csv"},
-          body: text,
-        })
-        hideResult() // hide previous predict result
-        if (response.ok) onPredictShowResult(await response.text())
-        // TODO: handle errors here
-        else {
-          buildUnsuccessful()
-          console.log(`Predict failed with ${response.statusText}: ${await response.text()}`)
-        }
-      }
       const csv_predict = document.getElementById("csv-predict-button")
       csv_predict.onclick = () => {
         csv_predict.value = null
