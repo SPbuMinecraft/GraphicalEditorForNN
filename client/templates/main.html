@@ -282,7 +282,7 @@
           }
 
           addLayer(layer).then(id => {
-            if (id.status != 400) {
+            if (id.status != 500) {
               const attrs = {
                 DBID: id,
                 Connections: [],
@@ -747,7 +747,7 @@
       const model_id = localStorage.getItem("model_id")
       const py_server_address = localStorage.getItem("py_server_address")
       const failed_request = {
-        status: 400,
+        status: 500,
         ok: false,
       }
 
