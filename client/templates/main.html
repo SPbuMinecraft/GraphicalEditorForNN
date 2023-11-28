@@ -1039,8 +1039,8 @@
         // id format "node-<id>"
         const correct_id = id.split("-")[1]
         const node = editor.getNodeFromId(correct_id)
-        const connections = editor.getNodeFromId(id).data.Connections
-        const layer_dbid = editor.getNodeFromId(id).data.DBID
+        const connections = editor.getNodeFromId(correct_id).data.Connections
+        const layer_dbid = editor.getNodeFromId(correct_id).data.DBID
 
         writeIdOnConnections(correct_id)
         let sortable_list = getSortableInputList(node.class)
@@ -1051,9 +1051,9 @@
           child = sortable_list.lastElementChild
         }
 
-        for (let i = 0; i < connections.length; i++) {
+        for (let connection of connections) {
           let new_element = document.createElement("LI")
-          const text_for_new_element = document.createTextNode("Input from: " + connections[i].split(";")[0])
+          const text_for_new_element = document.createTextNode("Input from: " + connection.split(";")[0])
           new_element.appendChild(text_for_new_element)
           sortable_list.appendChild(new_element)
         }
@@ -1073,6 +1073,16 @@
                 continue
               }
             }
+
+            let newConnections = []
+            for (let i = 0; i < new_input_order.length; i++) {
+              for (let connection of connections) {
+                if (new_input_order[i] == connection.split(";")[0]) {
+                  newConnections[i] = connection
+                }
+              }
+            }
+
             let new_inputs_object = {
               new_parents: new_input_order,
               layer_id: layer_dbid,
@@ -1080,8 +1090,8 @@
             updateParentOrder(new_inputs_object).then(() => {
               editor.updateNodeDataFromId(correct_id, {
                 DBID: layer_dbid,
-                Connections: new_input_order,
-                Parameters: editor.getNodeFromId(id).data.Parameters,
+                Connections: newConnections,
+                Parameters: editor.getNodeFromId(correct_id).data.Parameters,
               })
             })
             console.log(new_input_order)
