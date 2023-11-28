@@ -173,7 +173,7 @@ paths:
         '403':
           $ref: '#/components/responses/ModelForbidden'
         '404':
-          $ref: '#components/responses/ModelNotFound'
+          $ref: '#/components/responses/ModelNotFound'
     put:
       tags: 
       - model
@@ -568,6 +568,213 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /update_metrics/{user_id}/{model_id}:
+    put:
+      tags:
+      - use
+      summary: "Writes new values of a metric"
+      description: "WRITES metric values"
+      operationId: "updates_metrics"
+      parameters:
+        - name: user_id
+          in: path
+          description: model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: model_id
+          in: path
+          description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: "Information about new metric's values"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WriteMetricValues'
+      responses:
+        '200':
+          description: "Metrics updated successfully"
+        '400':
+          description: "Json isn't provided or required fields missing"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "The model does not exist or you have no rights for changing it"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "Model / layer does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /protect_metrics/{user_id}/{model_id}:
+    put:
+      tags:
+      - use
+      summary: "Protects model's metrics from auto-deletion"
+      description: "PROTECTS metric values"
+      operationId: "protect_metrics"
+      parameters:
+        - name: user_id
+          in: path
+          description: model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: model_id
+          in: path
+          description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: "Whar record to protect"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProtectMetricValues'
+      responses:
+        '200':
+          description: "Settings updated successfully"
+        '400':
+          description: "Json isn't provided or required fields missing"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "The model does not exist or you have no rights for changing it"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "Model / layer does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /get_metrics/{user_id}/{model_id}:
+    put:
+      tags:
+      - use
+      summary: "Reads metric's values from database"
+      description: "READS metric values"
+      operationId: "get_metrics"
+      parameters:
+        - name: user_id
+          in: path
+          description: model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: model_id
+          in: path
+          description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: "Information about metric's values to read"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadMetricValues'
+      responses:
+        '200':
+          description: "Successful read"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnMetricValues'
+        '400':
+          description: "Json isn't provided or required fields missing"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "The model does not exist or you have no rights for changing it"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "Model / layer does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /get_plots/{user_id}/{model_id}:
+    put:
+      tags:
+      - use
+      summary: "Get plot of metrics from the database"
+      description: "PLOTS metric values"
+      operationId: "get_plots"
+      parameters:
+        - name: user_id
+          in: path
+          description: model owner's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: model_id
+          in: path
+          description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: "Information about metric's values to read"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadMetricValues'
+      responses:
+        '200':
+          description: "Returns PNG"
+          schema:
+            type: file
+        '400':
+          description: "Json isn't provided or required fields missing"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "The model does not exist or you have no rights for changing it"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "Model / layer does not exist"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          
 components:
   schemas:
     User:
@@ -640,6 +847,37 @@ components:
           type: integer
           format: int64
           example: 2
+    WriteMetricValues:
+      type: object
+      properties:
+        values:
+          type: array
+          items:
+            type: string
+          example: [0.25, 0.112, 0.787, 0.238, 0.030, 0.0003]
+        label:
+          type: string
+          example: "train"
+        new_iteration:
+          type: boolean
+          example: true
+      required:
+        - values
+    ProtectMetricValues:
+      type: object
+      properties:
+        label:
+          type: string
+          example: "train"
+        protected:
+          type: boolean
+          example: true
+    ReadMetricValues:
+      type: object
+      properties:
+        label:
+          type: string
+          example: "train"
     Data:
       type: object
       properties:
@@ -665,11 +903,16 @@ components:
         1,1
     PredictResult:
       type: array
-      descriptoin: Array with 1 element for now
       items:
         type: number
         format: float
       example: [1.0]
+    ReturnMetricValues:
+      type: array
+      items:
+        type: number
+        format: float
+      example: [0.25, 0.112, 0.787, 0.238, 0.030, 0.0003]
     Error:
       type: object
       properties:
@@ -684,7 +927,7 @@ components:
           example: "Something whent wrong"
         problemPart:
           type: string
-          example: "The problem is in the Retrograde Mercury"
+          example: "The problem is here: ..."
   parameters:
     UserId: 
       name: user_id
@@ -743,9 +986,6 @@ components:
             $ref: '#/components/schemas/Error'
     NoJson:
       description: "Json not provided"
-      content:
-        text/html:
-          type: string
     NoField:
       description: "Required field is missing"
       content:
