@@ -301,10 +301,10 @@
       })
       editor.on("nodeSelected", function (id) {
         last_selected_node_id = id
-        console.log("selected layer DBID: " + Object.values(editor.getNodeFromId(id)["data"])[0]) // DBID = "database_id;drawflow_id"
-        last_selected_layer_id = Object.values(editor.getNodeFromId(id)["data"])[0] // database id of last selected layer
-        console.log("layer parameters: " + Object.values(editor.getNodeFromId(id)["data"])[2])
-        console.log("Connections: " + Object.values(editor.getNodeFromId(id)["data"])[1])
+        console.log("selected layer DBID: " + editor.getNodeFromId(id).data.DBID) // DBID = "database_id;drawflow_id"
+        last_selected_layer_id = editor.getNodeFromId(id).data.DBID // database id of last selected layer
+        console.log("layer parameters: " + editor.getNodeFromId(id).data.Parameters)
+        console.log("Connections: " + editor.getNodeFromId(id).data.Connections)
       })
       editor.on("moduleCreated", function (name) {
         console.log("Module Created " + name)
@@ -345,8 +345,8 @@
         let layer_parameters = data2.Parameters
         let cur_elem_index = null
 
-        for (var i = 0; i < list_of_connections.length; i++) {
-          let parsed_dbid = list_of_connections[i].split(";")[0]
+        for (let connection of list_of_connections) {
+          let parsed_dbid = connection.split(";")[0]
           if (parsed_dbid == data1.DBID) {
             cur_elem_index = i
             break
@@ -485,7 +485,7 @@
       }
 
       function getParametersFromNode(id) {
-        var layer_parameters = Object.values(editor.getNodeFromId(id)["data"])[2]
+        var layer_parameters = editor.getNodeFromId(id).data.Parameters
         var splited_parameters = layer_parameters.split(";")
         var parameters_array = new Array()
 
@@ -496,10 +496,10 @@
       }
 
       function joinUpdatedLayerParameters(new_parameters, id) {
-        var temp_array = []
-        var new_parameters_string = null
-        var dbid = Object.values(editor.getNodeFromId(id)["data"])[0]
-        var connections = Object.values(editor.getNodeFromId(id)["data"])[1]
+        let temp_array = []
+        let new_parameters_string = null
+        let dbid = editor.getNodeFromId(id).data.DBID
+        let connections = editor.getNodeFromId(id).data.Connections
 
         let parameters_to_send = {
           id: dbid,
@@ -1002,46 +1002,45 @@
 
       let pathsWithWrittenID = []
       function writeIdOnConnections(id) {
-        const connections = Object.values(editor.getNodeFromId(id)['data'])[1]
+        const connections = editor.getNodeFromId(id).data.Connections
 
-        for (let i = 0; i < connections.length; i++) {
-          console.log("aboba" + i)
-          let from_layer_drawflow_id = connections[i].split(";")[1]
-          let connection = document.querySelector(`.connection.node_in_node-${id}.node_out_node-${from_layer_drawflow_id}.output_1.input_1`)
-          let tmp = addLabelText(connection, connections[i].split(";")[0])
+        for (let connection of connections) {
+          const from_layer_drawflow_id = connection.split(";")[1]
+          const htmlConnection = document.querySelector(`.connection.node_in_node-${id}.node_out_node-${from_layer_drawflow_id}.output_1.input_1`)
+          const tmp = addLabelText(htmlConnection, connection.split(";")[0])
           pathsWithWrittenID.push(tmp)
         }
       }
 
       function deleteIdOnConnections() {
-        for (let i = 0; i < pathsWithWrittenID.length; i++) {
-          pathsWithWrittenID[i].setAttribute("display", "none")
+        for (let path of pathsWithWrittenID) {
+          path.setAttribute("display", "none")
         }
         pathsWithWrittenID = []
+      }
+
+      function getSortableInputList(layerClass) {
+        switch (layerClass) {
+          case "linear":
+            return document.querySelector("#linear-inputs-sortable-list")
+          case "relu":
+            return document.querySelector("#relu-inputs-sortable-list")
+          case "special":
+            return document.querySelector("#special-inputs-sortable-list")
+        }
       }
 
       function showLayerInfo(id) {
         // id format "node-<id>"
         const correct_id = id.split("-")[1]
         const node = editor.getNodeFromId(correct_id)
-        const connections = Object.values(editor.getNodeFromId(correct_id)['data'])[1]
-        const layer_dbid = Object.values(editor.getNodeFromId(correct_id)['data'])[0]
-        console.log(connections)
+        const connections = editor.getNodeFromId(id).data.Connections
+        const layer_dbid = editor.getNodeFromId(id).data.DBID
 
         writeIdOnConnections(correct_id)
-
-        let sortable_list
-        if (node.class == "linear") {
-          sortable_list = document.querySelector("#linear-inputs-sortable-list")
-        }
-        else if (node.class == "special") {
-          sortable_list = document.querySelector("#special-inputs-sortable-list")
-        }
-        else if (node.class == "relu") {
-          sortable_list = document.querySelector("#relu-inputs-sortable-list")
-        }
-
+        let sortable_list = getSortableInputList(node.class)
         let child = sortable_list.lastElementChild
+
         while (child) {
           sortable_list.removeChild(child)
           child = sortable_list.lastElementChild
@@ -1049,7 +1048,7 @@
 
         for (let i = 0; i < connections.length; i++) {
           let new_element = document.createElement("LI");
-          let text_for_new_element = document.createTextNode("Input from: " + connections[i].split(";")[0]);
+          const text_for_new_element = document.createTextNode("Input from: " + connections[i].split(";")[0]);
           new_element.appendChild(text_for_new_element);
           sortable_list.appendChild(new_element)
         }
@@ -1060,11 +1059,9 @@
           ghostClass: 'sortable-ghost',
           onEnd: function(event) {
             new_input_order = []
-            console.log('Изменился порядок элементов:');
             for (i in sortable_list.childNodes) {
               try {
                 if (sortable_list.childNodes[i].textContent.includes("Input")) {
-                  console.log(sortable_list.childNodes[i].textContent)
                   new_input_order.push(Number(sortable_list.childNodes[i].textContent.split(" ")[2]))
                 }
               }
@@ -1080,7 +1077,7 @@
               editor.updateNodeDataFromId(correct_id, {
                 DBID: layer_dbid,
                 Connections: new_input_order,
-                Parameters: Object.values(editor.getNodeFromId(correct_id)["data"])[2],
+                Parameters: editor.getNodeFromId(id).data.Parameters,
               })
             })
             console.log(new_input_order)
@@ -1098,7 +1095,7 @@
               document.querySelector("#bias-parameter").value = layer_parameters[i][1] == "1"
             }
             if (layer_parameters[i][0] == "inFeatures") {
-              document.querySelector("#linear-  inFeatures-parameter").value = layer_parameters[i][1]
+              document.querySelector("#linear-inFeatures-parameter").value = layer_parameters[i][1]
             }
             if (layer_parameters[i][0] == "outFeatures") {
               document.querySelector("#linear-outFeatures-parameter").value = layer_parameters[i][1]
