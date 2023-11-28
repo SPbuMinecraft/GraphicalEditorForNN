@@ -1003,6 +1003,7 @@
         document.getElementById("predict-result-wrapper").style.display = "block"
       }
 
+      // Array of connections with written id (input selection)
       let pathsWithWrittenID = []
       function writeIdOnConnections(id) {
         const connections = editor.getNodeFromId(id).data.Connections
@@ -1012,11 +1013,12 @@
           const htmlConnection = document.querySelector(
             `.connection.node_in_node-${id}.node_out_node-${from_layer_drawflow_id}.output_1.input_1`,
           )
-          const tmp = addLabelText(htmlConnection, connection.split(";")[0])
+          const tmp = addLabelText(htmlConnection, connection.split(";")[0]) // Writes id on connection
           pathsWithWrittenID.push(tmp)
         }
       }
 
+      // Remove id written on connection
       function deleteIdOnConnections() {
         for (let path of pathsWithWrittenID) {
           path.setAttribute("display", "none")
@@ -1042,6 +1044,7 @@
         const connections = editor.getNodeFromId(correct_id).data.Connections
         const layer_dbid = editor.getNodeFromId(correct_id).data.DBID
 
+        // Input selection
         writeIdOnConnections(correct_id)
         let sortable_list = getSortableInputList(node.class)
         let child = sortable_list.lastElementChild
