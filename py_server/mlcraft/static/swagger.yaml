@@ -23,8 +23,6 @@ externalDocs:
 servers:
   - url: http://localhost:3000
 tags:
-- name: "ours"
-  description: "Something useful here"
 - name: "user"
   description: "Operations about user"
 - name: "build"

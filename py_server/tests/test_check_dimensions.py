@@ -1,4 +1,6 @@
-from mlcraft.check_dimensions import check_dimensions, DimensionsCheckStatus
+import pytest
+from mlcraft.check_dimensions import check_dimensions
+from mlcraft.errors import Error
 
 
 def test_correct_simple():
@@ -15,9 +17,8 @@ def test_correct_simple():
         {"id": 4, "type": "MSELoss", "parameters": {}, "parents": [0, 3]},
         {"id": 5, "type": "Output", "parameters": {}, "parents": [3]},
     ]
-    check_code, problem_node = check_dimensions(layers)
-    assert check_code == DimensionsCheckStatus.OK
-    assert problem_node is None
+    # Assert no exception is raised
+    check_dimensions(layers)
 
 
 def test_correct_harder():
@@ -49,9 +50,7 @@ def test_correct_harder():
         {"id": 9, "type": "MSELoss", "parameters": {}, "parents": [0, 8]},
         {"id": 10, "type": "Output", "parameters": {}, "parents": [8]},
     ]
-    check_code, problem_node = check_dimensions(layers)
-    assert check_code == DimensionsCheckStatus.OK
-    assert problem_node is None
+    check_dimensions(layers)
 
 
 def test_mismatch_simple():
@@ -68,9 +67,12 @@ def test_mismatch_simple():
         {"id": 4, "type": "MSELoss", "parameters": {}, "parents": [0, 3]},
         {"id": 5, "type": "Output", "parameters": {}, "parents": [3]},
     ]
-    check_code, problem_node = check_dimensions(layers)
-    assert check_code == DimensionsCheckStatus.DimensionsMismatch
-    assert problem_node == 4
+
+    with pytest.raises(Error) as e:
+        check_dimensions(layers)
+
+    assert e.match(r".*4.*match.*dimensions")
+    assert e.value.payload["problemNode"] == 4
 
 
 def test_mismatch_harder():
@@ -102,6 +104,9 @@ def test_mismatch_harder():
         {"id": 9, "type": "MSELoss", "parameters": {}, "parents": [0, 8]},
         {"id": 10, "type": "Output", "parameters": {}, "parents": [8]},
     ]
-    check_code, problem_node = check_dimensions(layers)
-    assert check_code == DimensionsCheckStatus.DimensionsMismatch
-    assert problem_node == 6
+
+    with pytest.raises(Error) as e:
+        check_dimensions(layers)
+
+    assert e.match(r".*6.*match.*dimensions")
+    assert e.value.payload["problemNode"] == 6
