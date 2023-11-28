@@ -24,10 +24,20 @@ async function addLayer(sending_object) {
         "POST",
     )
     if (!response.ok) {
-        console.log("Failed to add layer with type: " + sending_object.type + ", parameters: " + sending_object.parameters)
+        console.log(
+            "Failed to add layer with type: " +
+                sending_object.type +
+                ", parameters: " +
+                sending_object.parameters,
+        )
         return failed_request
     }
-    console.log("Added layer with type: " + sending_object.type + ", parameters:  " + sending_object.parameters)
+    console.log(
+        "Added layer with type: " +
+            sending_object.type +
+            ", parameters:  " +
+            sending_object.parameters,
+    )
     return response
 }
 
@@ -38,12 +48,21 @@ async function addConnection(layers_connection) {
         "POST",
     )
     if (!response.ok) {
-        console.log("Failed to add connection from " + layers_connection.layer_from + " to " + layers_connection.layer_to)
+        console.log(
+            "Failed to add connection from " +
+                layers_connection.layer_from +
+                " to " +
+                layers_connection.layer_to,
+        )
         return response
     }
-    console.log("Added connection from " + layers_connection.layer_from + " to " + layers_connection.layer_to)
+    console.log(
+        "Added connection from " +
+            layers_connection.layer_from +
+            " to " +
+            layers_connection.layer_to,
+    )
     return response
-
 }
 
 async function updateLayerParameter(sending_object) {
@@ -69,7 +88,7 @@ async function clearModel() {
 }
 
 async function deleteLayer(sending_object) {
-    const response =  await sendJson(
+    const response = await sendJson(
         sending_object,
         `http://${py_server_address}/delete_layer/${user_id}/${model_id}`,
         "PUT",
@@ -129,13 +148,9 @@ async function predictRequest() {
     if (response.ok) onPredictShowResult(responseJson)
     else {
         Swal.fire("Error!", "Server is not responding now.", "error")
-        errorNotification(
-            "Failed to predict.\n" + responseJson.error,
-        )
+        errorNotification("Failed to predict.\n" + responseJson.error)
         console.log(
-            `Predict failed with ${response.statusText}: ${
-                responseJson.error
-            }`,
+            `Predict failed with ${response.statusText}: ${responseJson.error}`,
         )
     }
 }

@@ -334,7 +334,7 @@
             this.precanvas.getElementsByClassName("drawflow-delete")[0].remove()
           }
           if (this.node_selected || this.connection_selected) {
-            var deletebox = document.createElement("div")
+            let deletebox = document.createElement("div")
             deletebox.classList.add("drawflow-delete")
             deletebox.innerHTML = "x"
             if (this.node_selected && !this.node_selected.classList.contains("special")) {
