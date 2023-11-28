@@ -30,7 +30,7 @@ body {
     &#success {
         background-color: var(--notification-color-success);
         border: var(--border-width) solid
-        var(--notification-color-success-border);
+            var(--notification-color-success-border);
     }
     &#error {
         background-color: var(--notification-color-fail);
@@ -86,8 +86,8 @@ header {
     background-color: var(--background1);
     box-shadow: inset 3px 3px 3px var(--background0);
     transition:
-            background-color 0.125s ease-in,
-            box-shadow ease-in 0.125s;
+        background-color 0.125s ease-in,
+        box-shadow ease-in 0.125s;
 }
 .menu ul li.selected {
     border-radius: var(--border-radius);
@@ -168,8 +168,8 @@ header .button-wrapper {
     justify-content: center;
     background-color: var(--background1);
     box-shadow:
-            inset 3px 3px 3px var(--background-color),
-            3px 3px 3px var(--background2);
+        inset 3px 3px 3px var(--background-color),
+        3px 3px 3px var(--background2);
     border: var(--border-width) solid var(--background3);
     border-radius: 30px;
     overflow: hidden;
@@ -472,8 +472,8 @@ header .button-wrapper {
             to right,
             var(--gradient-color) 1px,
             transparent 1px
-    ),
-    linear-gradient(to bottom, var(--gradient-color) 1px, transparent 1px);
+        ),
+        linear-gradient(to bottom, var(--gradient-color) 1px, transparent 1px);
 }
 
 @media only screen and (max-width: 768px) {
@@ -504,17 +504,17 @@ header .button-wrapper {
     height: 50px;
 }
 
-.drawflow .drawflow-node.predict-success{
+.drawflow .drawflow-node.predict-success {
     -webkit-box-shadow: 0 2px 15px 2px var(--color4-model-success-node);
     box-shadow:
-            0 2px 15px 2px var(--color4-model-success-node),
-            inset 3px 3px 3px var(--background-color);
+        0 2px 15px 2px var(--color4-model-success-node),
+        inset 3px 3px 3px var(--background-color);
 }
-.drawflow .drawflow-node.predict-error{
+.drawflow .drawflow-node.predict-error {
     -webkit-box-shadow: 0 2px 15px 2px var(--color4-model-error-node);
     box-shadow:
-            0 2px 15px 2px var(--color4-model-error-node),
-            inset 3px 3px 3px var(--background-color);
+        0 2px 15px 2px var(--color4-model-error-node),
+        inset 3px 3px 3px var(--background-color);
 }
 
 .drawflow .drawflow-node.selected {
@@ -524,20 +524,19 @@ header .button-wrapper {
     box-shadow: 0 2px 20px 2px var(--color3);
 }
 
-.drawflow .drawflow-node.predict-error.selected{
+.drawflow .drawflow-node.predict-error.selected {
     background: var(--color0-model-error-connection);
     border: var(--border-width) solid var(--background2);
     -webkit-box-shadow: 0 2px 20px 2px var(--color3-model-error-connection);
     box-shadow: 0 2px 20px 2px var(--color3-model-error-connection);
 }
 
-.drawflow .drawflow-node.predict-success.selected{
+.drawflow .drawflow-node.predict-success.selected {
     background: var(--color0-model-success-connection);
     border: var(--border-width) solid var(--background2);
     -webkit-box-shadow: 0 2px 20px 2px var(--color3-model-success-connection);
     box-shadow: 0 2px 20px 2px var(--color3-model-success-connection);
 }
-
 
 .drawflow .connection .main-path {
     stroke: var(--color2);
