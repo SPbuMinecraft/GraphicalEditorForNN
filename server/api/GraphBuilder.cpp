@@ -28,9 +28,9 @@ void Graph::OverviewLayers(const crow::json::rvalue& layers,
 }
 
 void Graph::GetEdges(const crow::json::rvalue& connections,
-              std::unordered_map<int, std::vector<int>>& straightEdges,
-              std::unordered_map<int, std::vector<int>>& reversedEdges,
-              std::unordered_set<int>& entryNodes) {
+                     std::unordered_map<int, std::vector<int>>& straightEdges,
+                     std::unordered_map<int, std::vector<int>>& reversedEdges,
+                     std::unordered_set<int>& entryNodes) {
     std::unordered_set<int> nodesWithParents;
     for (auto& connection : connections) {
         if (!connection.has("layer_from") || !connection.has("layer_to")) {
@@ -56,8 +56,8 @@ void Graph::GetEdges(const crow::json::rvalue& connections,
 }
 
 void Graph::TopologySort(std::unordered_map<int, std::vector<int>>& edges,
-                  std::unordered_set<int>& entryNodes,
-                  std::vector<int>& layersOrder) {
+                         std::unordered_set<int>& entryNodes,
+                         std::vector<int>& layersOrder) {
     std::unordered_set<int> closed;
     std::stack<int> dfsStack;
     bool isFinal;
@@ -126,6 +126,12 @@ void Graph::Initialize(crow::json::rvalue modelJson,
         } else if (type == "ReLU") {
             layers_.emplace(layer_id, new ReLULayer{prevLayers});
         } else if (type == "Data" || type == "Target") {
+            if (type == "Data") {
+                dataIds_.push_back(layer_id);
+            }
+            if (type == "Target") {
+                targetsIds_.push_back(layer_id);
+            }
             CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
             auto params = ParseData2d(layerDicts[layer_id]["parameters"]);
             if (dataDicts[layer_id].size() % params.width != 0) {
@@ -168,23 +174,26 @@ Graph::~Graph() {
     Allocator::end();
 }
 
-std::vector<Layer*> Graph::getLastTrainLayers() const {
+std::vector<Layer*> Graph::getLayers(BaseLayerType type) const {
     std::vector<Layer*> result;
-    result.reserve(lastTrainIds_.size());
-    for (int id : lastTrainIds_) {
+    std::vector<int>* layers_ids = nullptr;
+    if (type == BaseLayerType::Data) {
+        layers_ids = const_cast<std::vector<int>*>(&dataIds_);
+    } else if (type == BaseLayerType::Targets) {
+        layers_ids = const_cast<std::vector<int>*>(&targetsIds_);
+    } else if (type == BaseLayerType::TrainOut) {
+        layers_ids = const_cast<std::vector<int>*>(&lastTrainIds_);
+    } else {
+        layers_ids = const_cast<std::vector<int>*>(&lastPredictIds_);
+    }
+
+    result.reserve(layers_ids->size());
+    for (int id : *layers_ids) {
         result.push_back(layers_.at(id));
     }
     return result;
 }
 
-std::vector<Layer*> Graph::getLastPredictLayers() const {
-    std::vector<Layer*> result;
-    result.reserve(lastPredictIds_.size());
-    for (int id : lastPredictIds_) {
-        result.push_back(layers_.at(id));
-    }
-    return result;
-}
 const Layer& Graph::operator[](int i) const {
     return *layers_.at(i);
 }

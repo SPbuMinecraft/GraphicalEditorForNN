@@ -1,8 +1,16 @@
+from json import dumps
+from sqlite3 import IntegrityError
+import datetime
 import requests
 from http import HTTPStatus
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request, current_app, send_file
+import numpy as np
+import os
 
-from .utils import convert_model_parameters, is_valid_model, convert_model
+from .utils import (
+    convert_model_parameters, is_valid_model, convert_model,
+    plot_metrics, delete_file,
+)
 from .check_dimensions import assert_dimensions_match
 
 from .errors import Error
@@ -159,7 +167,7 @@ def train_model(
     model = {"graph": model, "dataset": dataset}
 
     response = requests.post(
-        current_app.config["CPP_SERVER"] + f"/train/{model_id}",
+        current_app.config["CPP_SERVER"] + f"/train/{user_id}/{model_id}",
         json=model,
         timeout=3,
     )
@@ -183,9 +191,65 @@ def predict(user_id: int, model_id: int):
         raise Error("Not trained", HTTPStatus.PRECONDITION_FAILED)
 
     response = requests.post(
-        current_app.config["CPP_SERVER"] + f"/predict/{model_id}",
+        current_app.config["CPP_SERVER"] + f"/predict/{user_id}/{model_id}",
         json=json_data,
         timeout=3,
     )
 
     return response.text, response.status_code
+
+
+@app.route("/update_metrics/<int:user_id>/<int:model_id>", methods=["PUT"])
+def update_metrics(user_id: int, model_id: int):
+    sql_worker.verify_access(user_id, model_id)
+    
+    json = request.json
+    outputs = np.array(json["outputs"])
+    targets = np.array(json["targets"])
+    metrics = np.mean((targets - outputs) ** 2, axis=1)
+    sql_worker.update_metrics(
+        model_id, list(metrics),
+        json.get("label", "default"), json.get("rewrite", False),
+    )
+    return "", HTTPStatus.OK
+
+
+@app.route("/protect_metrics/<int:user_id>/<int:model_id>", methods=["PUT"])
+def protect_metrics(user_id: int, model_id: int):
+    sql_worker.verify_access(user_id, model_id)
+    
+    json = request.json
+    sql_worker.protect_metrics(
+        model_id, json.get("label", "default"), json.get("protected", True),
+    )
+    return "", HTTPStatus.OK
+
+
+@app.route("/get_metrics/<int:user_id>/<int:model_id>", methods=["PUT"])
+def get_metircs(user_id: int, model_id: int):
+    sql_worker.verify_access(user_id, model_id)
+
+    json = request.json
+    values = sql_worker.get_metrics(
+        model_id, json.get("label", "default"),
+    )
+    return {"values": list(map(float, values.split()))}, HTTPStatus.OK
+
+
+# Add swagger description
+@app.route("/get_plots/<int:user_id>/<int:model_id>", methods=["PUT"])
+def get_plots(user_id: int, model_id: int):
+    sql_worker.verify_access(user_id, model_id)
+
+    json = request.json
+    label = json.get("label", "default")
+    values = sql_worker.get_metrics(
+        model_id, label,
+    )
+
+    plot_path = plot_metrics(list(map(float, values.split())), user_id, model_id, label)
+    current_dir = os.getcwd()
+    print(current_dir)
+    response = send_file(os.path.join(current_dir, "images", plot_path))
+    delete_file(os.path.join(current_dir, "images", plot_path))
+    return response

@@ -1,4 +1,5 @@
 from threading import Lock  # fuck it, just using old robust methods
+import datetime
 import json
 from sqlite3 import IntegrityError
 from flask import current_app
@@ -29,6 +30,18 @@ class Model(db.Model):  # type: ignore
     content = db.Column(db.Text)
     is_trained = db.Column(db.Boolean)
     raw = db.Column(db.Text)
+
+
+class Metrics(db.Model):  # type: ignore
+    __tablename__ = "metrics_table"
+
+    id = db.Column(db.Integer, primary_key=True)
+    model = db.Column(db.Integer, db.ForeignKey("users_table.id"), nullable=False)
+    label = db.Column(db.Text)
+    values = db.Column(db.Text)
+    begin_time = db.Column(db.DateTime)
+    end_time = db.Column(db.DateTime)
+    protected = db.Column(db.Boolean)
 
 
 class SQLWorker:
@@ -301,9 +314,6 @@ class SQLWorker:
                 )
             layer1 = layer1_candidates[0]
             layer2 = layer2_candidates[0]
-            # TO BE DONE later
-            # if not self.check_dimensions(layer1, layer2):
-            #     return LayersConnectionStatus.DimensionsMismatch
             if layer2["type"] == "Data" or layer1["type"] == "Output":
                 raise Error(
                     "Wrong direction in data or output layer",
@@ -339,6 +349,65 @@ class SQLWorker:
         with current_app.app_context():
             model = self.get_model(model_id)
             return model.is_trained
+
+    def update_metrics(self, model_id, values: list[float], label: str, rewrite: bool):
+        with current_app.app_context(), self.content_lock:
+            metrics = Metrics.query.filter_by(model=model_id, label=label)\
+                                    .order_by(Metrics.id.desc()).first()
+            if not metrics:
+                metrics = Metrics()
+                metrics.model = model_id
+                metrics.label = label
+                metrics.values = " ".join(list(map(str, values)))
+                metrics.begin_time = datetime.datetime.now()
+                metrics.end_time = datetime.datetime.now()
+                metrics.protected = False
+            if rewrite:
+                metrics.values = ""
+            else:
+                metrics.values += " "
+            metrics.values += " ".join(list(map(str, values)))
+            metrics.end_time = datetime.datetime.now()
+            db.session.add(metrics)
+            db.session.commit()
+            return 0
+
+    def protect_metrics(self, model_id, label: str, protected: bool):
+        with current_app.app_context(), self.content_lock:
+            metrics = Metrics.query.filter_by(model=model_id, label=label)\
+                                    .order_by(Metrics.id.desc()).first()
+            if not metrics:
+                raise Error(
+                    f"No recordings found for model with id {model_id} and label {label}.",
+                    HTTPStatus.NOT_FOUND,
+                )
+            metrics.protected = protected
+            db.session.add(metrics)
+            db.session.commit()
+            return 0
+
+    def get_metrics(self, model_id, label: str) -> str:
+        with current_app.app_context(), self.content_lock:
+            metrics = Metrics.query.filter_by(
+                model=model_id, label=label
+            ).order_by(Metrics.id.desc()).first()
+            if not metrics:
+                raise Error(
+                    f"No recordings found for model with id {model_id} and label {label}.",
+                    HTTPStatus.NOT_FOUND,    
+                )
+            return metrics.values
+
+    # Пока без ручки, просто как напоминание о том, что метрики нужно чистить
+    def delete_old_metrics():
+        with current_app.app_context(), self.content_lock:
+            Metrics.query.filter(
+                Metrics.end_time < datetime.datetime.now() - datetime.timedelta(days=30)
+            ).delete()
+            Metrics.query.filter(
+                Metrics.end_time < datetime.datetime.now() - datetime.timedelta(days=1)
+            ).filter_by(protected=False).delete()
+            db.session.commit()
 
 
 sql_worker: SQLWorker = None  # type: ignore

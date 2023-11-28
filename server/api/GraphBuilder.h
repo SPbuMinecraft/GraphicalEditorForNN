@@ -1,9 +1,19 @@
 #include <set>
 #include <vector>
+#include <string>
 
 #include <crow_all.h>
 #include "Parser.h"
 #include "Layer.h"
+
+
+enum class BaseLayerType : int {
+    Data       = 0,
+    Targets    = 1,
+    TrainOut   = 2,
+    PredictOut = 3,
+};
+
 
 class Graph {
 private:
@@ -12,6 +22,7 @@ private:
     std::vector<int> lastTrainIds_ = {};
     std::vector<int> lastPredictIds_ = {};
     std::vector<int> dataIds_ = {};
+    std::vector<int> targetsIds_ = {};
 
 public:
     Graph() = default;
@@ -36,8 +47,7 @@ public:
 
     void ChangeInputData(std::vector<float> data);
     
-    std::vector<Layer*> getLastTrainLayers() const;
-    std::vector<Layer*> getLastPredictLayers() const;
+    std::vector<Layer*> getLayers(BaseLayerType type) const;
 
     const Layer& operator[](int i) const;
 };

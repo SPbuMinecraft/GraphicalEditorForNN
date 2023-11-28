@@ -2,6 +2,14 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <sstream>
+
+#include <boost/asio.hpp>
+
+#include <cpprest/http_client.h>
+#include <cpprest/filestream.h>
+#include <cpprest/uri.h>
+#include <cpprest/json.h>
 
 #include <crow_all.h>
 #include "GraphBuilder.h"
@@ -14,18 +22,35 @@ std::string getDataPath(int id) {
     return "./model_data/data/" + std::to_string(id) + ".csv";
 }
 
+<<<<<<< HEAD
 std::string getPredictPath(int id) {
     return "./model_data/predict/" + std::to_string(id) + ".csv";
 }
 
 void train(json::rvalue& json, Graph** graph, int model_id) {
     RandomObject initObject(0, 1, 42);
+=======
+web::json::value GetLogs(const std::optional<Blob>& node) {
+    std::vector<web::json::value> values;
+    values.reserve(node.value().rows * node.value().cols);
+    for (size_t sample_index = 0; sample_index < node.value().rows; ++sample_index) {
+        for (size_t feature_index = 0; feature_index < node.value().cols; ++feature_index) {
+            values.push_back(web::json::value::number(node.value()[sample_index][feature_index]));
+        }
+    }
+    return web::json::value::array(values);
+}
+
+void train(json::rvalue& json, Graph** graph, int user_id, int model_id) {
+    RandomObject initObject(0, 1, 17);
+>>>>>>> 6b9ee4f (Makes preparations for metrics logging on python)
     OptimizerBase SGD = OptimizerBase(0.1);
     std::vector<std::vector<float>> data = CsvLoader::load_csv(getDataPath(model_id));
     *graph = new Graph();
     (*graph)->Initialize(json, data, &initObject, SGD);
     std::cout << "Graph is ready!" << std::endl;
 
+<<<<<<< HEAD
     auto& lastNode = (*graph)->getLastTrainLayers()[0]->result.value();  // Пока не думаем о нескольких выходах (!) Hard-coded
 
     lastNode.forward();
@@ -41,16 +66,66 @@ void train(json::rvalue& json, Graph** graph, int model_id) {
         // lastNode.gradient = result;
         lastNode.gradient = Blob::ones({{1}});
         lastNode.backward();
+=======
+    Blob result {1, 1};
+
+    auto& lastTrainNode = (*graph)->getLayers(BaseLayerType::TrainOut)[0]->result.value();
+    auto& lastPredictNode = (*graph)->getLayers(BaseLayerType::PredictOut)[0]->result.value().output;
+    auto& targetsNode = (*graph)->getLayers(BaseLayerType::Targets)[0]->result.value().output;
+    size_t buffer_size = 5;
+    std::vector<web::json::value> targets, outputs;
+    targets.reserve(buffer_size);
+    outputs.reserve(buffer_size);
+
+    size_t max_epochs = 1000;
+    for (size_t epoch = 0; epoch < max_epochs; ++epoch) {
+        result = lastTrainNode.forward();
+        printf("%ld: %f\n", epoch, result[0][0]);
+
+        outputs.push_back(GetLogs(lastPredictNode));
+        targets.push_back(GetLogs(targetsNode));
+
+        if ((epoch == max_epochs - 1 && outputs.size() > 0) ||
+            outputs.size() == buffer_size) {
+
+            web::json::value json;
+            json["targets"] = web::json::value::array(targets);
+            json["outputs"] = web::json::value::array(outputs);
+            json["label"] = web::json::value::string("train");
+            if (epoch < buffer_size) {
+                json["rewrite"] = web::json::value::boolean(true);
+            }
+            targets.clear();
+            outputs.clear();
+
+            std::ostringstream request_url;
+            request_url << "/update_metrics/" << user_id << "/" << model_id;
+
+            web::http::client::http_client client(U("http://localhost:3000"));
+            client.request(web::http::methods::PUT, U(request_url.str()), json);
+        }
+
+        // lastTrainNode.gradient = result;
+        lastTrainNode.gradient.value()[0][0] = 1;
+        lastTrainNode.backward();
+>>>>>>> 6b9ee4f (Makes preparations for metrics logging on python)
         SGD.step();
-        lastNode.clear();
+        lastTrainNode.clear();
     }
 }
 
+<<<<<<< HEAD
 void predict(int model_id, Graph* graph, std::vector<float>& answer) {
     std::vector<std::vector<float>> predict_data = CsvLoader::load_csv(getPredictPath(model_id));
     graph->ChangeInputData(predict_data[0]);
+=======
+void predict(json::rvalue& json, Graph* graph, int user_id, int model_id,
+             std::vector<float>& answer) {
+    graph->ChangeInputData(json);
+>>>>>>> 6b9ee4f (Makes preparations for metrics logging on python)
 
-    auto& lastNode = graph->getLastPredictLayers()[0]->result.value();  // Пока не думаем о нескольких выходах (!) Hard-coded
+    // Пока не думаем о нескольких выходах (!) Hard-coded
+    auto& lastNode = graph->getLayers(BaseLayerType::PredictOut)[0]->result.value();
     lastNode.clear();
     const Blob& result = lastNode.forward();
 
@@ -74,12 +149,23 @@ int main(int argc, char *argv[]) {
 
     std::map<int, Graph*> sessions;
 
+<<<<<<< HEAD
     CROW_ROUTE(app, "/predict/<int>").methods(HTTPMethod::POST)
     ([&](const request& req, int model_id) -> response {
         if (sessions.find(model_id) == sessions.end()) return response(status::METHOD_NOT_ALLOWED, "Not trained");
         std::vector<float> answer;
         try {
             predict(model_id, sessions[model_id], answer);
+=======
+    CROW_ROUTE(app, "/predict/<int>/<int>").methods(HTTPMethod::POST)
+    ([&](const request& req, int user_id, int model_id) -> response {
+        auto body = json::load(req.body);
+        if (!body) return response(status::BAD_REQUEST, "No model provided");
+        if (sessions.find(model_id) == sessions.end()) return response(status::METHOD_NOT_ALLOWED, "Not trained");
+        std::vector<float> answer;
+        try {
+            predict(body, sessions[model_id], user_id, model_id, answer);
+>>>>>>> 6b9ee4f (Makes preparations for metrics logging on python)
         } catch (const std::runtime_error &err) {
             return response(status::BAD_REQUEST, "Invalid body");
         }
@@ -90,8 +176,8 @@ int main(int argc, char *argv[]) {
         return crow::response(status::OK, response);
     });
 
-    CROW_ROUTE(app, "/train/<int>").methods(HTTPMethod::POST)
-    ([&](const request& req, int model_id) -> response {
+    CROW_ROUTE(app, "/train/<int>/<int>").methods(HTTPMethod::POST)
+    ([&](const request& req, int user_id, int model_id) -> response {
         auto body = json::load(req.body);
         std::cout << "Checking json!" << std::endl;
         if (!body) return response(status::BAD_REQUEST, "Invalid body");
@@ -100,7 +186,11 @@ int main(int argc, char *argv[]) {
             delete sessions[model_id];
         }
         Graph* g = nullptr;
+<<<<<<< HEAD
         train(body, &g, model_id);
+=======
+        train(body, &g, user_id, model_id);
+>>>>>>> 6b9ee4f (Makes preparations for metrics logging on python)
         sessions[model_id] = g;
         return response(status::OK, "done");
     });
