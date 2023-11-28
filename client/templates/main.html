@@ -237,7 +237,6 @@
               super.removeConnection()
 
               let listOfConnections = data2.Connections
-              let layerParameters = data2.Parameters
 
               for (let i = 0; i < listOfConnections.length; i++) {
                 let parsedDBID = listOfConnections[i].split(";")[0]
@@ -250,7 +249,7 @@
               editor.updateNodeDataFromId(layerInId, {
                 DBID: data2.DBID,
                 Connections: listOfConnections,
-                Parameters: layerParameters,
+                Parameters: data2.Parameters,
               })
             } else {
               errorNotification("Failed to delete connection.\n Server is not responding now.")
@@ -369,9 +368,7 @@
       let id = document.getElementById("drawflow")
       const editor = new CustomDrawflow(id)
       editor.start()
-
-      const delay = async ms => await new Promise(resolve => setTimeout(resolve, ms))
-      delay(25).then(() => setup())
+      setup()
 
       async function setup() {
         try {
@@ -621,9 +618,8 @@
       }
 
       async function addNodeToConstructor(name, pos_x, pos_y) {
-        console.log("added node")
-
         if (editor.editor_mode === "fixed") return false
+
         pos_x =
           pos_x * (editor.precanvas.clientWidth / (editor.precanvas.clientWidth * editor.zoom)) -
           editor.precanvas.getBoundingClientRect().x *
