@@ -1,0 +1,37 @@
+/*глобальные переменные и палитра*/
+:root {
+    --border-color: #000000;
+    --background-color: #ffffff;
+    --background-box-title: #d0d0d0;
+    --gradient-color: #aebcd2;
+    --text-color: #000000;
+    --disable-color: #aaa;
+    --notification-color-success: #3fd778;
+    --notification-color-success-border: #156532;
+    --notification-color-fail: #f66262;
+    --notification-color-fail-border: #913030;
+    --auth-error-alert: #792112;
+    --auth-error-area: #dc482f;
+    --color0: #ccfcff; /* #ccfcff */
+    --color0-model-success-connection: #e6ffcc;
+    --color0-model-error-connection: #ffcccc;
+    --color1: #b2f9fd; /* #b2f9fd */
+    --color2: #009ba2; /* #00f4ff */
+    --color2-model-success-connection: #2ea200;
+    --color2-model-error-connection: #a21800;
+    --color3: #25c6ce; /* #25c6ce */
+    --color3-model-success-connection: #82ce25;
+    --color3-model-error-connection: #ce2525;
+    --color4: #20b6be; /* #18989f */
+    --color4-model-success-node: #30be20;
+    --color4-model-error-node: #be3220;
+    --background0: #e1e1e1; /* #e0e0e0 */
+    --background1: #b5bdc4; /* #c2c2c2 */
+    --background2: #62738c; /* #9d9d9d */
+    --background3: #303744; /* #525252 */
+    --background4: #282828; /* #333333 */
+    --border-width: 3px;
+    --connection-width: 4px;
+    --header-height: 65px;
+    --border-radius: 15px;
+}

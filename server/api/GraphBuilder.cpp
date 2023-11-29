@@ -80,7 +80,7 @@ void Graph::TopologySort(std::unordered_map<int, std::vector<int>>& edges,
     std::reverse(layersOrder.begin(), layersOrder.end());
 }
 
-Graph::Graph(crow::json::rvalue modelJson,
+void Graph::Initialize(crow::json::rvalue modelJson,
              RandomObject* randomInit,
              OptimizerBase& SGD) {
 
@@ -136,7 +136,7 @@ Graph::Graph(crow::json::rvalue modelJson,
             layers_.emplace(layer_id, new MSELoss{prevLayers});
             lastTrainIds_.push_back(layer_id);
         } else {
-            throw std::invalid_argument("Unknown layer type");
+            throw std::invalid_argument("Unknown layer type: " + type);
         }
     }
 }

@@ -1,3 +1,4 @@
+from threading import Lock  # fuck it, just using old robust methods
 import json
 from sqlite3 import IntegrityError
 from flask import current_app
@@ -5,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from .utils import (
     LayersConnectionStatus,
     DeleteStatus,
+    VerificationStatus,
     parse_parameters,
     check_paths_exist,
 )
@@ -34,7 +36,14 @@ class Model(db.Model):  # type: ignore
 
 
 class SQLWorker:
+    """
+    Important: whenever you work with 'content' column of the model,
+    you must first acquire content_lock, release it after you commit the session
+    Tip: with mutex: ...  # also works
+    """
+
     def __init__(self, app):
+        self.content_lock = Lock()
         with app.app_context():
             db.create_all()
 
@@ -80,7 +89,7 @@ class SQLWorker:
         with current_app.app_context():
             model_owner = db.session.get(User, user_id)
             if not model_owner:
-                return -1
+                raise errors.ObjectNotFoundError(f"No user with id {user_id}")
             new_model = Model(
                 owner=user_id,
                 name=name,
@@ -92,10 +101,10 @@ class SQLWorker:
             return new_model.id
 
     def add_layer(self, layer_type: str, parameters: str, model_id: int):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
-                return -1
+                raise errors.ObjectNotFoundError(f"No model with id {model_id}")
             model_items = json.loads(
                 model.content
             )  # Throws exception if model.content is not json
@@ -106,7 +115,7 @@ class SQLWorker:
             )
             new_layer = {
                 "id": new_id,
-                "layer_type": layer_type,
+                "type": layer_type,
                 "parameters": parameters,
                 "parents": [],
             }  # Should be refactored?
@@ -118,25 +127,25 @@ class SQLWorker:
             return new_id
 
     def update_layer(self, new_params: str, layer_id: int, model_id: int):
-        with current_app.app_context():
-            model = db.session.get(Model, model_id)
-        if model is None:
-            # change later for suitable Error type
-            raise KeyError(f"No model with id {model_id}")
-        items = json.loads(model.content)
-        layer = next(l for l in items["layers"] if l["id"] == layer_id)
-        layer["parameters"] = new_params
-        model.content = json.dumps(items)
-        model.is_trained = False
-        with current_app.app_context():
-            db.session.add(model)
-            db.session.commit()
+        with self.content_lock:
+            with current_app.app_context():
+                model = db.session.get(Model, model_id)
+            if not model:
+                raise errors.ObjectNotFoundError(f"No model with id {model_id}")
+            items = json.loads(model.content)
+            layer = next(l for l in items["layers"] if l["id"] == layer_id)
+            layer["parameters"] = new_params
+            model.content = json.dumps(items)
+            model.is_trained = False
+            with current_app.app_context():
+                db.session.add(model)
+                db.session.commit()
 
     def update_parents_order(self, new_parents: list, layer_id: int, model_id: int):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
-                raise KeyError(f"No model with id {model_id}")
+                raise errors.ObjectNotFoundError(f"No model with id {model_id}")
             model_items = json.loads(model.content)
             layer = next(l for l in model_items["layers"] if l["id"] == layer_id)
             if sorted(layer["parents"]) != sorted(new_parents):
@@ -151,7 +160,7 @@ class SQLWorker:
     def add_connection(
         self, layer_from: int, layer_to: int, model_id: int
     ):  # When we sure, that adding is correct
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
                 return -1
@@ -165,7 +174,7 @@ class SQLWorker:
             return 1
 
     def delete_layer(self, layer_id: int, model_id: int):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
                 return DeleteStatus.ModelNotExist
@@ -187,7 +196,7 @@ class SQLWorker:
             return DeleteStatus.OK
 
     def delete_connection(self, layer_from: int, layer_to: int, model_id: int):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
                 return DeleteStatus.ModelNotExist
@@ -207,7 +216,7 @@ class SQLWorker:
             return DeleteStatus.OK
 
     def clear_model(self, model_id: int):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
                 return DeleteStatus.ModelNotExist
@@ -221,12 +230,13 @@ class SQLWorker:
     def check_dimensions(self, layer_from: dict, layer_to: dict):
         parameters_from = parse_parameters(layer_from["parameters"])
         parameters_to = parse_parameters(layer_to["parameters"])
-        return int(parameters_from["outputs"]) == int(parameters_to["inputs"])
+        # return int(parameters_from["outputs"]) <= int(parameters_to["inputs"])
+        return True
 
     def verify_connection(
         self, user_id: int, model_id: int, layer_from: int, layer_to: int
     ):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             if not self.verify_access(user_id, model_id):
                 return LayersConnectionStatus.AccessDenied
             model = db.session.get(Model, model_id)
@@ -243,9 +253,10 @@ class SQLWorker:
                 return LayersConnectionStatus.DoNotExist
             layer1 = layer1_candidates[0]
             layer2 = layer2_candidates[0]
-            if not self.check_dimensions(layer1, layer2):
-                return LayersConnectionStatus.DimensionsMismatch
-            if layer2["layer_type"] == "Data" or layer1["layer_type"] == "Output":
+            # TO BE DONE later
+            # if not self.check_dimensions(layer1, layer2):
+            #     return LayersConnectionStatus.DimensionsMismatch
+            if layer2["type"] == "Data" or layer1["type"] == "Output":
                 return LayersConnectionStatus.WrongDirection
             if check_paths_exist([layer_to], [layer_from], model_items):
                 return LayersConnectionStatus.Cycle
@@ -254,12 +265,14 @@ class SQLWorker:
     def verify_access(self, user_id, model_id):
         with current_app.app_context():
             model_passport = db.session.get(Model, model_id)
-            if model_passport is None or model_passport.owner != user_id:
-                return False
-            return True
+            if model_passport is None:
+                return VerificationStatus.NotFound
+            if model_passport.owner != user_id:
+                return VerificationStatus.Forbidden
+            return VerificationStatus.OK
 
     def get_graph_elements(self, model_id):
-        with current_app.app_context():
+        with current_app.app_context(), self.content_lock:
             model = db.session.get(Model, model_id)
             if not model:
                 return -1

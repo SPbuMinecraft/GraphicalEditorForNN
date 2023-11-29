@@ -1,3 +1,5 @@
+#pragma once
+
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -11,17 +13,8 @@
 #include "Tensor.h"
 #include "RandomInit.h"
 #include "Optimizer.h"
+#include "Parameters.h"
 
-struct LinearLayerParameters {
-    size_t inFeatures;
-    size_t outFeatures;
-    bool bias;
-};
-
-struct Data2dLayerParameters {
-    size_t width;
-    size_t height;
-};
 
 void CHECK_HAS_FIELD(const crow::json::rvalue& layer, const std::string& field);
 

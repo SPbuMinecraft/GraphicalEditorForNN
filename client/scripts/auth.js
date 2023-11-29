@@ -27,25 +27,25 @@ function buildJsonFormData(form) {
     return jsonFormData
 }
 
-async function sendJson(sending_object, url) {
+async function sendJson(sending_object, url, method) {
     const resp = await fetch(url, {
-        method: "POST",
+        method: method,
         mode: "cors",
         headers: {"content-type": "application/json"},
         body: JSON.stringify(sending_object),
     })
 
-    return await resp.text()
+    return await resp.json()
 }
 
 async function requestModel(user_id) {
-    console.log("req model called")
     const text = await sendJson(
         {name: "My Model"},
-        `http://${py_server_address}/add_model/${user_id}`,
+        `http://${py_server_address}/model/${user_id}`,
+        "POST",
     )
-    console.log("ModEL id: ", text)
-    return text
+    console.log("ModEL id: ", text.model_id)
+    return text.model_id
 }
 
 async function loginUser() {
@@ -68,11 +68,11 @@ async function loginUser() {
 
     const userLoginData = buildJsonFormData(loginForm)
     try {
-        let login_data_response = await sendJson(
+        const responseJson = await sendJson(
             userLoginData,
-            `http://${py_server_address}/login_user`,
+            `http://${py_server_address}/user`,
+            "PUT",
         )
-        const responseJson = JSON.parse(login_data_response)
         if (responseJson.error) {
             console.error(
                 "Ошибка при авторизации пользователя:",
@@ -143,11 +143,11 @@ async function registerUser() {
 
     const userRegistrationData = buildJsonFormData(signupForm)
     try {
-        let add_data_response = await sendJson(
+        let responseJson = await sendJson(
             userRegistrationData,
-            `http://${py_server_address}/add_user`,
+            `http://${py_server_address}/user`,
+            "POST",
         )
-        const responseJson = JSON.parse(add_data_response)
         if (responseJson.error) {
             console.error(
                 "Ошибка при регистрации пользователя:",

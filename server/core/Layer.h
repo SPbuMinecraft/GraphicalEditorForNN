@@ -1,14 +1,11 @@
 #pragma once
 
-#include <map>
-#include <unordered_map>
 #include <optional>
-#include <string>
 #include <vector>
 
 #include "RandomInit.h"
 #include "Tensor.h"
-#include "Parser.h"
+#include "Parameters.h"
 
 
 class Layer {

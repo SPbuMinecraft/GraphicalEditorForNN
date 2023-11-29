@@ -4,26 +4,35 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>VisualNetworks</title>
+    <title>MLCraft</title>
     <link rel="stylesheet" type="text/css" href="../styles/common.css" />
-
+    <link rel="stylesheet" type="text/css" href="../styles/palette.css" />
+    <link rel="stylesheet" type="text/css" href="../styles/day_night_mode.css" />
     <link rel="stylesheet" type="text/css" href="../styles/auth.css" />
+    <link rel="stylesheet" type="text/css" href="../styles/style.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
+      integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ="
+      crossorigin="anonymous"
+    />
+    <script src="../scripts/day_night_mode.js"></script>
   </head>
   <body>
     <div class="container">
       <div class="content">
         <div class="logo">
-          <p class="logo_text">MLCraft</p>
+          <p onmousedown="return false" class="logo_text">MLCraft</p>
         </div>
 
         <div class="divider"></div>
 
         <div class="btn-container">
-          <button class="login-choose btn">Log in</button>
-          <button class="signup-choose btn">Sign up</button>
+          <button class="login-choose button-wrapper">Log in</button>
+          <button class="signup-choose button-wrapper">Sign up</button>
         </div>
 
         <!-- Form section that contains the
@@ -35,15 +44,22 @@
               <input type="text" name="login" placeholder="Username" required="required" />
               <input type="password" name="password" placeholder="Password" required="required" />
               <div class="login_button">
-                <input type="button" class="btn" id="login_button" value="Log in" />
+                <input type="button" class="button-wrapper" id="login_button" value="Log in" />
               </div>
             </form>
-
+            <!--
             <div class="services_buttons">
-              <button type="submit" class="btn service-btn github">Git</button>
-              <button type="submit" class="btn service-btn google">G</button>
-              <button type="submit" class="btn service-btn vk">VK</button>
+              <button type="submit" class="button-wrapper github">
+                <i class="fab fa-github fa-3x" style="font-size: 30px"></i>
+              </button>
+              <button type="submit" class="button-wrapper google">
+                <i class="fab fa-google" style="font-size: 30px"></i>
+              </button>
+              <button type="submit" class="button-wrapper vk">
+                <i class="fab fa-vk" style="font-size: 30px"></i>
+              </button>
             </div>
+            -->
             <div class="error-area"></div>
           </div>
 
@@ -55,13 +71,23 @@
               <input type="password" name="password" placeholder="Password" required="required" />
               <input type="password" name="password-confirm" placeholder="Confirm password" required="required" />
               <div class="signup_button">
-                <input type="button" class="btn" id="sign_up_button" value="Sign up" />
+                <input type="button" class="button-wrapper" id="sign_up_button" value="Sign up" />
               </div>
               <div class="error-area"></div>
             </form>
           </div>
         </div>
       </div>
+      <label class="day-night-mode-label">
+        <input
+          type="checkbox"
+          id="day-night-checkbox-id"
+          class="day-night-checkbox"
+          value="day"
+          onclick="changeTheme()"
+        />
+        <span class="control"></span>
+      </label>
       <script src="../scripts/auth.js"></script>
     </div>
   </body>
