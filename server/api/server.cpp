@@ -12,7 +12,8 @@ using namespace crow;
 void train(json::rvalue& json, Graph** graph) {
     RandomObject initObject(0, 1, 42);
     OptimizerBase SGD = OptimizerBase(0.1);
-    *graph = new Graph(json, &initObject, SGD);
+    *graph = new Graph();
+    (*graph)->Initialize(json, &initObject, SGD);
     std::cout << "Graph is ready!" << std::endl;
 
     Blob result {1, 1};

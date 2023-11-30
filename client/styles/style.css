@@ -504,6 +504,19 @@ header .button-wrapper {
     height: 50px;
 }
 
+.drawflow .drawflow-node.predict-success {
+    -webkit-box-shadow: 0 2px 15px 2px var(--color4-model-success-node);
+    box-shadow:
+        0 2px 15px 2px var(--color4-model-success-node),
+        inset 3px 3px 3px var(--background-color);
+}
+.drawflow .drawflow-node.predict-error {
+    -webkit-box-shadow: 0 2px 15px 2px var(--color4-model-error-node);
+    box-shadow:
+        0 2px 15px 2px var(--color4-model-error-node),
+        inset 3px 3px 3px var(--background-color);
+}
+
 .drawflow .drawflow-node.selected {
     background: var(--color0);
     border: var(--border-width) solid var(--background2);
@@ -511,9 +524,31 @@ header .button-wrapper {
     box-shadow: 0 2px 20px 2px var(--color3);
 }
 
+.drawflow .drawflow-node.predict-error.selected {
+    background: var(--color0-model-error-connection);
+    border: var(--border-width) solid var(--background2);
+    -webkit-box-shadow: 0 2px 20px 2px var(--color3-model-error-connection);
+    box-shadow: 0 2px 20px 2px var(--color3-model-error-connection);
+}
+
+.drawflow .drawflow-node.predict-success.selected {
+    background: var(--color0-model-success-connection);
+    border: var(--border-width) solid var(--background2);
+    -webkit-box-shadow: 0 2px 20px 2px var(--color3-model-success-connection);
+    box-shadow: 0 2px 20px 2px var(--color3-model-success-connection);
+}
+
 .drawflow .connection .main-path {
     stroke: var(--color2);
     stroke-width: var(--connection-width);
+}
+
+.drawflow .connection .main-path.connection-predict-error {
+    stroke: var(--color2-model-error-connection);
+}
+
+.drawflow .connection .main-path.connection-predict-success {
+    stroke: var(--color2-model-success-connection);
 }
 
 .drawflow .drawflow-node .input,
@@ -538,19 +573,19 @@ header .button-wrapper {
 }
 
 .drawflow > .drawflow-delete {
-    border: 2px solid #43b993;
+    border: 2px solid var(--notification-color-fail);
     background: white;
-    color: #43b993;
-    -webkit-box-shadow: 0 2px 20px 2px #43b993;
-    box-shadow: 0 2px 20px 2px #43b993;
+    color: var(--notification-color-fail);
+    -webkit-box-shadow: 0 2px 20px 2px var(--notification-color-fail);
+    box-shadow: 0 2px 20px 2px var(--notification-color-fail);
 }
 
 .drawflow-delete {
-    border: 2px solid #4ea9ff;
+    border: 2px solid var(--notification-color-fail-border);
     background: white;
-    color: #4ea9ff;
-    -webkit-box-shadow: 0 2px 20px 2px #4ea9ff;
-    box-shadow: 0 2px 20px 2px #4ea9ff;
+    color: var(--notification-color-fail-border);
+    -webkit-box-shadow: 0 2px 20px 2px var(--notification-color-fail-border);
+    box-shadow: 0 2px 20px 2px var(--notification-color-fail-border);
 }
 
 .drawflow-node .title-box {

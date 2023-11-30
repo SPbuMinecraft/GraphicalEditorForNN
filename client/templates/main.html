@@ -28,6 +28,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
     <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.13.0/Sortable.min.js"></script>
     <script src="../scripts/day_night_mode.js"></script>
     <script src="../scripts/requests.js"></script>
   </head>
@@ -94,23 +95,23 @@
     <div class="constructor" id="constructor">
       <div class="col">
         <br />
-        <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="linear">
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `linear`)" data-node="linear">
           <span> Linear</span>
         </div>
-        <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="relu">
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `relu`)" data-node="relu">
           <span> ReLU</span>
         </div>
 
         <!--
-        <div
-                class="drag-drawflow"
-                draggable="true"
-                ondragstart="drag(event)"
-                data-node="sigmoid">
-            <span> Sigmoid</span>
+    <div
+            class="drag-drawflow"
+            draggable="true"
+            ondragstart="drag(event)"
+            data-node="sigmoid">
+        <span> Sigmoid</span>
 
-        </div>
-        -->
+    </div>
+    -->
         <div class="drag-drawflow" draggable="false" onmousedown="return false">
           <span> Coming soon</span>
         </div>
@@ -171,11 +172,23 @@
           <h3></h3>
           <label for="linear-outFeatures-parameter"> outFeatures </label>
           <input id="linear-outFeatures-parameter" type="number" value="1" size="4" />
+          <div id="linear-input-selection">
+            <ul id="linear-inputs-sortable-list"></ul>
+          </div>
+        </div>
+
+        <div class="relu-layer-parameters" id="relu-layer-parameters" style="display: none">
+          <div id="relu-input-selection">
+            <ul id="relu-inputs-sortable-list"></ul>
+          </div>
         </div>
 
         <div class="special-layer-parameters" id="special-layer-parameters" style="display: none">
           <label for="special-width-parameter">Width</label>
           <input id="special-width-parameter" type="number" value="1" size="4" />
+          <div id="special-input-selection">
+            <ul id="special-inputs-sortable-list"></ul>
+          </div>
         </div>
       </div>
     </div>
@@ -320,7 +333,13 @@
           })
         }
         contextmenu(e) {
-          if (this.node_selected) showLayerInfo(this.node_selected.id)
+          if (this.node_selected) {
+            try {
+              showLayerInfo(this.node_selected.id)
+            } catch (e) {
+              console.log(e)
+            }
+          }
           this.dispatch("contextmenu", e)
           e.preventDefault()
           if (this.editor_mode === "fixed" || this.editor_mode === "view") {
@@ -354,6 +373,7 @@
           }
         }
         click(e) {
+          deleteIdOnConnections()
           hideLayerInfo()
           super.click(e)
         }
@@ -406,15 +426,18 @@
           if (loss_node) editor.addConnection(last_created_node.id, loss_node, "output_1", "input_1")
         }
         console.log("Node created " + id)
+        setModelView("irrelevant")
       })
       editor.on("nodeRemoved", function (id) {
         console.log("Node removed " + id)
+        setModelView("irrelevant")
       })
       editor.on("nodeSelected", function (id) {
         last_selected_node_id = id
-        console.log("selected layer DBID: " + editor.getNodeFromId(id).data.DBID) // DBID -- database id
+        console.log("selected layer DBID: " + editor.getNodeFromId(id).data.DBID) // DBID = "database_id;drawflow_id"
         last_selected_layer_id = editor.getNodeFromId(id).data.DBID // database id of last selected layer
         console.log("layer parameters: " + editor.getNodeFromId(id).data.Parameters)
+        console.log("Connections: " + editor.getNodeFromId(id).data.Connections)
       })
       editor.on("moduleCreated", function (name) {
         console.log("Module Created " + name)
@@ -448,6 +471,7 @@
             )
           }
         })
+        setModelView("irrelevant")
       })
       editor.on("connectionRemoved", function (connection) {
         console.log("Connection removed")
@@ -466,10 +490,11 @@
       })
 
       const linear_bias_selector = document.getElementById("bias-parameter")
-      linear_bias_selector.addEventListener("change", function () {
+      linear_bias_selector.addEventListener("change", () => {
+        setModelView("irrelevant")
         const parameters = getParametersFromNode(last_selected_node_id)
         console.log("last id: " + last_selected_layer_id)
-        let new_value = document.getElementById("bias-parameter").value
+        const new_value = document.getElementById("bias-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "bias") {
@@ -480,55 +505,70 @@
               console.log("bias false")
               parameters[i][1] = "0"
             }
-            joinUpdatedLayerParameters(parameters, last_selected_node_id, "bias-parameter")
+            joinUpdatedLayerParameters(parameters, last_selected_node_id)
             break
           }
         }
       })
 
       const linear_inFeatures_input = document.getElementById("linear-inFeatures-parameter")
-      linear_inFeatures_input.addEventListener("change", function () {
-        const parameters = getParametersFromNode(last_selected_node_id)
+      linear_inFeatures_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
         console.log("last id: " + last_selected_layer_id)
-        let new_value = document.getElementById("linear-inFeatures-parameter").value
+        const new_value = document.getElementById("linear-inFeatures-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "inFeatures") {
             parameters[i][1] = new_value
-            joinUpdatedLayerParameters(parameters, last_selected_node_id, "linear-inFeatures-parameter")
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
             break
           }
         }
       })
+      linear_inFeatures_input.addEventListener("input", () => {
+        setModelView("irrelevant")
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
 
       const linear_outFeatures_input = document.getElementById("linear-outFeatures-parameter")
-      linear_outFeatures_input.addEventListener("change", function () {
-        const parameters = getParametersFromNode(last_selected_node_id)
+      linear_outFeatures_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
         console.log("last id: " + last_selected_layer_id)
-        let new_value = document.getElementById("linear-outFeatures-parameter").value
+        const new_value = document.getElementById("linear-outFeatures-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "outFeatures") {
             parameters[i][1] = new_value
-            joinUpdatedLayerParameters(parameters, last_selected_node_id, "linear-outFeatures-parameter")
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
             break
           }
         }
       })
+      linear_outFeatures_input.addEventListener("input", () => {
+        setModelView("irrelevant")
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
 
       const special_width_input = document.getElementById("special-width-parameter")
-      special_width_input.addEventListener("change", function () {
-        const parameters = getParametersFromNode(last_selected_node_id)
+      special_width_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
         console.log("last id: " + last_selected_layer_id)
-        let new_value = document.getElementById("special-width-parameter").value
+        const new_value = document.getElementById("special-width-parameter").value
 
         for (i in parameters) {
           if (parameters[i][0] == "width") {
             parameters[i][1] = new_value
-            joinUpdatedLayerParameters(parameters, last_selected_node_id, "special-width-parameter")
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
             break
           }
         }
+      })
+      special_width_input.addEventListener("input", () => {
+        setModelView("irrelevant")
+        last_changed_parameters_layer_id = last_selected_node_id
       })
 
       /* DRAG EVENT */
@@ -547,7 +587,16 @@
       function allowDrop(ev) {
         ev.preventDefault()
       }
-      function drag(ev) {
+      function drag(ev, layer) {
+        if (layer == "linear") {
+          layer_drag_offset_X = ev.clientX - 50 // Linear layer offset X coord
+          layer_drag_offset_Y = ev.clientY - 97 // Linear layer offset Y coord
+        }
+        if (layer == "relu") {
+          layer_drag_offset_X = ev.clientX - 50 // Relu layer offset X coord
+          layer_drag_offset_Y = ev.clientY - 163 // Relu layer offset Y coord
+        }
+
         if (ev.type === "touchstart") {
           mobile_item_selec = ev.target.closest(".drag-drawflow").getAttribute("data-node")
         } else {
@@ -585,7 +634,7 @@
         return parameters_array
       }
 
-      function joinUpdatedLayerParameters(new_parameters, id, changedParameter) {
+      function joinUpdatedLayerParameters(new_parameters, id) {
         let temp_array = []
         let new_parameters_string = null
         const dbid = editor.getNodeFromId(id).data.DBID
@@ -612,7 +661,6 @@
             })
           } else {
             errorNotification("Failed to update parameters.\n Server is not responding now.")
-            console.log(changedParameter)
             hideLayerInfo(id)
             showLayerInfo(id)
           }
@@ -631,8 +679,8 @@
           editor.precanvas.getBoundingClientRect().y *
             (editor.precanvas.clientHeight / (editor.precanvas.clientHeight * editor.zoom))
 
-        pos_x -= 100
-        pos_y -= 25
+          pos_x -= layer_drag_offset_X
+          pos_y -= layer_drag_offset_Y
 
         const empty_data = {}
         switch (name) {
@@ -741,6 +789,7 @@
       csv_predict.onclick = () => {
         csv_predict.value = null
       }
+
       csv_predict.addEventListener("input", predictRequest)
 
       function buildJsonFormData(form) {
@@ -780,6 +829,13 @@
     <script>
       console.log(`current user id: ${user_id}`)
       console.log(`current address ${py_server_address}`)
+
+      let last_selected_layer_id // layer's db id
+      let last_changed_parameters_layer_id
+      let train_status = false
+      var last_selected_node_id // not db id
+      let layer_drag_offset_X = 0
+      let layer_drag_offset_Y = 0
     </script>
 
     <!--Общее взаимодействие html и js-->
@@ -896,6 +952,7 @@
         const file = csv_upload.files[0]
         const text = await file.text()
         // do whatever with the `text`
+        setModelView("irrelevant")
         console.log(`Got goods: ${text}`)
         train_data = text
         // allow user to press a train button from now on
@@ -924,6 +981,41 @@
         document.getElementById("predict-result-wrapper").style.textAlign = "center"
         document.getElementById("predict-result-wrapper").style.display = "block"
       }
+
+      // Array of connections with written id (input selection)
+      let pathsWithWrittenID = []
+      function writeIdOnConnections(id) {
+        const connections = editor.getNodeFromId(id).data.Connections
+
+        for (let connection of connections) {
+          const from_layer_drawflow_id = connection.split(";")[1]
+          const htmlConnection = document.querySelector(
+            `.connection.node_in_node-${id}.node_out_node-${from_layer_drawflow_id}.output_1.input_1`,
+          )
+          const tmp = addLabelText(htmlConnection, connection.split(";")[0]) // Writes id on connection
+          pathsWithWrittenID.push(tmp)
+        }
+      }
+
+      // Remove id written on connection
+      function deleteIdOnConnections() {
+        for (let path of pathsWithWrittenID) {
+          path.setAttribute("display", "none")
+        }
+        pathsWithWrittenID = []
+      }
+
+      function getSortableInputList(layerClass) {
+        switch (layerClass) {
+          case "linear":
+            return document.querySelector("#linear-inputs-sortable-list")
+          case "relu":
+            return document.querySelector("#relu-inputs-sortable-list")
+          case "special":
+            return document.querySelector("#special-inputs-sortable-list")
+        }
+      }
+
       function hideResult() {
         document.getElementById("predict-result-wrapper").style.display = "none"
       }
@@ -934,6 +1026,65 @@
           correct_id = id.split("-")[1]
         }
         const node = editor.getNodeFromId(correct_id)
+        const connections = editor.getNodeFromId(correct_id).data.Connections
+        const layer_dbid = editor.getNodeFromId(correct_id).data.DBID
+
+        // Input selection
+        writeIdOnConnections(correct_id)
+        let sortable_list = getSortableInputList(node.class)
+        let child = sortable_list.lastElementChild
+
+        while (child) {
+          sortable_list.removeChild(child)
+          child = sortable_list.lastElementChild
+        }
+
+        for (let connection of connections) {
+          let new_element = document.createElement("LI")
+          const text_for_new_element = document.createTextNode("Input from: " + connection.split(";")[0])
+          new_element.appendChild(text_for_new_element)
+          sortable_list.appendChild(new_element)
+        }
+
+        let new_input_order = []
+        new Sortable(sortable_list, {
+          animation: 150,
+          ghostClass: "sortable-ghost",
+          onEnd: function (event) {
+            new_input_order = []
+            for (i in sortable_list.childNodes) {
+              try {
+                if (sortable_list.childNodes[i].textContent.includes("Input")) {
+                  new_input_order.push(Number(sortable_list.childNodes[i].textContent.split(" ")[2]))
+                }
+              } catch (e) {
+                continue
+              }
+            }
+
+            let newConnections = []
+            for (let i = 0; i < new_input_order.length; i++) {
+              for (let connection of connections) {
+                if (new_input_order[i] == connection.split(";")[0]) {
+                  newConnections[i] = connection
+                }
+              }
+            }
+
+            let new_inputs_object = {
+              new_parents: new_input_order,
+              layer_id: layer_dbid,
+            }
+            updateParentOrder(new_inputs_object).then(() => {
+              editor.updateNodeDataFromId(correct_id, {
+                DBID: layer_dbid,
+                Connections: newConnections,
+                Parameters: editor.getNodeFromId(correct_id).data.Parameters,
+              })
+            })
+            console.log(new_input_order)
+          },
+        })
 
         document.getElementById("layer-data").style.display = "block"
         const layer_parameters = getParametersFromNode(correct_id)
@@ -952,7 +1103,7 @@
               document.querySelector("#linear-outFeatures-parameter").value = layer_parameters[i][1]
             }
           }
-        } else if ((node.class = "special")) {
+        } else if (node.class == "special") {
           document.querySelector("#special-layer-parameters").style.display = "block"
 
           for (i in layer_parameters) {
@@ -960,6 +1111,8 @@
               document.querySelector("#special-width-parameter").value = layer_parameters[i][1]
             }
           }
+        } else if (node.class == "relu") {
+          document.querySelector("#relu-layer-parameters").style.display = "block"
         }
       }
       function hideLayerInfo() {
@@ -967,6 +1120,27 @@
 
         document.querySelector("#linear-layer-parameters").style.display = "none"
         document.querySelector("#special-layer-parameters").style.display = "none"
+        document.querySelector("#relu-layer-parameters").style.display = "none"
+
+        deleteIdOnConnections()
+      }
+
+      function addLabelText(path, labelText) {
+        try {
+          const newid = [path.classList].join().replace(/\s/g, "")
+          path.childNodes[0].id = newid
+          let textElem = document.createElementNS(path.namespaceURI, "text")
+          let textElemPath = document.createElementNS(path.namespaceURI, "textPath")
+          textElemPath.setAttribute("href", `#${newid}`)
+          textElemPath.setAttribute("text-anchor", "middle")
+          textElemPath.setAttribute("startOffset", "50%")
+          textElemPath.setAttribute("style", "font-size:30px")
+          textElemPath.classList.add("label-text")
+          textElemPath.textContent = labelText
+          textElem.appendChild(textElemPath)
+          path.appendChild(textElem)
+          return textElemPath
+        } catch (e) {}
       }
 
       function save() {
@@ -994,6 +1168,48 @@
             })
           }
         })
+      }
+
+      let modelIsUpToDate = "irrelevant"
+      function setModelView(state) {
+        modelIsUpToDate = state
+        let nodes = document.getElementsByClassName("drawflow-node")
+        let connections = document.getElementsByClassName("main-path")
+
+        if (state == "success") {
+          for (let node of nodes) {
+            if (!node.classList.contains("predict-success")) node.classList.add("predict-success")
+            if (node.classList.contains("predict-error")) node.classList.remove("predict-error")
+          }
+          for (let connection of connections) {
+            if (!connection.classList.contains("connection-predict-success"))
+              connection.classList.add("connection-predict-success")
+            if (connection.classList.contains("connection-predict-error"))
+              connection.classList.remove("connection-predict-error")
+          }
+        } else if (state == "error") {
+          for (let node of nodes) {
+            if (node.classList.contains("predict-up-to-success")) node.classList.remove("predict-success")
+            if (!node.classList.contains("predict-error")) node.classList.add("predict-error")
+          }
+          for (let connection of connections) {
+            if (connection.classList.contains("connection-predict-success"))
+              connection.classList.remove("connection-predict-success")
+            if (!connection.classList.contains("connection-predict-error"))
+              connection.classList.add("connection-predict-error")
+          }
+        } else {
+          for (let node of nodes) {
+            if (node.classList.contains("predict-error")) node.classList.remove("predict-error")
+            if (node.classList.contains("predict-success")) node.classList.remove("predict-success")
+          }
+          for (let connection of connections) {
+            if (connection.classList.contains("connection-predict-error"))
+              connection.classList.remove("connection-predict-error")
+            if (connection.classList.contains("connection-predict-success"))
+              connection.classList.remove("connection-predict-success")
+          }
+        }
       }
     </script>
 
