@@ -1073,7 +1073,6 @@
                 }
               }
             }
-            console.log("dutiki: " + new_input_order)
             let new_inputs_object = {
               new_parents: new_input_order,
               layer_id: layer_dbid,
@@ -1085,7 +1084,6 @@
                   Connections: newConnections,
                   Parameters: editor.getNodeFromId(correct_id).data.Parameters,
                 })
-                //console.log(new_input_order)
               } else {
                 errorNotification("Failed to update input order.\n Server is not responding now.")
               }
