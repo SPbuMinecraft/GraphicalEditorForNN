@@ -49,7 +49,6 @@ async function requestModel(user_id) {
 }
 
 async function loginUser() {
-    debugger
     console.log(loginForm)
     let errorArea = document
         .querySelector(".login-box")

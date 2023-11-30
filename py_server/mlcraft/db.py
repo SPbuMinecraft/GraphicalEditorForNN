@@ -32,6 +32,7 @@ class Model(db.Model):  # type: ignore
     owner = db.Column(db.Integer, db.ForeignKey("users_table.id"), nullable=False)
     content = db.Column(db.Text)
     is_trained = db.Column(db.Boolean)
+    raw = db.Column(db.Text)
 
 
 class SQLWorker:
@@ -77,6 +78,13 @@ class SQLWorker:
             raise errors.WrongPasswordError("Wrong password")
         return existing_user.id
 
+    def get_models_list(self, user_id: int) -> list:
+        user = db.session.get(User, user_id)
+        if user is None:
+            raise errors.UserNotFoundError("User not found") 
+        models = Model.query.filter_by(owner=user_id)
+        return list(map(lambda m: m.id, models))
+
     def add_model(self, user_id: int, name: str):
         with current_app.app_context():
             model_owner = db.session.get(User, user_id)
@@ -87,10 +95,53 @@ class SQLWorker:
                 name=name,
                 content='{"layers": []}',
                 is_trained=False,
+                raw=""
             )
             db.session.add(new_model)
             db.session.commit()
             return new_model.id
+        
+    def get_raw_model(self, model_id: int) -> dict:
+        with current_app.app_context():
+            model = db.session.get(Model, model_id)
+            if not model:
+                raise errors.ObjectNotFoundError(f"No model with id {model_id}") 
+            return json.loads(model.raw)
+
+    def update_model(self, model_id: int, name: str | None = None, raw: str | None = None):
+        with current_app.app_context():
+            model = db.session.get(Model, model_id)
+            if not model:
+                raise errors.ObjectNotFoundError(f"No model with id {model_id}")
+            if name is not None:
+                model.name = name
+            if raw is not None:
+                model.raw = raw
+            db.session.commit()
+    
+    def copy_model(self, model_id: int):
+        with current_app.app_context():
+            model = db.session.get(Model, model_id)
+            if not model:
+                raise errors.ObjectNotFoundError(f"No model with id {model_id}")
+            new_model = Model(
+                owner=model.owner,
+                name=model.name,
+                content=model.content,
+                is_trained=model.is_trained,
+                raw=model.raw
+            )
+            db.session.add(new_model)
+            db.session.commit()
+            return new_model.id 
+    
+    def delete_model(self, model_id: int):
+        with current_app.app_context():
+            model = db.session.get(Model, model_id)
+            if not model:
+                raise errors.ObjectNotFoundError(f"No model with id {model_id}")
+            db.session.delete(model)
+            db.session.commit()
 
     def add_layer(self, layer_type: str, parameters: str, model_id: int):
         with current_app.app_context():
