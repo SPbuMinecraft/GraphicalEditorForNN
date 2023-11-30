@@ -9,9 +9,11 @@ CPPFLAGS = -I $(dirCore) -isystem $(dirApi)
 
 # C++ compiler flags
 maxErrors = 4 # number of errors compiler will print to the console
-CXXFLAGS = -std=c++17 -pthread
+# LDFLAGS = -lX11
+CXXFLAGS = -std=c++20 -pthread
 CXXFLAGS += -Wall -Wextra -pedantic 
 CXXFLAGS += -fmax-errors=$(maxErrors) # for g++
+# CXXFLAGS += -lX11 -lm
 # CXXFLAGS += -ferror-limit=$(maxErrors) # uncomment for clang
 CXXFLAGS += -Wno-sign-compare
 CXXFLAGS += -Wno-unused-parameter
@@ -121,8 +123,8 @@ serverObjects = $(call getObjects,$(serverFiles),$(dirApi))
 
 serve: $(server); $< $(host) $(port)
 
-$(server): $(serverObjects) $(coreArchive) $(serverMain) | checkboost $(dirBin)
-	$(LINK.cpp) -L $(boost)/lib $^ -o $@
+$(server): $(serverMain) $(serverObjects) $(coreArchive) | checkboost $(dirBin)
+	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11 -lpng
 
 
 ### TESTS ###
@@ -140,7 +142,7 @@ test.%: $(dirBin)/test%
 	@echo "$* test completed"
 
 $(dirBin)/test%: $(dirBuild)/%Tests.o $(serverObjects) $(coreArchive) | checkboost $(dirBin)
-	$(LINK.cpp) -L $(boost)/lib $^ -o $@
+	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11 -lpng
 
 
 ### COMMON ###
