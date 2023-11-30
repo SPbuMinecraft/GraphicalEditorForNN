@@ -68,7 +68,7 @@ def login_user():
         return {"error": f"Missing required field {str(e)}"}, HTTPStatus.BAD_REQUEST
 
 
-@app.route("/models/<int:user_id>", methods=["GET"])
+@app.route("/models/<int:user_id>")
 def model_list(user_id: int):
     models = sql_worker.get_models_list(user_id)
     return models, HTTPStatus.OK

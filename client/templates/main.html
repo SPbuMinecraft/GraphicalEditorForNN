@@ -885,29 +885,22 @@
         return jsonFormData
       }
 
-      // function buildTrainData(form) {
-      //   let input = []
-      //   let output = []
-      //   let loss = []
-      //   let target = []
-      //   const jsonFormData = {}
+      async function deleteModel(id) {
+        const response = await fetch(`http://${py_server_address}/${user_id}/${id}`, {
+          method: "DELETE",
+          mode: "cors",
+        })
+        return response
+      }
 
-      //   for (const pair of new FormData(form)) {
-      //     if (pair[0] == "res") {
-      //       output.push(Number(pair[1]))
-      //     } else {
-      //       input.push(Number(pair[1]))
-      //     }
-      //   }
-
-      //   jsonFormData["0"] = input // 0 - id Data layer
-      //   jsonFormData["1"] = output // 1 - id Output layer TODO: id of target block here
-      //   jsonFormData["2"] = loss
-      //   jsonFormData["3"] = target
-
-      //   console.log(jsonFormData)
-      //   return {dataset: jsonFormData}
-      // }
+      async function getModelList() {
+        const response = await fetch(`http://${py_server_address}/models/${user_id}`, {mode: "cors"})
+        if (!response.ok) {
+          console.error(`Failed to fetch models for current user: ${await response.json()}`)
+          return []
+        }
+        return await response.json()
+      }
     </script>
 
     <!-- JS scripts -->
@@ -996,6 +989,13 @@
           console.log(`Something went wrong during setup :( \nError: ${err}`)
         }
       }
+
+      // Do something every time this page is loaded
+      onReload()
+      async function onReload() {
+        const models = await getModelList()
+        for (const i in models) addModelBlock(models[i].name, models[i].id)
+      }
     </script>
 
     <!--Общее взаимодействие html и js-->
@@ -1050,20 +1050,33 @@
           cancelButtonColor: "#d33",
           confirmButtonText: "Yes, delete it!",
           allowOutsideClick: () => !Swal.isLoading(),
-        }).then(result => {
-          if (result.isConfirmed) {
-            //delete nn from db
-            //verify deletion
-            elem.remove()
+        }).then(async result => {
+          if (!result.isConfirmed) return
+          //delete nn from db
+          const id = elem.children[0].value
+          const response = await deleteModel(id)
+          //verify deletion
+          if (!response.ok) {
+            console.error(`Failed to delete model with id ${id}: ${await response.json()}`)
             Swal.fire({
               position: "top-end",
-              icon: "success",
-              title: "Deleted!",
-              text: "Neural network has been deleted",
+              icon: "error",
+              title: "Failed",
+              text: "Unable to delete, you can try again, but its unlikely to work...",
               showConfirmButton: false,
               timer: 1500,
             })
+            return
           }
+          elem.remove()
+          Swal.fire({
+            position: "top-end",
+            icon: "success",
+            title: "Deleted!",
+            text: "Neural network has been deleted",
+            showConfirmButton: false,
+            timer: 1500,
+          })
         })
       }
       function uploadModel() {

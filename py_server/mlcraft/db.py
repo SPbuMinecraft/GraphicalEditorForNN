@@ -21,7 +21,7 @@ class User(db.Model):  # type: ignore
     login = db.Column(db.Text)
     password = db.Column(db.Text)
     mail = db.Column(db.Text)
-    model = db.relationship("Model", backref="user_id")
+    models = db.relationship("Model", backref="user_id")
 
 
 class Model(db.Model):  # type: ignore
@@ -78,12 +78,17 @@ class SQLWorker:
             raise errors.WrongPasswordError("Wrong password")
         return existing_user.id
 
-    def get_models_list(self, user_id: int) -> list:
+    def get_models_list(self, user_id: int) -> list[dict[str, int | str]]:
         user = db.session.get(User, user_id)
         if user is None:
             raise errors.UserNotFoundError("User not found")
-        models = Model.query.filter_by(owner=user_id)
-        return list(map(lambda m: m.id, models))
+        # only return model ids where 'raw' data is filled
+        return list(
+            map(
+                lambda m: {"id": m.id, "name": m.name},
+                filter(lambda m: m.raw, user.models),
+            )
+        )
 
     def add_model(self, user_id: int, name: str):
         with current_app.app_context():
@@ -131,7 +136,7 @@ class SQLWorker:
                 name=model.name,
                 content=model.content,
                 is_trained=model.is_trained,
-                raw=model.raw,
+                raw="",
             )
             if dst_model_id is not None:
                 old_model = db.session.get(Model, dst_model_id)
@@ -139,7 +144,6 @@ class SQLWorker:
                     raise errors.ObjectNotFoundError(f"No model with id {dst_model_id}")
                 old_model.content = new_model.content
                 old_model.is_trained = new_model.is_trained
-                old_model.raw = new_model.raw
                 db.session.add(old_model)
             else:
                 db.session.add(new_model)
