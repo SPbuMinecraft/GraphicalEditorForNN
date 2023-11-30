@@ -60,7 +60,7 @@
     </header>
 
     <div class="profile" id="profile">
-      <a style="text-decoration: none" href="./authorization.html" onclick="signOut()">
+      <a style="text-decoration: none" href="../index.html" onclick="signOut()">
         <input class="button-wrapper" type="button" id="sing-out-button" value="Sign out" />
       </a>
       <label class="day-night-mode-label">
@@ -699,7 +699,7 @@
         //todo
       }
       function signOut() {
-        //todo
+        localStorage.clear()
       }
       function openNNInConstructor(NNdata) {
         //todo
@@ -860,7 +860,7 @@
       const user_id = localStorage.getItem("user_id")
       const model_id = localStorage.getItem("model_id")
       const py_server_address = localStorage.getItem("py_server_address")
-
+      
       console.log(`current user id: ${user_id}`)
       console.log(`current address ${py_server_address}`)
 
@@ -870,8 +870,10 @@
 
       // Функция, позволяющая вызывать другю функцию через ms времени
       const delay = async ms => await new Promise(resolve => setTimeout(resolve, ms))
-      setup()
-
+      if (!localStorageUsed){
+        setup()
+      }
+      
       async function setup() {
         try {
           let ObjData = {
