@@ -211,10 +211,7 @@
         removeConnection() {
           const selectedConnection = this.connection_selected
 
-          const tmpListclassConnection = selectedConnection.parentElement.classList
-          const output_node_name = this.getNodeFromId(tmpListclassConnection[2].slice(14)).name
-          const input_node_name = this.getNodeFromId(tmpListclassConnection[1].slice(13)).name
-          if (output_node_name == "target" && input_node_name == "loss") return
+          if (this.connectionIsNotRemovable()) return
 
           const connection_name = this.connection_selected.parentElement.className.animVal
           const parsed_connection_name = connection_name.split(" ")
@@ -351,10 +348,7 @@
                   (this.precanvas.clientWidth / (this.precanvas.clientWidth * this.zoom)) +
                 "px"
 
-              const tmpListclassConnection = this.connection_selected.parentElement.classList
-              const output_node_name = this.getNodeFromId(tmpListclassConnection[2].slice(14)).name
-              const input_node_name = this.getNodeFromId(tmpListclassConnection[1].slice(13)).name
-              if (output_node_name == "target" && input_node_name == "loss") return
+              if (this.connectionIsNotRemovable()) return
               this.precanvas.appendChild(deletebox)
             }
           }
@@ -362,6 +356,14 @@
         click(e) {
           hideLayerInfo()
           super.click(e)
+        }
+
+        connectionIsNotRemovable() {
+          const tmpListclassConnection = this.connection_selected.parentElement.classList
+          const output_node_name = this.getNodeFromId(tmpListclassConnection[2].slice(14)).name
+          const input_node_name = this.getNodeFromId(tmpListclassConnection[1].slice(13)).name
+          if (output_node_name == "target" && input_node_name == "loss") return true
+          return false
         }
       }
 
