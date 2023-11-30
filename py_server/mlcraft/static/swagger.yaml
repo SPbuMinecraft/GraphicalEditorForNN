@@ -7,15 +7,6 @@ info:
     neural networks using only GUI, withou any programming. Out service is created to make machine learning
     approachable for everyone needs it!
 
-    Some useful links:
-    - To be added
-
-  termsOfService: http://swagger.io/terms/
-  contact:
-    email: apiteam@swagger.io
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.11
 externalDocs:
   description: Find out more about Swagger
@@ -23,10 +14,12 @@ externalDocs:
 servers:
   - url: http://localhost:3000
 tags:
-- name: "ours"
-  description: "Something useful here"
 - name: "user"
   description: "Operations about user"
+- name: "info"
+  description: "Get information about current user"
+- name: "model"
+  description: "Model manipulation"
 - name: "build"
   description: "Operations for building neural networks"
 - name: "use"
@@ -58,11 +51,7 @@ paths:
                     type: integer
                     example: 1
         '400':
-          description: "Json isn't provided or required fields missing"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NoField'
         '409':
           description: "On invalid username or password"
           content:
@@ -100,32 +89,46 @@ paths:
                     type: integer
                     example: 1
         '400':
-          description: "Json isn't provided or required fields missing"
+          $ref: '#/components/responses/NoField'
+        '401': 
+          $ref: '#/components/responses/UserNotFound'
+  /models/{user_id}:
+    get:
+      tags:
+      - info
+      summary: "List of all models available to the user"
+      description: "All models in the list is guaranteed to have the 'raw' field"
+      operationId: "model_list"
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: "Ok"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: "Can't login: user not found"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedError'
+                type: array
+                description: "Array containing models ids"
+                items:
+                  type: object
+                  properties:
+                    id: 
+                      type: integer
+                      format: int64
+                    name: 
+                      type: string
+                example: [{"id": 1, "name": "XOR"}, {"id": 2, "name": "AND"}]
+        '404':
+          $ref: '#/components/responses/UserNotFound'
   /model/{user_id}:
     post:
       tags:
-      - build
+      - model
       summary: "Adds a new model for a certain user"
       description: "Adds a MODEL"
       operationId: "add_model"
       parameters:
-        - name: user_id
-          in: path
-          description: new model owner's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
+        - $ref: '#/components/parameters/UserId'
       requestBody:
         description: "Model  parameters"
         required: true
@@ -145,17 +148,131 @@ paths:
                     type: integer
                     example: 1
         '400':
-          description: "Json isn't provided or required fields missing"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NoField'
         '404':
-          description: "No user with such ID"
-          content:
+          $ref: '#/components/responses/UserNotFound'
+  /{user_id}/{model_id}:
+    get:
+      tags:
+      - model
+      summary: "Get the model's drawflow representation"
+      description: "Get the json in drawflow format"
+      operationId: "get_model"
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
+      responses:
+        '200':
+          description: "Ok"
+          content: 
+            application/json:
+              example: |- 
+                { "drawflow": { "Home": ... }}
+        '401': 
+          $ref: '#/components/responses/UserNotFound'
+        '403':
+          $ref: '#/components/responses/ModelForbidden'
+        '404':
+          $ref: '#components/responses/ModelNotFound'
+    put:
+      tags: 
+      - model
+      summary: "Update model's name and 'raw' representation"
+      description: "Names can repeat, all json fields are optional"
+      operationId: "put_model"
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
+      requestBody:
+        description: "Name and 'raw' string"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: 
+                  type: string
+                  example: "XOR model"
+                raw:
+                  type: string
+      responses:
+        '200':
+          description: "Model updated"
+        '401': 
+          $ref: '#/components/responses/UserNotFound'
+        '403':
+          $ref: '#/components/responses/ModelForbidden'
+        '404':
+          $ref: '#/components/responses/ModelNotFound'
+        '415':
+          $ref: '#/components/responses/NoJson'
+    delete:
+      tags: 
+      - model
+      summary: "Delete model"
+      description: "Delete a model, by id, from database, forever"
+      operationId: "delete_model"
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
+      responses:
+        '200':
+          description: "Model deleted"
+        '401': 
+          $ref: '#/components/responses/UserNotFound'
+        '403':
+          $ref: '#/components/responses/ModelForbidden'
+        '404':
+          $ref: '#/components/responses/ModelNotFound'
+  /{user_id}/{model_id}/copy:
+    put:
+      tags:
+      - model
+      summary: "Duplicate a model"
+      description: "Creates a new model in database, copies `content` and `is_trained` fields of a current model into it"
+      operationId: "copy_model"
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
+      responses:
+        '201':
+          description: "Model copied successfully, returns new model's `id`"
+          content: 
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                description: "Created model's `id`"
+                properties:
+                  model_id:
+                    description: "New models id"
+                    type: integer
+                    format: int64
+        '401': 
+          $ref: '#/components/responses/UserNotFound'
+        '403':
+          $ref: '#/components/responses/ModelForbidden'
+        '404':
+          $ref: '#/components/responses/ModelNotFound'
+  /{user_id}/{model_id}/copy/{dst_model_id}:
+    put:
+      tags: 
+      - model
+      summary: "Copies one model's content to another"
+      description: "Copies `content` and `is_trained` fields to the destination model"
+      operationId: "assign_model"
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
+        - $ref: '#/components/parameters/DestinationModelId'
+      responses:
+        '201':
+          description: "Model copied successfully"
+        '401': 
+          $ref: '#/components/responses/UserNotFound'
+        '403':
+          $ref: '#/components/responses/ModelForbidden'
+        '404':
+          $ref: '#/components/responses/ModelNotFound'
   /layer/{user_id}/{model_id}:
     post:
       tags:
@@ -164,20 +281,8 @@ paths:
       description: "Adds a LAYER"
       operationId: "add_layer"
       parameters:
-        - name: user_id
-          in: path
-          description: model owner's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: model_id
-          in: path
-          description: model's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
       requestBody:
         description: "Layer parameters (create)"
         required: true
@@ -197,23 +302,11 @@ paths:
                     type: integer
                     example: 1
         '400':
-          description: "Json isn't provided or required fields missing"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NoField'
         '403':
-          description: "The model does not exist or you have no rights for changing it"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ModelForbidden'
         '404':
-          description: "No user / model with such ID"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+            $ref: '#/components/responses/ModelNotFound'
     put:
       tags:
       - build
@@ -221,20 +314,8 @@ paths:
       description: "Adds a LAYER"
       operationId: "update_layer"
       parameters:
-        - name: user_id
-          in: path
-          description: model owner's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: model_id
-          in: path
-          description: model's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
       requestBody:
         description: "Layer parameters (update)"
         required: true
@@ -246,23 +327,11 @@ paths:
         '200':
           description: "Layer successfully updated"
         '400':
-          description: "Json isn't provided or required fields missing"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NoField'
         '403':
-          description: "The model does not exist or you have no rights for changing it"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ModelForbidden'
         '404':
-          description: "No user / mode / layer with such ID"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/LayerModelNotFound'
   /delete_layer/{user_id}/{model_id}:
     put:
       tags:
@@ -271,20 +340,8 @@ paths:
       description: "DELETES a LAYER"
       operationId: "delete_layer"
       parameters:
-        - name: user_id
-          in: path
-          description: model owner's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: model_id
-          in: path
-          description: model's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
       requestBody:
         description: "Parameters of the layer to be deleted"
         required: true
@@ -300,29 +357,11 @@ paths:
         '200':
           description: "Layer deleted successfully"
         '400':
-          description: "Json isn't provided or required fields missing"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NoField'
         '403':
-          description: "The model does not exist or you have no rights for changing it"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ModelForbidden'
         '404':
-          description: "Layer you want to delete does not exist"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '412':
-          description: "You need to delete layer's connections first"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/LayerModelNotFound'
   /clear_model/{user_id}/{model_id}:
     post:
       tags:
@@ -331,35 +370,15 @@ paths:
       description: "Deletes all model's layers and connections"
       operationId: "clear_model"
       parameters:
-        - name: user_id
-          in: path
-          description: model owner's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: model_id
-          in: path
-          description: model's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
       responses:
         '200':
           description: "Model successfully cleared"
         '403':
-          description: "The model does not exist or you have no rights for changing it"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ModelForbidden'
         '404':
-          description: "No model with such ID"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ModelNotFound'
   /connection/{user_id}/{model_id}:
     post:
       tags:
@@ -368,20 +387,8 @@ paths:
       description: "Adds a new CONNECTION between layers"
       operationId: "add_connection"
       parameters:
-        - name: user_id
-          in: path
-          description: model owner's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: model_id
-          in: path
-          description: model's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
       requestBody:
         description: "Connection parameters"
         required: true
@@ -393,23 +400,11 @@ paths:
         '201':
           description: "A new connection created"
         '400':
-          description: "Json isn't provided or required fields missing"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NoField'
         '403':
-          description: "The model does not exist or you have no rights for changing it"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ModelForbidden'
         '404':
-          description: "Impossible to create a connection due to at least obe of layers is not found"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ModelNotFound'
         '412':
           description: "Issue with model graph structure"
           content:
@@ -424,20 +419,8 @@ paths:
       description: "DELETES a CONNECTION"
       operationId: "delete_connection"
       parameters:
-        - name: user_id
-          in: path
-          description: model owner's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: model_id
-          in: path
-          description: model's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
       requestBody:
         description: "Parameters of the connection to be deleted"
         required: true
@@ -453,23 +436,11 @@ paths:
         '200':
           description: "Connection deleted successfully"
         '400':
-          description: "Json isn't provided or required fields missing"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NoField'
         '403':
-          description: "The model does not exist or you have no rights for changing it"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ModelForbidden'
         '404':
-          description: "Connection you wand to delete does not exist"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ConnectionNotFound'
   /update_parents_order/{user_id}/{model_id}:
     put:
       tags:
@@ -478,20 +449,8 @@ paths:
       description: "REORDERS parents"
       operationId: "updates_parents_order"
       parameters:
-        - name: user_id
-          in: path
-          description: model owner's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: model_id
-          in: path
-          description: model's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
       requestBody:
         description: "Parameters of the connection to be deleted"
         required: true
@@ -503,23 +462,11 @@ paths:
         '200':
           description: "Parents order updated successfully"
         '400':
-          description: "Json isn't provided or required fields missing"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NoField'
         '403':
-          description: "The model does not exist or you have no rights for changing it"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ModelForbidden'
         '404':
-          description: "Model / layer does not exist"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/LayerModelNotFound'
   /train/{user_id}/{model_id}/{safe}:
     put:
       tags:
@@ -528,20 +475,8 @@ paths:
       description: "TRAINS a model"
       operationId: "train_model"
       parameters:
-        - name: user_id
-          in: path
-          description: model owner's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: model_id
-          in: path
-          description: model's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
         - name: safe
           in: path
           description: flag, if 1, then the training process will be started even if the model is already trained
@@ -566,17 +501,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: "You have no rights for training this model"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ModelForbidden'
         '404':
-          description: "The model you want to train does not exist"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ModelNotFound'
         '406':
           description: "Model you want to train is not valid"
           content:
@@ -603,20 +530,8 @@ paths:
       description: "EXPLOITS a model"
       operationId: "model_predict"
       parameters:
-        - name: user_id
-          in: path
-          description: model owner's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: model_id
-          in: path
-          description: model's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ModelId'
       requestBody:
         description: "Data for predictions"
         required: true
@@ -638,17 +553,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: "You have no rights for using this model"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ModelForbidden'
         '404':
-          description: "The model you want to use does not exist"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/ModelNotFound'
         '408':
           description: "Evaluating time limit exceeded"
           content:
@@ -661,7 +568,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-          
 components:
   schemas:
     User:
@@ -779,3 +685,70 @@ components:
         problemPart:
           type: string
           example: "The problem is in the Retrograde Mercury"
+  parameters:
+    UserId: 
+      name: user_id
+      in: path
+      description: model owner's ID
+      required: true
+      schema:
+        type: integer
+        format: int64
+    ModelId:
+      name: model_id
+      in: path
+      description: model's ID
+      required: true
+      schema:
+        type: integer
+        format: int64
+    DestinationModelId:
+      name: dst_model_id
+      in: path
+      description: id of a model to copy to
+      required: true
+      schema:
+        type: integer
+        format: int64
+  responses:
+    UserNotFound: 
+      description: "The user with the provided id of yours is not found"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ModelNotFound:
+      description: "Requested model does not exist"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    LayerModelNotFound:
+      description: "Requested model or layer does not exist"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ModelForbidden:
+      description: "You have no rights to access this model"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ConnectionNotFound:
+      description: "Requested connection does not exist"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NoJson:
+      description: "Json not provided"
+      content:
+        text/html:
+          type: string
+    NoField:
+      description: "Required field is missing"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
