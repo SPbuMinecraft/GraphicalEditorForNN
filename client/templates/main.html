@@ -835,13 +835,6 @@
     <script>
       console.log(`current user id: ${user_id}`)
       console.log(`current address ${py_server_address}`)
-
-      let last_selected_layer_id // layer's db id
-      let last_changed_parameters_layer_id
-      let train_status = false
-      var last_selected_node_id // not db id
-      let layer_drag_offset_X = 0
-      let layer_drag_offset_Y = 0
     </script>
 
     <!--Общее взаимодействие html и js-->
@@ -1062,10 +1055,10 @@
           ghostClass: "sortable-ghost",
           onEnd: function (event) {
             new_input_order = []
-            for (i in sortable_list.childNodes) {
+            for (let i in sortable_list.childNodes) {
               try {
-                if (sortable_list.childNodes[i].textContent.includes("Input")) {
-                  new_input_order.push(Number(sortable_list.childNodes[i].textContent.split(" ")[2]))
+                if (sortable_list.childNodes[i].textContent.includes("input")) {
+                  new_input_order.push(Number(sortable_list.childNodes[i].textContent.split(" ")[3]))
                 }
               } catch (e) {
                 continue
@@ -1080,19 +1073,23 @@
                 }
               }
             }
-
+            console.log("dutiki: " + new_input_order)
             let new_inputs_object = {
               new_parents: new_input_order,
               layer_id: layer_dbid,
             }
-            updateParentOrder(new_inputs_object).then(() => {
-              editor.updateNodeDataFromId(correct_id, {
-                DBID: layer_dbid,
-                Connections: newConnections,
-                Parameters: editor.getNodeFromId(correct_id).data.Parameters,
-              })
+            updateParentOrder(new_inputs_object).then(response => {
+              if (response.ok) {
+                editor.updateNodeDataFromId(correct_id, {
+                  DBID: layer_dbid,
+                  Connections: newConnections,
+                  Parameters: editor.getNodeFromId(correct_id).data.Parameters,
+                })
+                //console.log(new_input_order)
+              } else {
+                errorNotification("Failed to update input order.\n Server is not responding now.")
+              }
             })
-            console.log(new_input_order)
           },
         })
 

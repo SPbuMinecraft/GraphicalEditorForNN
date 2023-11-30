@@ -77,6 +77,19 @@ async function updateLayerParameter(sending_object) {
     return response
 }
 
+async function updateParentOrder(sending_obj) {
+    console.log(sending_obj)
+    const response = await sendJson(
+        sending_obj,
+        `http://${py_server_address}/update_parents_order/${user_id}/${model_id}`,
+        "PUT",
+    )
+    if (!response.ok) {
+        return failed_request
+    }
+    return response
+}
+
 async function clearModel() {
     const response = await sendJson(
         null,
