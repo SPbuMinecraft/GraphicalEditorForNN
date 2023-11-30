@@ -2,7 +2,7 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 
-std::vector<std::vector<float>> CsvLoader::load_csv(char *path) {
+std::vector<std::vector<float>> CsvLoader::load_csv(std::string path) {
     std::ifstream fin(path);
     if (!fin) {
         throw std::runtime_error("No such csv file in directory");
