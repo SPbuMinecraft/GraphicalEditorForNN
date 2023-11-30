@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
         return response(status::OK, "done");
     });
 
-    //curl -X POST -F "InputFile=@/home/osboxes/CLionProjects/GraphicalEditorForNN/server/tests/data/and-train.csv" http://0.0.0.0:2000/upload_data/1
+    //curl -X POST -F "InputFile=@filename" http://0.0.0.0:2000/upload_data/1/0 (last can be 1)
     CROW_ROUTE(app, "/upload_data/<int>/<int>").methods(HTTPMethod::Post)
     ([&](const request& req, int model_id, int type) -> response {
         crow::multipart::message file_message(req);
