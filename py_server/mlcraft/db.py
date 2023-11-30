@@ -81,7 +81,7 @@ class SQLWorker:
     def get_models_list(self, user_id: int) -> list:
         user = db.session.get(User, user_id)
         if user is None:
-            raise errors.UserNotFoundError("User not found") 
+            raise errors.UserNotFoundError("User not found")
         models = Model.query.filter_by(owner=user_id)
         return list(map(lambda m: m.id, models))
 
@@ -95,20 +95,22 @@ class SQLWorker:
                 name=name,
                 content='{"layers": []}',
                 is_trained=False,
-                raw=""
+                raw="",
             )
             db.session.add(new_model)
             db.session.commit()
             return new_model.id
-        
+
     def get_raw_model(self, model_id: int) -> dict:
         with current_app.app_context():
             model = db.session.get(Model, model_id)
             if not model:
-                raise errors.ObjectNotFoundError(f"No model with id {model_id}") 
+                raise errors.ObjectNotFoundError(f"No model with id {model_id}")
             return json.loads(model.raw)
 
-    def update_model(self, model_id: int, name: str | None = None, raw: str | None = None):
+    def update_model(
+        self, model_id: int, name: str | None = None, raw: str | None = None
+    ):
         with current_app.app_context():
             model = db.session.get(Model, model_id)
             if not model:
@@ -118,8 +120,8 @@ class SQLWorker:
             if raw is not None:
                 model.raw = raw
             db.session.commit()
-    
-    def copy_model(self, model_id: int):
+
+    def copy_model(self, model_id: int, dst_model_id: int | None = None):
         with current_app.app_context():
             model = db.session.get(Model, model_id)
             if not model:
@@ -129,12 +131,21 @@ class SQLWorker:
                 name=model.name,
                 content=model.content,
                 is_trained=model.is_trained,
-                raw=model.raw
+                raw=model.raw,
             )
-            db.session.add(new_model)
+            if dst_model_id is not None:
+                old_model = db.session.get(Model, dst_model_id)
+                if not old_model:
+                    raise errors.ObjectNotFoundError(f"No model with id {dst_model_id}")
+                old_model.content = new_model.content
+                old_model.is_trained = new_model.is_trained
+                old_model.raw = new_model.raw
+                db.session.add(old_model)
+            else:
+                db.session.add(new_model)
             db.session.commit()
-            return new_model.id 
-    
+            return new_model.id
+
     def delete_model(self, model_id: int):
         with current_app.app_context():
             model = db.session.get(Model, model_id)

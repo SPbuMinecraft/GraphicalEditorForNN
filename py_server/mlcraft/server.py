@@ -96,13 +96,13 @@ def model(user_id: int, model_id: int):
     if allowed == VerificationStatus.Forbidden:
         return {
             "error": "You have no rights for changing this model"
-        }, HTTPStatus.FORBIDDEN 
+        }, HTTPStatus.FORBIDDEN
     match request.method:
         case "GET":
             raw = sql_worker.get_raw_model(model_id)
             return raw, HTTPStatus.OK
         case "PUT":
-            d = defaultdict(lambda: None, **request.json)
+            d: dict[str, str | None] = defaultdict(lambda: None, **request.json)  # type: ignore
             sql_worker.update_model(model_id, d["name"], d["raw"])
             return "", HTTPStatus.OK
         case "DELETE":
@@ -118,9 +118,29 @@ def copy_model(user_id: int, model_id: int):
     if allowed == VerificationStatus.Forbidden:
         return {
             "error": "You have no rights for changing this model"
-        }, HTTPStatus.FORBIDDEN  
+        }, HTTPStatus.FORBIDDEN
     id = sql_worker.copy_model(model_id)
     return {"model_id": id}, HTTPStatus.CREATED
+
+
+@app.route("/<int:user_id>/<int:src_model_id>/copy/<int:dst_model_id>", methods=["PUT"])
+def assign_model(user_id: int, src_model_id: int, dst_model_id: int):
+    allowed = sql_worker.verify_access(user_id, src_model_id)
+    if allowed == VerificationStatus.NotFound:
+        return {"error": "Model does not exist"}, HTTPStatus.NOT_FOUND
+    if allowed == VerificationStatus.Forbidden:
+        return {
+            "error": "You have no rights for changing this model"
+        }, HTTPStatus.FORBIDDEN
+    allowed = sql_worker.verify_access(user_id, dst_model_id)
+    if allowed == VerificationStatus.NotFound:
+        return {"error": "Model does not exist"}, HTTPStatus.NOT_FOUND
+    if allowed == VerificationStatus.Forbidden:
+        return {
+            "error": "You have no rights for changing this model"
+        }, HTTPStatus.FORBIDDEN
+    sql_worker.copy_model(src_model_id, dst_model_id)
+    return "", HTTPStatus.OK
 
 
 @app.route("/layer/<int:user_id>/<int:model_id>", methods=["POST"])

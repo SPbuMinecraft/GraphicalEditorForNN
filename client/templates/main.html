@@ -723,9 +723,19 @@
           })
         }
 
-        clearAlert(result => {
+        clearAlert(async result => {
           if (!result.isConfirmed) {
             feedback("error", "Cancelled", "Model not loaded")
+            return
+          }
+          // Copy the rest of the data in database to the current model
+          const response = await sendJson(
+            {},
+            `http://${py_server_address}/${user_id}/${saved_id}/copy/${model_id}`,
+            "PUT",
+          )
+          if (!response.ok) {
+            feedback("error", "Request failed", "You can try again, but it's unlikely to work...")
             return
           }
           hideResult()
