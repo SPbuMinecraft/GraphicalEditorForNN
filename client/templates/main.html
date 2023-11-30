@@ -200,7 +200,7 @@
         // Если строка не пуста, преобразуем её в объект
         if (jsonString) {
           let json = JSON.parse(jsonString)
-          editorObj.import(json)
+          editorObj.import(json, notifi=false)
           return json
         } else {
           // Если строка пуста (ключ отсутствует или значение null), возвращаем null или другое значение по умолчанию
@@ -222,6 +222,15 @@
             super.removeNodeId(id)
           }
         }
+        import (data, notifi = true) {
+          super.clear()
+          this.drawflow = JSON.parse(JSON.stringify(data));
+          this.load();
+          if(notifi) {
+            this.dispatch('import', 'import');
+          }
+        }
+
         clear() {
           Swal.fire({
             title: "Clear the workspace?",
