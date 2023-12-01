@@ -425,10 +425,6 @@
       }
 
 
-      id = document.getElementById("drawflow")
-      let editor = new CustomDrawflow(id)
-
-
       let id = document.getElementById("drawflow")
       const editor = new CustomDrawflow(id)
       editor.start()
@@ -572,8 +568,6 @@
           }
         })
         saveCanvasToLocalStorage(editor)
-      })
-
         setModelView("irrelevant")
       })
       editor.on("connectionRemoved", function (connection) {
