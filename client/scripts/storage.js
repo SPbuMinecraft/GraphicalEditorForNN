@@ -5,3 +5,7 @@ const py_server_address = localStorage.getItem("py_server_address")
 let last_selected_layer_id // layer's db id
 let train_status = false
 let last_selected_node_id // layer's drawflow id
+
+let last_changed_parameters_layer_id
+let layer_drag_offset_X = 0
+let layer_drag_offset_Y = 0
