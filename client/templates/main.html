@@ -61,7 +61,7 @@
     </header>
 
     <div class="profile" id="profile">
-      <a style="text-decoration: none" href="./authorization.html" onclick="signOut()">
+      <a style="text-decoration: none" href="../index.html" onclick="signOut()">
         <input class="button-wrapper" type="button" id="sing-out-button" value="Sign out" />
       </a>
       <label class="day-night-mode-label">
@@ -205,6 +205,28 @@
 
     <!--Работа с Drawflow-->
     <script>
+      function saveCanvasToLocalStorage(editorObj) {
+        // Переводим объект в строку JSON
+
+        let jsonString = JSON.stringify(editorObj.export())
+        // Сохраняем строку в LocalStorage с определенным ключом
+        localStorage.setItem("canvas", jsonString)
+      }
+
+      function setCanvasFromLocalStorage(editorObj) {
+        // Получаем строку из LocalStorage по ключу
+        const jsonString = localStorage.getItem("canvas")
+        // Если строка не пуста, преобразуем её в объект
+        if (jsonString) {
+          let json = JSON.parse(jsonString)
+          editorObj.import(json, notifi=false)
+          return json
+        } else {
+          // Если строка пуста (ключ отсутствует или значение null), возвращаем null или другое значение по умолчанию
+          return null
+        }
+      }
+
       class CustomDrawflow extends Drawflow {
         constructor(id) {
           super(id)
@@ -308,6 +330,15 @@
             }
           })
         }
+        import (data, notifi = true) {
+          super.clear()
+          this.drawflow = JSON.parse(JSON.stringify(data));
+          this.load();
+          if(notifi) {
+            this.dispatch('import', 'import');
+          }
+        }
+
         clear() {
           Swal.fire({
             title: "Are you sure?",
@@ -393,9 +424,67 @@
         }
       }
 
+
+      id = document.getElementById("drawflow")
+      let editor = new CustomDrawflow(id)
+
+
       let id = document.getElementById("drawflow")
       const editor = new CustomDrawflow(id)
       editor.start()
+      let localStorageUsed = false
+      editor.start()
+      let editor_info = setCanvasFromLocalStorage(editor)
+      if (editor_info != null) {
+        console.log(editor_info)
+        localStorageUsed = true
+      }
+      if (!localStorageUsed) {
+        editor.addNode(
+          "Data",
+          0,
+          1,
+          300,
+          320,
+          "special",
+          {},
+          '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>',
+        )
+        editor.addNode(
+          "Output",
+          1,
+          0,
+          760,
+          320,
+          "special",
+          {},
+          '<div class="title-box"><i class="fas fa-file-signature"></i> Output </div>',
+        )
+
+        editor.addNode(
+          "Target",
+          0,
+          1,
+          450,
+          450,
+          "special",
+          {},
+          '<div class="title-box"><i class="fas fa-file-signature"></i> Target </div>',
+        )
+
+        editor.addNode(
+          "Loss",
+          1,
+          0,
+          760,
+          450,
+          "special",
+          {},
+          '<div class="title-box"><i class="fas fa-file-signature"></i> Loss </div>',
+        )
+      }
+
+      saveCanvasToLocalStorage(editor)
       setup()
 
       async function setup() {
@@ -420,6 +509,7 @@
         })
       }
 
+
       // Events!
       editor.on("nodeCreated", function (id) {
         let last_created_node = editor.getNodeFromId(id)
@@ -437,6 +527,7 @@
       editor.on("nodeRemoved", function (id) {
         console.log("Node removed " + id)
         setModelView("irrelevant")
+        saveCanvasToLocalStorage(editor)
       })
       editor.on("nodeSelected", function (id) {
         last_selected_node_id = id
@@ -444,12 +535,15 @@
         last_selected_layer_id = editor.getNodeFromId(id).data.DBID // database id of last selected layer
         console.log("layer parameters: " + editor.getNodeFromId(id).data.Parameters)
         console.log("Connections: " + editor.getNodeFromId(id).data.Connections)
+        saveCanvasToLocalStorage(editor)
       })
       editor.on("moduleCreated", function (name) {
         console.log("Module Created " + name)
+        saveCanvasToLocalStorage(editor)
       })
       editor.on("moduleChanged", function (name) {
         console.log("Module Changed " + name)
+        saveCanvasToLocalStorage(editor)
       })
       editor.on("connectionCreated", function (connection) {
         const data1 = editor.getNodeFromId(connection.output_id).data
@@ -477,22 +571,31 @@
             )
           }
         })
+        saveCanvasToLocalStorage(editor)
+      })
+
         setModelView("irrelevant")
       })
       editor.on("connectionRemoved", function (connection) {
         console.log("Connection removed")
+        saveCanvasToLocalStorage(editor)
+
       })
       editor.on("nodeMoved", function (id) {
         console.log("Node moved " + id)
+        saveCanvasToLocalStorage(editor)
       })
       editor.on("zoom", function (zoom) {
         console.log("Zoom level " + zoom)
+        saveCanvasToLocalStorage(editor)
       })
       editor.on("addReroute", function (id) {
         console.log("Reroute added " + id)
+        saveCanvasToLocalStorage(editor)
       })
       editor.on("removeReroute", function (id) {
         console.log("Reroute removed " + id)
+        saveCanvasToLocalStorage(editor)
       })
 
       const linear_bias_selector = document.getElementById("bias-parameter")
@@ -763,7 +866,7 @@
         //todo
       }
       function signOut() {
-        //todo
+        localStorage.clear()
       }
       function openNNInConstructor(NNdata) {
         //todo
@@ -833,8 +936,92 @@
 
     <!-- JS scripts -->
     <script>
+      const dataLayerId = 1
+      const outputLayerId = 2
+      const targetLayerId = 3
+      const lossLayerId = 4
+      //import {user_id, py_server_address} from "../scripts/auth.js"
+      const user_id = localStorage.getItem("user_id")
+      const model_id = localStorage.getItem("model_id")
+      const py_server_address = localStorage.getItem("py_server_address")
+
       console.log(`current user id: ${user_id}`)
-      console.log(`current address ${py_server_address}`)
+
+      let last_selected_layer_id // layer's db id
+      let last_changed_parameters_layer_id
+      let train_status = false
+      var last_selected_node_id // not db id
+
+      // Функция, позволяющая вызывать другю функцию через ms времени
+      const delay = async ms => await new Promise(resolve => setTimeout(resolve, ms))
+      if (!localStorageUsed) {
+        setup()
+      }
+
+      async function setup() {
+        try {
+          let ObjData = {
+            type: "Data",
+            parameters: "inputs=0;outputs=1;width=2",
+          }
+
+          let ObjOutput = {
+            type: "Output",
+            parameters: "inputs=1;outputs=0;width=1",
+          }
+
+          let ObjTarget = {
+            type: "Target",
+            parameters: "inputs=0;outputs=1;width=1",
+          }
+
+          let ObjLoss = {
+            type: "MSELoss",
+            parameters: "inputs=2;outputs=0;width=1",
+          }
+
+          addLayer(ObjData)
+            .then(id =>
+              editor.updateNodeDataFromId(dataLayerId, {
+                DBID: id,
+                Connections: [],
+                Parameters: ObjData.parameters,
+              }),
+            )
+            .then(() =>
+              addLayer(ObjOutput).then(id =>
+                editor.updateNodeDataFromId(outputLayerId, {
+                  DBID: id,
+                  Connections: [],
+                  Parameters: ObjOutput.parameters,
+                }),
+              ),
+            )
+            .then(() =>
+              addLayer(ObjTarget).then(id =>
+                editor.updateNodeDataFromId(targetLayerId, {
+                  DBID: id,
+                  Connections: [],
+                  Parameters: ObjTarget.parameters,
+                }),
+              ),
+            )
+            .then(() =>
+              addLayer(ObjLoss).then(id =>
+                editor.updateNodeDataFromId(lossLayerId, {
+                  DBID: id,
+                  Connections: [],
+                  Parameters: ObjLoss.parameters,
+                }),
+              ),
+            )
+            .then(() => console.log(`Setup completed successfully. \nUser ID: ${user_id} \nModel ID: ${model_id}`))
+        } catch (err) {
+          console.log(`Something went wrong during setup :( \nError: ${err}`)
+        }
+      }
+
+      let layer_drag_offset_X = 0
     </script>
 
     <!--Общее взаимодействие html и js-->
