@@ -1,7 +1,7 @@
 #include "GraphBuilder.h"
 #include <vector>
 
-void Graph::OverviewLayers(const crow::json::rvalue& layers, const std::vector<std::vector<float>> data,
+void Graph::OverviewLayers(const crow::json::rvalue& layers, const std::vector<std::vector<float>>& data,
                  std::unordered_map<int, crow::json::rvalue>& layer_dicts,
                  std::unordered_map<int, std::vector<float>>& data_dicts) {
     std::vector<float> instances;

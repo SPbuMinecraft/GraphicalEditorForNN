@@ -6,7 +6,7 @@ void CHECK_HAS_FIELD(const crow::json::rvalue& layer, const std::string& field) 
     }
 }
 
-void ParseCsvData(const std::vector<std::vector<float>> data, std::vector<float>& instances, std::vector<float>& answers) {
+void ParseCsvData(const std::vector<std::vector<float>>& data, std::vector<float>& instances, std::vector<float>& answers) {
     // Think about optimization via reservation
     for (auto& instance : data) {
         answers.push_back(instance.back());

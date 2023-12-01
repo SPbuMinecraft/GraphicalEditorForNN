@@ -21,13 +21,15 @@ public:
           OptimizerBase& SGD);
     ~Graph();
 
-    void OverviewLayers(const crow::json::rvalue& layers, const std::vector<std::vector<float>> data,
+    void OverviewLayers(const crow::json::rvalue& layers, const std::vector<std::vector<float>>& data,
                         std::unordered_map<int, crow::json::rvalue>& layer_dicts,
                         std::unordered_map<int, std::vector<float>>& data_dicts);
+
     void GetEdges(const crow::json::rvalue& connections,
                   std::unordered_map<int, std::vector<int>>& straightEdges,
                   std::unordered_map<int, std::vector<int>>& reversedEdges,
                   std::unordered_set<int>& entryNodes);
+
     void TopologySort(std::unordered_map<int, std::vector<int>>& edges,
                       std::unordered_set<int>& entryNodes,
                       std::vector<int>& layersOrder);
