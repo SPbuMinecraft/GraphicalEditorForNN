@@ -1,3 +1,4 @@
+from collections import defaultdict
 from json import dumps
 from sqlite3 import IntegrityError
 import requests
@@ -72,6 +73,12 @@ def login_user():
         return {"error": f"Missing required field {str(e)}"}, HTTPStatus.BAD_REQUEST
 
 
+@app.route("/models/<int:user_id>")
+def model_list(user_id: int):
+    models = sql_worker.get_models_list(user_id)
+    return models, HTTPStatus.OK
+
+
 @app.route("/model/<int:user_id>", methods=["POST"])
 def add_model(user_id: int):
     json = request.json
@@ -84,6 +91,61 @@ def add_model(user_id: int):
         return {"error": str(e)}, HTTPStatus.NOT_FOUND
     except KeyError as e:
         return {"error": f"Missing required field {str(e)}"}, HTTPStatus.BAD_REQUEST
+
+
+@app.route("/<int:user_id>/<int:model_id>", methods=["GET", "PUT", "DELETE"])
+def model(user_id: int, model_id: int):
+    allowed = sql_worker.verify_access(user_id, model_id)
+    if allowed == VerificationStatus.NotFound:
+        return {"error": "Model does not exist"}, HTTPStatus.NOT_FOUND
+    if allowed == VerificationStatus.Forbidden:
+        return {
+            "error": "You have no rights for changing this model"
+        }, HTTPStatus.FORBIDDEN
+    match request.method:
+        case "GET":
+            raw = sql_worker.get_raw_model(model_id)
+            return raw, HTTPStatus.OK
+        case "PUT":
+            d: dict[str, str | None] = defaultdict(lambda: None, **request.json)  # type: ignore
+            sql_worker.update_model(model_id, d["name"], d["raw"])
+            return "", HTTPStatus.OK
+        case "DELETE":
+            sql_worker.delete_model(model_id)
+            return "", HTTPStatus.OK
+
+
+@app.route("/<int:user_id>/<int:model_id>/copy", methods=["PUT"])
+def copy_model(user_id: int, model_id: int):
+    allowed = sql_worker.verify_access(user_id, model_id)
+    if allowed == VerificationStatus.NotFound:
+        return {"error": "Model does not exist"}, HTTPStatus.NOT_FOUND
+    if allowed == VerificationStatus.Forbidden:
+        return {
+            "error": "You have no rights for changing this model"
+        }, HTTPStatus.FORBIDDEN
+    id = sql_worker.copy_model(model_id)
+    return {"model_id": id}, HTTPStatus.CREATED
+
+
+@app.route("/<int:user_id>/<int:src_model_id>/copy/<int:dst_model_id>", methods=["PUT"])
+def assign_model(user_id: int, src_model_id: int, dst_model_id: int):
+    allowed = sql_worker.verify_access(user_id, src_model_id)
+    if allowed == VerificationStatus.NotFound:
+        return {"error": "Model does not exist"}, HTTPStatus.NOT_FOUND
+    if allowed == VerificationStatus.Forbidden:
+        return {
+            "error": "You have no rights for changing this model"
+        }, HTTPStatus.FORBIDDEN
+    allowed = sql_worker.verify_access(user_id, dst_model_id)
+    if allowed == VerificationStatus.NotFound:
+        return {"error": "Model does not exist"}, HTTPStatus.NOT_FOUND
+    if allowed == VerificationStatus.Forbidden:
+        return {
+            "error": "You have no rights for changing this model"
+        }, HTTPStatus.FORBIDDEN
+    sql_worker.copy_model(src_model_id, dst_model_id)
+    return "", HTTPStatus.OK
 
 
 @app.route("/layer/<int:user_id>/<int:model_id>", methods=["POST"])
