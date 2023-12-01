@@ -429,7 +429,6 @@
       const editor = new CustomDrawflow(id)
       editor.start()
       let localStorageUsed = false
-      editor.start()
       let editor_info = setCanvasFromLocalStorage(editor)
       if (editor_info != null) {
         console.log(editor_info)
@@ -478,10 +477,11 @@
           {},
           '<div class="title-box"><i class="fas fa-file-signature"></i> Loss </div>',
         )
+        setup()
       }
 
       saveCanvasToLocalStorage(editor)
-      setup()
+      
 
       async function setup() {
         try {
