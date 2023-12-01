@@ -13,6 +13,11 @@ from .utils import (
     DeleteStatus,
     VerificationStatus,
 )
+from .check_dimensions import (
+    DimensionsCheckStatus,
+    check_dimensions,
+)
+
 from . import errors
 
 from .db import sql_worker
@@ -214,8 +219,6 @@ def add_connection(user_id: int, model_id: int):
             return {
                 "error": "You have no rights for changing this model"
             }, HTTPStatus.FORBIDDEN
-        if allowed == LayersConnectionStatus.DimensionsMismatch:
-            return {"error": "Dimensions do not match"}, HTTPStatus.PRECONDITION_FAILED
         if allowed == LayersConnectionStatus.WrongDirection:
             return {
                 "error": "Wrong direction in data or output layer"
@@ -324,6 +327,15 @@ def train_model(
             )
         if not is_valid_model(model):
             return {"error": "Invalid model found"}, HTTPStatus.NOT_ACCEPTABLE
+        dimensions_status, layer_id = check_dimensions(model["layers"])
+        if dimensions_status == DimensionsCheckStatus.InvalidNumberOfInputs:
+            return {
+                "error": f"Invalid number of inputs for layer {layer_id}"
+            }, HTTPStatus.NOT_ACCEPTABLE
+        elif dimensions_status == DimensionsCheckStatus.DimensionsMismatch:
+            return {
+                "error": f"Layer {layer_id} does not match with it's parents in dimensions"
+            }, HTTPStatus.NOT_ACCEPTABLE
         # Convert json to another format for C++ by deleting connsetcions ids and rename layers_type
         model["connections"] = list(
             {
@@ -358,6 +370,8 @@ def train_model(
         return {"error": str(e)}, HTTPStatus.BAD_REQUEST
     except TimeoutError as e:
         return {"error": "Training time limit exceeded"}, HTTPStatus.REQUEST_TIMEOUT
+    except TypeError as e:
+        return {"error": str(e)}, HTTPStatus.NOT_ACCEPTABLE
 
 
 @app.route("/predict/<int:user_id>/<int:model_id>", methods=["PUT"])
