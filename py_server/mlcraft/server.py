@@ -3,7 +3,7 @@ from http import HTTPStatus
 from flask import Blueprint, request, current_app
 
 from .utils import convert_model_parameters, is_valid_model, convert_model
-from .check_dimensions import check_dimensions
+from .check_dimensions import assert_dimensions_match
 
 from .errors import Error
 
@@ -28,11 +28,48 @@ def login_user():
     return {"user_id": user_id}, HTTPStatus.OK
 
 
+@app.route("/models/<int:user_id>")
+def model_list(user_id: int):
+    models = sql_worker.get_models_list(user_id)
+    return models, HTTPStatus.OK
+
+
 @app.route("/model/<int:user_id>", methods=["POST"])
 def add_model(user_id: int):
     json_data = request.json
     inserted_id = sql_worker.add_model(user_id, json_data["name"])
     return {"model_id": inserted_id}, HTTPStatus.CREATED
+
+
+@app.route("/<int:user_id>/<int:model_id>", methods=["GET", "PUT", "DELETE"])
+def model(user_id: int, model_id: int):
+    sql_worker.verify_access(user_id, model_id)
+    match request.method:
+        case "GET":
+            raw = sql_worker.get_raw_model(model_id)
+            return raw, HTTPStatus.OK
+        case "PUT":
+            d: dict[str, str | None] = defaultdict(lambda: None, **request.json)  # type: ignore
+            sql_worker.update_model(model_id, d["name"], d["raw"])
+            return "", HTTPStatus.OK
+        case "DELETE":
+            sql_worker.delete_model(model_id)
+            return "", HTTPStatus.OK
+
+
+@app.route("/<int:user_id>/<int:model_id>/copy", methods=["PUT"])
+def copy_model(user_id: int, model_id: int):
+    sql_worker.verify_access(user_id, model_id)
+    id = sql_worker.copy_model(model_id)
+    return {"model_id": id}, HTTPStatus.CREATED
+
+
+@app.route("/<int:user_id>/<int:src_model_id>/copy/<int:dst_model_id>", methods=["PUT"])
+def assign_model(user_id: int, src_model_id: int, dst_model_id: int):
+    sql_worker.verify_access(user_id, src_model_id)
+    sql_worker.verify_access(user_id, dst_model_id)
+    sql_worker.copy_model(src_model_id, dst_model_id)
+    return "", HTTPStatus.OK
 
 
 @app.route("/layer/<int:user_id>/<int:model_id>", methods=["POST"])
@@ -114,7 +151,7 @@ def train_model(
     convert_model_parameters(model)
     if not is_valid_model(model):
         raise Error("Invalid model found", HTTPStatus.NOT_ACCEPTABLE)
-    check_dimensions(model["layers"])
+    assert_dimensions_match(model["layers"])
 
     dataset = extract_train_data(request.data, model)
 

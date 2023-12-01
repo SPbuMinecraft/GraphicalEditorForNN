@@ -75,7 +75,7 @@ def create_checker(layer: dict):
             raise TypeError(f"Unknown layer type: {layer['type']}")
 
 
-def check_dimensions(layers: list[dict]):
+def assert_dimensions_match(layers: list[dict]):
     layer_checkers = {}
     data_layers = []
 

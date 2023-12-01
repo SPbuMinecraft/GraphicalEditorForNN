@@ -17,7 +17,7 @@ class User(db.Model):  # type: ignore
     login = db.Column(db.Text)
     password = db.Column(db.Text)
     mail = db.Column(db.Text)
-    model = db.relationship("Model", backref="user_id")
+    models = db.relationship("Model", backref="user_id")
 
 
 class Model(db.Model):  # type: ignore
@@ -28,6 +28,7 @@ class Model(db.Model):  # type: ignore
     owner = db.Column(db.Integer, db.ForeignKey("users_table.id"), nullable=False)
     content = db.Column(db.Text)
     is_trained = db.Column(db.Boolean)
+    raw = db.Column(db.Text)
 
 
 class SQLWorker:
@@ -44,7 +45,6 @@ class SQLWorker:
 
     def add_user(self, user_parameters: dict):
         with current_app.app_context():
-            # Не очень хорошее решение по обработке ошибок... А если ошибок станет 10, 100?
             existing_user = User.query.filter_by(login=user_parameters["login"]).first()
             if existing_user is not None:
                 raise Error(
@@ -86,9 +86,21 @@ class SQLWorker:
             )
         if existing_user.password != user_parameters["password"]:
             raise Error(
-                "User not found", HTTPStatus.UNAUTHORIZED, problemPart="password"
+                "Wrong password", HTTPStatus.UNAUTHORIZED, problemPart="password"
             )
         return existing_user.id
+
+    def get_models_list(self, user_id: int) -> list[dict[str, int | str]]:
+        user = db.session.get(User, user_id)
+        if user is None:
+            raise Error("User not found", HTTPStatus.UNAUTHORIZED)
+        # only return model ids where 'raw' data is filled
+        return list(
+            map(
+                lambda m: {"id": m.id, "name": m.name},
+                filter(lambda m: m.raw, user.models),
+            )
+        )
 
     def add_model(self, user_id: int, name: str):
         with current_app.app_context():
@@ -100,10 +112,59 @@ class SQLWorker:
                 name=name,
                 content='{"layers": []}',
                 is_trained=False,
+                raw="",
             )
             db.session.add(new_model)
             db.session.commit()
             return new_model.id
+
+    def get_raw_model(self, model_id: int) -> dict:
+        with current_app.app_context():
+            model = db.session.get(Model, model_id)
+            if not model:
+                raise Error(f"No model with id {model_id}")
+            return json.loads(model.raw)
+
+    def update_model(
+        self, model_id: int, name: str | None = None, raw: str | None = None
+    ):
+        with current_app.app_context():
+            model = self.get_model(model_id)
+            if name is not None:
+                model.name = name
+            if raw is not None:
+                model.raw = raw
+            db.session.commit()
+
+    def copy_model(self, model_id: int, dst_model_id: int | None = None):
+        with current_app.app_context():
+            model = self.get_model(model_id)
+            new_model = Model(
+                owner=model.owner,
+                name=model.name,
+                content=model.content,
+                is_trained=model.is_trained,
+                raw="",
+            )
+            if dst_model_id is not None:
+                old_model = db.session.get(Model, dst_model_id)
+                if not old_model:
+                    raise Error(
+                        f"No model with id {dst_model_id}", HTTPStatus.NOT_FOUND
+                    )
+                old_model.content = new_model.content
+                old_model.is_trained = new_model.is_trained
+                db.session.add(old_model)
+            else:
+                db.session.add(new_model)
+            db.session.commit()
+            return new_model.id
+
+    def delete_model(self, model_id: int):
+        with current_app.app_context():
+            model = self.get_model(model_id)
+            db.session.delete(model)
+            db.session.commit()
 
     def add_layer(self, layer_type: str, parameters: str, model_id: int):
         with current_app.app_context(), self.content_lock:
@@ -219,12 +280,6 @@ class SQLWorker:
             if model is None:
                 raise Error(f"No model with id {model_id}", HTTPStatus.NOT_FOUND)
             return model
-
-    def check_dimensions(self, layer_from: dict, layer_to: dict):
-        parameters_from = parse_parameters(layer_from["parameters"])
-        parameters_to = parse_parameters(layer_to["parameters"])
-        # return int(parameters_from["outputs"]) <= int(parameters_to["inputs"])
-        return True
 
     def verify_connection(
         self, user_id: int, model_id: int, layer_from: int, layer_to: int

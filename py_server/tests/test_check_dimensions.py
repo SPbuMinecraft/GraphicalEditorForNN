@@ -1,5 +1,5 @@
 import pytest
-from mlcraft.check_dimensions import check_dimensions
+from mlcraft.check_dimensions import assert_dimensions_match
 from mlcraft.errors import Error
 
 
@@ -18,7 +18,7 @@ def test_correct_simple():
         {"id": 5, "type": "Output", "parameters": {}, "parents": [3]},
     ]
     # Assert no exception is raised
-    check_dimensions(layers)
+    assert_dimensions_match(layers)
 
 
 def test_correct_harder():
@@ -50,7 +50,7 @@ def test_correct_harder():
         {"id": 9, "type": "MSELoss", "parameters": {}, "parents": [0, 8]},
         {"id": 10, "type": "Output", "parameters": {}, "parents": [8]},
     ]
-    check_dimensions(layers)
+    assert_dimensions_match(layers)
 
 
 def test_mismatch_simple():
@@ -69,7 +69,7 @@ def test_mismatch_simple():
     ]
 
     with pytest.raises(Error) as e:
-        check_dimensions(layers)
+        assert_dimensions_match(layers)
 
     assert e.match(r".*4.*match.*dimensions")
     assert e.value.payload["problemNode"] == 4
@@ -106,7 +106,7 @@ def test_mismatch_harder():
     ]
 
     with pytest.raises(Error) as e:
-        check_dimensions(layers)
+        assert_dimensions_match(layers)
 
     assert e.match(r".*6.*match.*dimensions")
     assert e.value.payload["problemNode"] == 6

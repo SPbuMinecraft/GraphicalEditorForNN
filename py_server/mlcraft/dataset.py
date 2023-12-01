@@ -1,27 +1,19 @@
 import csv
 from http import HTTPStatus
 from io import StringIO
-from .db import sql_worker
 from .errors import Error
 
 
-def get_data_layer(model: dict) -> dict:
-    layer = next(filter(lambda l: l["type"] == "Data", model["layers"]))
+def get_layer(type: str, model: dict) -> dict:
+    layer = next(filter(lambda l: l["type"] == type, model["layers"]), None)
     if layer is None:
-        raise Error("No 'data' block in model", HTTPStatus.PRECONDITION_FAILED)
-    return layer
-
-
-def get_target_layer(model: dict) -> dict:
-    layer = next(filter(lambda l: l["type"] == "Target", model["layers"]), None)
-    if layer is None:
-        raise Error("No 'target' block in model", HTTPStatus.PRECONDITION_FAILED)
+        raise Error(f"No {type} block in model", HTTPStatus.PRECONDITION_FAILED)
     return layer
 
 
 def extract_train_data(bytes: bytes, model: dict) -> dict:
-    data_layer = get_data_layer(model)
-    target_layer = get_target_layer(model)
+    data_layer = get_layer("Data", model)
+    target_layer = get_layer("Target", model)
 
     reader = csv.reader(StringIO(bytes.decode()))
 
@@ -40,7 +32,7 @@ def extract_train_data(bytes: bytes, model: dict) -> dict:
 
 
 def extract_predict_data(bytes: bytes, model: dict) -> dict:
-    data_layer = get_data_layer(model)
+    data_layer = get_layer("Data", model)
     reader = csv.reader(StringIO(bytes.decode()))
     row = next(reader, None)
 
