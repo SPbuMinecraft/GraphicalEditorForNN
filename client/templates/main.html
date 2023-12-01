@@ -421,7 +421,7 @@
 
       id = document.getElementById("drawflow")
       let editor = new CustomDrawflow(id)
-      
+
 
       let id = document.getElementById("drawflow")
       const editor = new CustomDrawflow(id)
@@ -567,13 +567,13 @@
         })
         saveCanvasToLocalStorage(editor)
       })
-      
+
         setModelView("irrelevant")
       })
       editor.on("connectionRemoved", function (connection) {
         console.log("Connection removed")
         saveCanvasToLocalStorage(editor)
-        
+
       })
       editor.on("nodeMoved", function (id) {
         console.log("Node moved " + id)
@@ -930,7 +930,6 @@
 
     <!-- JS scripts -->
     <script>
-
       const dataLayerId = 1
       const outputLayerId = 2
       const targetLayerId = 3
@@ -939,7 +938,7 @@
       const user_id = localStorage.getItem("user_id")
       const model_id = localStorage.getItem("model_id")
       const py_server_address = localStorage.getItem("py_server_address")
-      
+
       console.log(`current user id: ${user_id}`)
       console.log(`current address ${py_server_address}`)
 
@@ -948,13 +947,12 @@
       let train_status = false
       var last_selected_node_id // not db id
 
-
       // Функция, позволяющая вызывать другю функцию через ms времени
       const delay = async ms => await new Promise(resolve => setTimeout(resolve, ms))
-      if (!localStorageUsed){
+      if (!localStorageUsed) {
         setup()
       }
-      
+
       async function setup() {
         try {
           let ObjData = {
@@ -1020,7 +1018,6 @@
 
       let layer_drag_offset_X = 0
       let layer_drag_offset_Y = 0
-
     </script>
 
     <!--Общее взаимодействие html и js-->
