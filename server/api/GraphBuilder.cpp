@@ -80,7 +80,7 @@ void Graph::TopologySort(std::unordered_map<int, std::vector<int>>& edges,
     std::reverse(layersOrder.begin(), layersOrder.end());
 }
 
-Graph::Graph(crow::json::rvalue modelJson,
+void Graph::Initialize(crow::json::rvalue modelJson,
              RandomObject* randomInit,
              OptimizerBase& SGD) {
 
