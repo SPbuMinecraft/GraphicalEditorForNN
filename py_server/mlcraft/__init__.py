@@ -1,8 +1,11 @@
 import os
 import json
-from flask import Flask, url_for
+from flask import Flask
 from flask_cors import CORS
 from flask_swagger_ui import get_swaggerui_blueprint
+from mlcraft.errors import connection_error, timeout_error
+from werkzeug.exceptions import HTTPException
+from requests.exceptions import ConnectionError, ConnectTimeout
 
 
 def extract_config(file):
@@ -53,6 +56,15 @@ def make_app(config=None):
     from . import db  # this is ok, but only for professional programmers
 
     db.init_app(app)
+
+    from .errors import Error, api_error, key_error, value_error, http_error
+
+    app.register_error_handler(Error, api_error)
+    app.register_error_handler(KeyError, key_error)  # no json field
+    app.register_error_handler(ValueError, value_error)  # json wrong type
+    app.register_error_handler(HTTPException, http_error)
+    app.register_error_handler(ConnectTimeout, timeout_error)
+    app.register_error_handler(ConnectionError, connection_error)
 
     from . import server
 
