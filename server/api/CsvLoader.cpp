@@ -1,6 +1,6 @@
 #include "CsvLoader.h"
 #include <fstream>
-#include <boost/algorithm/string.hpp>
+#include <sstream>
 
 std::vector<std::vector<float>> CsvLoader::load_csv(std::string path) {
     std::ifstream fin(path);
@@ -11,11 +11,11 @@ std::vector<std::vector<float>> CsvLoader::load_csv(std::string path) {
     std::vector<std::vector<float>> result;
     getline(fin, line);
     while (!line.empty()) {
-        std::vector<std::string> content;
-        boost::split(content, line, boost::is_any_of(","));
-        result.push_back(std::vector<float>(content.size()));
-        for (int i = 0; i < content.size(); ++i) {
-            result.back()[i] = std::stof(content[i]);
+        std::stringstream line_stream(line);
+        result.push_back(std::vector<float>());
+        std::string number;
+        while (getline(line_stream, number, ',')) {
+            result.back().push_back(std::stof(number));
         }
         getline(fin, line);
     }
