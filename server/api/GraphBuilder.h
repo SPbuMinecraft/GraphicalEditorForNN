@@ -16,7 +16,7 @@ private:
 public:
     Graph() = default;
     void Initialize(crow::json::rvalue modelJson,
-          std::vector<std::vector<float>> data,
+          const std::vector<std::vector<float>>& data,
           RandomObject* randomInit,
           OptimizerBase& SGD);
     ~Graph();

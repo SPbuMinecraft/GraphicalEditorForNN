@@ -87,7 +87,7 @@ void Graph::TopologySort(std::unordered_map<int, std::vector<int>>& edges,
 }
 
 void Graph::Initialize(crow::json::rvalue modelJson,
-             std::vector<std::vector<float>> data,
+             const std::vector<std::vector<float>>& data,
              RandomObject* randomInit,
              OptimizerBase& SGD) {
 

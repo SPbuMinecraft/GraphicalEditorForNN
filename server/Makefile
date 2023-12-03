@@ -3,7 +3,7 @@ dirCore = core
 dirTests = tests
 dirBuild = Build
 dirBin = bin
-dirModelData = model-data
+dirModelData = model_data
 dirPredict = $(dirModelData)/predict
 dirTrain = $(dirModelData)/data
 
