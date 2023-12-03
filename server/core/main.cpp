@@ -27,17 +27,13 @@ static const Multiply multOperation;
 static const BiasSum sumOperation;
 static const ReLU reluOperation;
 
+thread_local int a = 0;
+
 int main() {
     Allocator::startVirtualMode();
     {
-
-    std::unordered_map<std::string, float> layer1Params = {};
-    layer1Params["h"] = 2;
-    layer1Params["w"] = 2;
-
-    std::unordered_map<std::string, float> layer2Params = {};
-    layer2Params["h"] = 2;
-    layer2Params["w"] = 1;
+    LinearLayerParameters params1{2ull, 2ull, true};
+    LinearLayerParameters params2{2ull, 1ull, true};
 
     auto inputNode = Tensor(Blob::constBlob(Shape {{4, 2}}, input));
 
@@ -45,20 +41,18 @@ int main() {
 
     RandomObject initObject(0, 1, 17);
     OptimizerBase SGD = OptimizerBase(0.1);
-
-    LinearLayer layer1 {layer1Params, {inputNode}, &initObject};
+    LinearLayer layer1 {params1, {inputNode}, &initObject};
     SGD.append(layer1.layerOperationParams);
 
     TensorRef res = layer1.result.value();
-    ReLULayer reluLayer1  {{}, {res}};
+    ReLULayer reluLayer1  {{res}};
 
     res = reluLayer1.result.value();
-
-    LinearLayer layer2 {layer2Params, {res}, &initObject};
+    LinearLayer layer2 {params2, {res}, &initObject};
     res = layer2.result.value();
     SGD.append(layer2.layerOperationParams);
 
-    MSELoss mseLoss {{}, {res, trueNode}};
+    MSELoss mseLoss {{res, trueNode}};
 
     auto &lastNode = mseLoss.result.value();
     lastNode.forward();

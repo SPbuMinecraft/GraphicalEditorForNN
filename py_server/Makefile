@@ -18,7 +18,7 @@ ifeq ("$(wildcard $(CONFIG_PATH))","")
 $(error "Not a valid config: check your CONFIG_PATH variable")
 endif
 ifeq ("$(shell which node)","")
-$(error 'node' not found, try installing it somehow, I don't know:0)
+$(error 'node' not found, see README about node)
 endif
 
 getField = $(shell node -p "require('$(CONFIG_PATH)').py_server.$1")

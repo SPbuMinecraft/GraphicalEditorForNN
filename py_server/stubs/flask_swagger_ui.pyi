@@ -1,0 +1,3 @@
+from flask import Blueprint
+
+def get_swaggerui_blueprint(base_url: str, api_url: str) -> Blueprint: ...

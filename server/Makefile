@@ -9,9 +9,11 @@ CPPFLAGS = -I $(dirCore) -isystem $(dirApi)
 
 # C++ compiler flags
 maxErrors = 4 # number of errors compiler will print to the console
-CXXFLAGS = -std=c++17 -pthread
+# LDFLAGS = -lX11
+CXXFLAGS = -std=c++20 -pthread
 CXXFLAGS += -Wall -Wextra -pedantic 
 CXXFLAGS += -fmax-errors=$(maxErrors) # for g++
+# CXXFLAGS += -lX11 -lm
 # CXXFLAGS += -ferror-limit=$(maxErrors) # uncomment for clang
 CXXFLAGS += -Wno-sign-compare
 CXXFLAGS += -Wno-unused-parameter
@@ -36,7 +38,7 @@ ifneq ($V,2)
 .SILENT:
 endif
 .DEFAULT_GOAL = default
-.PHONY: default serve test test.% clean
+.PHONY: default serve test test.% clean checkboost
 
 include $(wildcard $(dirBuild)/*.d)
 
@@ -47,6 +49,7 @@ getObjects = $(patsubst $2/%.cpp, $(dirBuild)/%.o, $1)
 core = $(dirBin)/core
 server = $(dirBin)/server
 coreMain = $(dirCore)/main.cpp
+serverMain = $(dirApi)/server.cpp
 coreArchive = $(dirBuild)/libcore.a
 
 help:
@@ -104,7 +107,7 @@ ifeq ("$(wildcard $(CONFIG_PATH))","")
 $(error $(CONFIG_PATH): Not a valid config: check your CONFIG_PATH variable)
 endif
 ifeq ($(shell which node),)
-$(error 'node' not found, try installing it somehow, I don't know:0)
+$(error 'node' not found, see README about node)
 endif
 
 getField = $(shell node -p "require('$(CONFIG_PATH)').cpp_server.$1")
@@ -112,25 +115,16 @@ port = $(call getField,PORT)
 host = $(call getField,HOST)
 boost = $(call getField,BOOST_ROOT)
 
-# check boost
-ifeq ("$(wildcard $(boost))","")
-$(warning $(boost): Not a valid boost path: check your BOOST_ROOT in the config)
-endif
-ifeq ("$(wildcard $(boost)/lib)","")
-$(warning $(boost): No `lib` folder found: check BOOST_ROOT in the config)
-endif
-ifeq ("$(wildcard $(boost)/include)","")
-$(warning $(boost): No `include` folder found: check BOOST_ROOT in the config)
-endif
 CPPFLAGS += -isystem $(boost)/include
 
 serverFiles = $(wildcard $(dirApi)/*.cpp)
+serverFiles := $(filter-out $(serverMain), $(serverFiles))
 serverObjects = $(call getObjects,$(serverFiles),$(dirApi))
 
 serve: $(server); $< $(host) $(port)
 
-$(server): $(serverObjects) $(coreArchive) | $(dirBin)
-	$(LINK.cpp) -L $(boost)/lib $^ -o $@
+$(server): $(serverMain) $(serverObjects) $(coreArchive) | checkboost $(dirBin)
+	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11 -lpng
 
 
 ### TESTS ###
@@ -147,11 +141,24 @@ test.%: $(dirBin)/test%
 	$<
 	@echo "$* test completed"
 
-$(dirBin)/test%: $(dirBuild)/%Tests.o $(coreArchive) | $(dirBin)
-	$(LINK.cpp) $^ -o $@
+$(dirBin)/test%: $(dirBuild)/%Tests.o $(serverObjects) $(coreArchive) | checkboost $(dirBin)
+	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11 -lpng
 
 
 ### COMMON ###
+
+warning = "'\033[0;33mWarning\033[0m'"
+checkboost:
+	if [ -z "$(boost)" -o ! -d "$(boost)" ]; then \
+		echo "$(warning): '$(boost)' is invalid: BOOST_ROOT is empty or not valid, check it in the config.json"; \
+	else \
+		if [ ! -d "$(boost)/lib" ]; then \
+			echo "$(warning): '$(boost)': No 'lib' folder found: check BOOST_ROOT in the config"; \
+		fi; \
+		if [ ! -d "$(boost)/include" ]; then \
+			echo "$(warning): '$(boost)': No 'include' folder found: check BOOST_ROOT in the config"; \
+		fi; \
+	fi
 
 $(dirBuild) $(dirBin): ; mkdir $@
 

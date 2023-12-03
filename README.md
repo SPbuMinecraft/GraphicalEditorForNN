@@ -10,6 +10,8 @@
 
 [Retrospectives](https://docs.google.com/spreadsheets/d/1N3NUDa-gbqLRaJE3SnSPSLX4hekyoULw-SIBjqRFItg/edit?usp=sharing)
 
+[Artifacts](https://docs.google.com/spreadsheets/d/1bWZJQjIyJ7C32olwx6MAcjix8CeSey4rFpeFd0Huoyc/edit#gid=0)
+
 ## Build options
 
 > **Important:** If CI tests don't pass, but work locally, make sure 
@@ -106,16 +108,6 @@ You can build and test things from the root folder as well, but I don't think it
 conveniently run the [CI](.github/workflows/CI.yml)   
 Use `make help` to see available targets there
 
-## Formats
-
-Some json formats to use for requests
-
-[`Server++/train`](documentation/api-examples/train.json)  
-
-[`Server++/predict`](documentation/api-examples/predict.json)  
-
-[`Server/predict`](documentation/api-examples/userPredict.json)  
-
 ## Technology stack
 
 ### Languages:
@@ -144,4 +136,4 @@ Some json formats to use for requests
 ![](documentation/ServerArchitecture.svg)
 
 ### Data
-![](documentation/DatabaseArchitecture.jpg)
+![](documentation/DatabaseArchitecture.png)

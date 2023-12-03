@@ -1,4 +1,4 @@
-.PHONY: run
+.PHONY: run test format
 .DEFAULT_GOAL = run
 
 ifndef CONFIG_PATH
@@ -9,7 +9,7 @@ ifeq ("$(wildcard $(CONFIG_PATH))","")
 $(error Not a valid config: check your CONFIG_PATH variable)
 endif
 ifeq ("$(shell which npx)","")
-$(error 'npx' not found, try installing 'node')
+$(error 'npx' not found, try installing 'node', see README about 'node')
 endif
 
 port = $(shell node -p "require('$(CONFIG_PATH)').client.PORT")
@@ -32,3 +32,12 @@ run: index.html
 	@echo "Starting client server"
 	@echo "-----------------------------------------------------------"
 	npx serve -l $(port)
+
+
+formatFlags = --log-level warn
+
+test:
+	npx prettier $(formatFlags) --check .
+
+format:
+	npx prettier -w $(formatFlags) .

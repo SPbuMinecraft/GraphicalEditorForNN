@@ -16,7 +16,7 @@ void Tensor::getParentsGrads(vector<LazyBlobRef> &grads) {
     for (auto p: parents) grads.push_back(*p.get().gradient);
 }
 
-Tensor::Tensor(Operation& operation, const vector<TensorRef>& parents): operation(operation), parents(parents) {
+Tensor::Tensor(const Operation& operation, const vector<TensorRef>& parents): operation(operation), parents(parents) {
     for (auto p: parents) p.get().childrenCount++;
 }
 

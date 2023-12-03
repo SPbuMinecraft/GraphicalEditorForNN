@@ -1,30 +1,7 @@
-/*глобальные переменные и палитра*/
-:root {
-    --border-color: #000000;
-    --background-color: #ffffff;
-    --background-box-title: #d0d0d0;
-    --gradient-color: #aebcd2;
-    --text-color: #000000;
-    --notification-color-success: #3fd778;
-    --notification-color-success-border: #156532;
-    --notification-color-fail: #f66262;
-    --notification-color-fail-border: #702626;
-    --color0: #ccfcff; /* #ccfcff */
-    --color1: #b2f9fd; /* #b2f9fd */
-    --color2: #009ba2; /* #00f4ff */
-    --color3: #25c6ce; /* #25c6ce */
-    --color4: #20b6be; /* #18989f */
-    --background0: #e1e1e1; /* #e0e0e0 */
-    --background1: #b5bdc4; /* #c2c2c2 */
-    --background2: #62738c; /* #9d9d9d */
-    --background3: #303744; /* #525252 */
-    --background4: #282828; /* #333333 */
-    --border-width: 3px;
-    --connection-width: 4px;
-    --header-height: 65px;
-}
+@import "palette.css";
 
-html, body {
+html,
+body {
     color: var(--text-color);
     background-color: var(--background-color);
     margin: 0;
@@ -33,12 +10,8 @@ html, body {
     height: 100vh;
     display: grid;
     overflow: hidden;
-    font-family: 'Roboto', sans-serif;
+    font-family: "Roboto", sans-serif;
 }
-
-
-
-
 
 /* Уведомления */
 .notification {
@@ -53,21 +26,26 @@ html, body {
     z-index: 2;
     color: var(--text-color);
     font-size: 20px;
-    border-radius: 15px;
-    &#success{
+    border-radius: var(--border-radius);
+    &#success {
         background-color: var(--notification-color-success);
-        border: var(--border-width) solid var(--notification-color-success-border);
+        border: var(--border-width) solid
+            var(--notification-color-success-border);
     }
-    &#error{
+    &#error {
         background-color: var(--notification-color-fail);
-        border: var(--border-width) solid var(--notification-color-fail-border);;
+        border: var(--border-width) solid var(--notification-color-fail-border);
     }
 }
 
-
-
-
 /*элементы верхней части окна*/
+h2 {
+    font-size: 40px;
+    margin-top: 10px;
+    color: var(--text-color);
+    font-weight: bold;
+    /*text-shadow: 2px 2px 3px var(--color4);*/
+}
 header {
     height: var(--header-height);
     border-bottom: var(--border-width) solid var(--background3);
@@ -103,20 +81,20 @@ header {
     background-color: var(--background2);
 }
 .menu ul li:hover {
-    border-radius: 15px;
+    border-radius: var(--border-radius);
     font-weight: bold;
     background-color: var(--background1);
-    transition: background-color .125s ease-in;
+    box-shadow: inset 3px 3px 3px var(--background0);
+    transition:
+        background-color 0.125s ease-in,
+        box-shadow ease-in 0.125s;
 }
 .menu ul li.selected {
-    border-radius: 15px;
+    border-radius: var(--border-radius);
     font-weight: bold;
     background-color: var(--background1);
+    box-shadow: inset 3px 3px 3px var(--background0);
 }
-
-
-
-
 
 /*Profile*/
 header .button-wrapper {
@@ -128,10 +106,12 @@ header .button-wrapper {
     overflow: hidden;
     border-radius: 50%;
     color: var(--text-color);
+    box-shadow: inset 3px 3px 5px var(--color0);
+    text-shadow: 2px 2px 3px var(--color4);
 }
 .profile-icon:hover {
     background-color: var(--color2);
-    transition: background-color .125s ease-in;
+    transition: background-color 0.125s ease-in;
     border-color: var(--background4);
 }
 
@@ -153,77 +133,15 @@ header .button-wrapper {
     border-right: var(--border-width) solid var(--background3);
     border-bottom: var(--border-width) solid var(--background3);
     border-bottom-right-radius: 30px;
-}
-/*потом прикручу функциональность*/
-.day-night-mode-label {
-    display: block;
-    position: absolute;
-    bottom: 15px;
-    left: 10px;
-    cursor: pointer;
-    font-size: 11px;
-    height: 25px;
-    width: 50px;
-    border: var(--border-width) solid var(--background3);
-    border-radius: 50px;
-
-    .day-night-checkbox {
-        display: none;
-    }
-    & input:checked ~ .control {
-        background-color: var(--color4);
-        &::before {
-            background: var(--color4);
-            left: calc(50px - (20px * 1.4) - 2px);
-            transform: scale(1);
-        }
-        &::after {
-            background: white;
-            left: calc(50px - 20px - 2px);
-        }
-    }
-    .control {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 25px;
-        width: 50px;
-        border-radius: 50px;
-        background-color: var(--color1);
-        transition: background-color .125s ease-in;
-
-        &::before {
-            content: "";
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            left: 0;
-            top: 0;
-            border-radius: 50%;
-            transform: scale(0);
-            background: var(--background3);
-            z-index: 5;
-            transition: all .125s ease-in;
-        }
-
-        &::after {
-
-            content: "";
-            position: absolute;
-            left: 2px;
-            top: 2px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #fff89e;
-            transition: all .125s ease-in;
-        }
+    /*box-shadow: inset 0px 2px 3px var(--background3);*/
+    .button-wrapper {
+        padding: 8px;
+        margin-top: 20px;
+        margin-left: 110px;
+        font-size: 20px;
+        width: 110px;
     }
 }
-
-
-
-
 
 /*Home screen*/
 .home {
@@ -231,10 +149,52 @@ header .button-wrapper {
     height: calc(100vh - var(--header-height));
     display: none;
 }
-
-
-
-
+.background {
+    position: absolute;
+    display: block;
+    overflow-y: scroll;
+    width: 100%;
+    height: calc(100% - var(--header-height) + var(--border-width));
+    top: calc(var(--header-height) + var(--border-width));
+}
+.nn-block {
+    position: relative;
+    margin: 20px 15px 15px 20px;
+    height: 250px;
+    width: 250px;
+    text-align: center;
+    align-content: center;
+    display: inline-grid;
+    justify-content: center;
+    background-color: var(--background1);
+    box-shadow:
+        inset 3px 3px 3px var(--background-color),
+        3px 3px 3px var(--background2);
+    border: var(--border-width) solid var(--background3);
+    border-radius: 30px;
+    overflow: hidden;
+    .button-wrapper {
+        margin-top: 15px;
+        display: inline-grid;
+        position: relative;
+        place-self: center;
+        padding-top: 10px;
+        height: 30px;
+        width: 80px;
+        font-size: 18px;
+    }
+    .text-wrapper {
+        text-align: center;
+        padding: 10px 30px;
+        border: var(--border-width) solid var(--background3);
+        border-radius: 15px;
+        background-color: var(--background-color);
+        box-shadow: inset 3px 3px 3px var(--background0);
+    }
+}
+#new-nn {
+    background-color: var(--background0);
+}
 
 /*Terminal screen*/
 .terminal {
@@ -243,20 +203,12 @@ header .button-wrapper {
     display: none;
 }
 
-
-
-
-
 /*Metrics screen*/
 .metrics {
     width: 100%;
     height: calc(100vh - var(--header-height));
     display: none;
 }
-
-
-
-
 
 /*Constructor screen*/
 .constructor {
@@ -265,19 +217,46 @@ header .button-wrapper {
     height: calc(100vh - var(--header-height));
     display: flex;
 }
-.layer-data{
+.layer-data {
     position: absolute;
-    height: 300px;
-    width: 300px;
+    height: fit-content;
+    width: fit-content;
+    font-size: 18px;
     top: var(--header-height);
     right: 0px;
     background-color: var(--background0);
     display: none;
-    z-index: 1;
+    z-index: 2;
     border-top: var(--border-width) solid var(--background3);
     border-left: var(--border-width) solid var(--background3);
     border-bottom: var(--border-width) solid var(--background3);
     border-bottom-left-radius: 30px;
+    & h2 {
+        margin-top: 0px;
+        font-size: 20px;
+        padding: 10px 20px;
+        background-color: var(--background1);
+        border-bottom: var(--border-width) solid var(--background3);
+        box-shadow:
+            0px 3px 3px var(--background2),
+            inset 0px -3px 3px var(--background0);
+    }
+    & h3 {
+        margin-bottom: 3px;
+        margin-top: 3px;
+    }
+    .layer-parameters {
+        padding-left: 20px;
+    }
+    #layer-id {
+        padding-left: 20px;
+    }
+    .layer-input-list {
+        margin-bottom: -15px;
+    }
+    & LI {
+        margin-left: -15px;
+    }
 }
 
 .col {
@@ -291,28 +270,40 @@ header .button-wrapper {
     background-color: var(--background1);
 }
 
-.button-wrapper{
+.button-wrapper {
+    font-weight: bold;
     text-align: center;
     background-color: var(--color4);
     color: var(--text-color);
     cursor: pointer;
     border: var(--border-width) solid var(--background3);
-    border-radius: 30px;
-    & input{
+    border-radius: var(--border-radius);
+    & input {
         display: none;
     }
 }
-.button-wrapper:hover{
-    font-weight: bold;
+.button-wrapper:hover {
     background-color: var(--color1);
-    transition: background-color .125s ease-in;
+    transition: background-color 0.125s ease-in;
+    border-color: var(--background4);
+}
+.button-wrapper:active {
+    box-shadow: inset 3px 3px 3px var(--color2);
+}
+
+.button-wrapper:disabled,
+.button-wrapper[disabled] {
+    font-weight: bold;
+    cursor: default;
+    background-color: var(--disable-color);
     border-color: var(--background4);
 }
 
-.col .button-wrapper{
+.col .button-wrapper {
     display: block;
     position: relative;
     padding-top: 10px;
+    margin-bottom: 10px;
     top: 0px;
     left: calc((300px - 80px - var(--border-width) * 2) / 2);
     height: 30px;
@@ -320,21 +311,21 @@ header .button-wrapper {
     font-size: 18px;
 }
 
-.predict-train-interface{
+.predict-train-interface {
     position: relative;
     left: calc((300px - 250px - var(--border-width) * 2) / 2);
     top: 10px;
     width: 250px;
-    .button-wrapper{
+    .button-wrapper {
         display: block;
         position: relative;
         align-self: center;
-        left: calc((250px - 80px)/2);
+        left: calc((250px - 80px) / 2);
         height: 30px;
         width: 80px;
         font-size: 18px;
     }
-    &#train{
+    &#train {
         display: block;
     }
     &#predict {
@@ -349,7 +340,7 @@ header .button-wrapper {
     width: calc(230px - var(--border-width) * 2);
     background-color: var(--background-color);
     border: var(--border-width) solid var(--background3);
-    border-radius: 15px;
+    border-radius: var(--border-radius);
     margin: 10px 0;
 
     font-size: 23px;
@@ -378,23 +369,23 @@ header .button-wrapper {
         left: 5px;
     }
 
-    & input{
+    & input {
         background-color: var(--background-color);
         border: 1px solid var(--text-color);
         color: var(--text-color);
     }
 }
 
-.predict-result-wrapper{
+.predict-result-wrapper {
     position: relative;
     padding: 10px;
     height: fit-content;
     width: 200px;
     overflow: hidden;
-    left: calc((300px - 250px - var(--border-width) * 2 - 10px) / 2);
+    left: calc((300px - 200px - var(--border-width) * 2 - 20px) / 2);
     background-color: var(--background-color);
     border: var(--border-width) solid var(--background3);
-    border-radius: 15px;
+    border-radius: var(--border-radius);
     display: none;
     margin: 10px 0;
     font-size: 23px;
@@ -405,10 +396,6 @@ header .button-wrapper {
         overflow-x: scroll;
     }
 }
-
-
-
-
 
 /* Editing Drawflow */
 .drag-drawflow {
@@ -421,10 +408,25 @@ header .button-wrapper {
     font-size: 20px;
     border: var(--border-width) solid var(--background3);
     background-color: var(--background0);
-    border-radius: 15px;
+    border-radius: var(--border-radius);
+    box-shadow: inset 3px 3px 3px var(--background-color);
     left: 20px;
     top: 10%;
     cursor: move;
+}
+.btn-save {
+    float: right;
+    position: absolute;
+    bottom: 60px;
+    right: 80px;
+    color: white;
+    font-weight: bold;
+    border: 1px solid #0e5ba3;
+    background: #4ea9ff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1;
 }
 
 .btn-clear {
@@ -493,8 +495,12 @@ header .button-wrapper {
     top: 0px;
     background: var(--background-color);
     background-size: 25px 25px;
-    background-image: linear-gradient(to right, var(--gradient-color) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--gradient-color) 1px, transparent 1px);
+    background-image: linear-gradient(
+            to right,
+            var(--gradient-color) 1px,
+            transparent 1px
+        ),
+        linear-gradient(to bottom, var(--gradient-color) 1px, transparent 1px);
 }
 
 @media only screen and (max-width: 768px) {
@@ -513,14 +519,29 @@ header .button-wrapper {
     color: var(--text-color);
     background: var(--background0);
     border: var(--border-width) solid var(--background3);
-    border-radius: 15px;
+    border-radius: var(--border-radius);
     text-align: center;
     font-size: 20px;
     -webkit-box-shadow: 0 2px 15px 2px var(--color4);
-    box-shadow: 0 2px 15px 2px var(--color4);
+    box-shadow:
+        0 2px 15px 2px var(--color4),
+        inset 3px 3px 3px var(--background-color);
     padding: 0px;
     width: 200px;
     height: 50px;
+}
+
+.drawflow .drawflow-node.predict-success {
+    -webkit-box-shadow: 0 2px 15px 2px var(--color4-model-success-node);
+    box-shadow:
+        0 2px 15px 2px var(--color4-model-success-node),
+        inset 3px 3px 3px var(--background-color);
+}
+.drawflow .drawflow-node.predict-error {
+    -webkit-box-shadow: 0 2px 15px 2px var(--color4-model-error-node);
+    box-shadow:
+        0 2px 15px 2px var(--color4-model-error-node),
+        inset 3px 3px 3px var(--background-color);
 }
 
 .drawflow .drawflow-node.selected {
@@ -530,18 +551,42 @@ header .button-wrapper {
     box-shadow: 0 2px 20px 2px var(--color3);
 }
 
+.drawflow .drawflow-node.predict-error.selected {
+    background: var(--color0-model-error-connection);
+    border: var(--border-width) solid var(--background2);
+    -webkit-box-shadow: 0 2px 20px 2px var(--color3-model-error-connection);
+    box-shadow: 0 2px 20px 2px var(--color3-model-error-connection);
+}
+
+.drawflow .drawflow-node.predict-success.selected {
+    background: var(--color0-model-success-connection);
+    border: var(--border-width) solid var(--background2);
+    -webkit-box-shadow: 0 2px 20px 2px var(--color3-model-success-connection);
+    box-shadow: 0 2px 20px 2px var(--color3-model-success-connection);
+}
+
 .drawflow .connection .main-path {
     stroke: var(--color2);
     stroke-width: var(--connection-width);
 }
 
-.drawflow .drawflow-node .input, .drawflow .drawflow-node .output {
-    height: 15px;
-    width: 15px;
-    border: 2px solid var(--border-color);
+.drawflow .connection .main-path.connection-predict-error {
+    stroke: var(--color2-model-error-connection);
 }
 
-.drawflow .drawflow-node .input:hover, .drawflow .drawflow-node .output:hover {
+.drawflow .connection .main-path.connection-predict-success {
+    stroke: var(--color2-model-success-connection);
+}
+
+.drawflow .drawflow-node .input,
+.drawflow .drawflow-node .output {
+    height: 15px;
+    width: 15px;
+    border: 2px solid var(--text-color);
+}
+
+.drawflow .drawflow-node .input:hover,
+.drawflow .drawflow-node .output:hover {
     background: var(--color4);
 }
 
@@ -555,19 +600,19 @@ header .button-wrapper {
 }
 
 .drawflow > .drawflow-delete {
-    border: 2px solid #43b993;
+    border: 2px solid var(--notification-color-fail);
     background: white;
-    color: #43b993;
-    -webkit-box-shadow: 0 2px 20px 2px #43b993;
-    box-shadow: 0 2px 20px 2px #43b993;
+    color: var(--notification-color-fail);
+    -webkit-box-shadow: 0 2px 20px 2px var(--notification-color-fail);
+    box-shadow: 0 2px 20px 2px var(--notification-color-fail);
 }
 
 .drawflow-delete {
-    border: 2px solid #4ea9ff;
+    border: 2px solid var(--notification-color-fail-border);
     background: white;
-    color: #4ea9ff;
-    -webkit-box-shadow: 0 2px 20px 2px #4ea9ff;
-    box-shadow: 0 2px 20px 2px #4ea9ff;
+    color: var(--notification-color-fail-border);
+    -webkit-box-shadow: 0 2px 20px 2px var(--notification-color-fail-border);
+    box-shadow: 0 2px 20px 2px var(--notification-color-fail-border);
 }
 
 .drawflow-node .title-box {
@@ -585,16 +630,15 @@ header .button-wrapper {
 }
 
 .drawflow .connection .point {
-    stroke: var(--border-color);
+    stroke: var(--text-color);
     stroke-width: 2;
     fill: white;
-
 }
 
-.drawflow .connection .point.selected, .drawflow .connection .point:hover {
+.drawflow .connection .point.selected,
+.drawflow .connection .point:hover {
     fill: #4ea9ff;
 }
-
 
 /* Modal */
 .modal {
@@ -608,7 +652,6 @@ header .button-wrapper {
     overflow: auto;
     background-color: rgb(0, 0, 0);
     background-color: rgba(0, 0, 0, 0.7);
-
 }
 
 .modal-content {

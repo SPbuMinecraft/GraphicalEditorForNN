@@ -20,7 +20,7 @@ public:
     std::optional<Blob> output;
     std::optional<Blob> gradient;
 
-    Tensor(Operation& operation, const std::vector<TensorRef>& parents);
+    Tensor(const Operation& operation, const std::vector<TensorRef>& parents);
     /// Carefull, Blob is moved here to Tensor's ownership
     Tensor(const Blob data);
 

@@ -1,20 +1,42 @@
 {
-  "name": "drawflow-demo",
-  "version": "1.0.0",
-  "description": "",
-  "main": "../GraphicalEditorForNN/client/index.html",
-  "scripts": {
-    "start": "parcel index.html --open",
-    "build": "parcel build index.html"
-  },
-  "dependencies": {
-    "drawflow": "0.0.22"
-  },
-  "devDependencies": {
-    "@babel/core": "7.2.0",
-    "gulp-jshint": "^2.1.0",
-    "jshint": "^2.13.6",
-    "parcel-bundler": "^1.6.1"
-  },
-  "keywords": []
+    "name": "ml-craft",
+    "version": "1.0.0",
+    "main": "scripts/auth.js",
+    "type": "module",
+    "prettier": {
+        "arrowParens": "avoid",
+        "bracketSpacing": false,
+        "printWidth": 80,
+        "semi": false,
+        "tabWidth": 4,
+        "overrides": [
+            {
+                "files": [
+                    "*.html"
+                ],
+                "options": {
+                    "printWidth": 120,
+                    "tabWidth": 2
+                }
+            }
+        ]
+    },
+    "scripts": {
+        "start": "parcel ./templates/authorization.html --open",
+        "build": "parcel build ./templates/authorization.html"
+    },
+    "dependencies": {
+        "drawflow": "0.0.22",
+        "prettier": "^3.0.3"
+    },
+    "devDependencies": {
+        "@babel/core": "7.2.0",
+        "gulp-jshint": "^2.1.0",
+        "jshint": "^2.13.6",
+        "parcel-bundler": "^1.6.1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": ""
 }
