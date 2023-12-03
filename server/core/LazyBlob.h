@@ -1,6 +1,10 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
+#include <optional>
+
+#include "Shape.h"
 
 typedef float (*UnaryTransform)(float x);
 typedef float (*BinaryTransform)(float x, float y);
@@ -11,13 +15,24 @@ typedef std::reference_wrapper<const LazyBlob> LazyBlobRef;
 class Blob;
 class LazyBlob {
 public:
-    virtual std::size_t rows() const = 0;
-    virtual std::size_t cols() const = 0;
-    virtual float operator() (std::size_t i, std::size_t j) const = 0;
+    const Shape& shape() const;
+    mutable std::optional<Shape> shape_ = {};
+    virtual void initShape() const = 0;
+    virtual float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const = 0;
+
+    float operator() (std::size_t l, std::size_t i, std::size_t j) const { return (*this)(0, l, i, j); };
+    float operator() (std::size_t i, std::size_t j) const { return (*this)(0, 0, i, j); };
+    float operator() (std::size_t j) const { return (*this)(0, 0, 0, j); };
 
     const LazyBlob& dot(const LazyBlob& b) const;
     const LazyBlob& transposed() const;
     const LazyBlob& applying(const UnaryTransform t) const;
+    const LazyBlob& sum(std::vector<short> axis) const;
+    const LazyBlob& mean(std::vector<short> axis) const;
+
+    /// To repeat some dimensions several times
+    /// - Parameter shape: the size we want to get
+    const LazyBlob& fill(Shape shape) const;
 
     friend const LazyBlob& operator + (const LazyBlob &a, const LazyBlob &b);
     friend const LazyBlob& operator - (const LazyBlob &a, const LazyBlob &b);
@@ -41,10 +56,9 @@ private:
 public:
     LazyBlobView(const Blob &ref);
 
-    std::size_t rows() const override;
-    std::size_t cols() const override;
+    void initShape() const override;
 
-    float operator() (std::size_t i, std::size_t j) const override;
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override;
 };
 
 const LazyBlob& operator + (float a, const LazyBlob &b);

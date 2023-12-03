@@ -7,28 +7,30 @@
 
 using namespace std;
 
-Blob::Blob(size_t rows, size_t cols, bool constMemory, RandomObject* object): rows(rows), cols(cols) {
-    this->data = Allocator::allocate({rows, cols}, constMemory);
+Blob::Blob(Shape shape, bool constMemory, RandomObject* object): shape(shape) {
+    this->data = Allocator::allocate(shape, constMemory);
     if (object == nullptr) clear();
-    else object->simpleInit(data, rows * cols);
+    else object->simpleInit(data, shape.size());
 }
 
-Blob::Blob(size_t rows, size_t cols, const float* data, bool constMemory): Blob(rows, cols, constMemory) {
-    copy_n(data, rows * cols, this->data);
+Blob::Blob(Shape shape, const float* data, bool constMemory): Blob(shape, constMemory) {
+    copy_n(data, shape.size(), this->data);
 }
 
-Blob::Blob(size_t rows, size_t cols): Blob(rows, cols, false) {}
+Blob::Blob(Shape shape): Blob(shape, false) {}
 
-Blob::Blob(float value): Blob(1, 1, &value) {};
+Blob::Blob(float value): Blob(Shape(), &value) {};
 
-Blob::Blob(Blob&& other) noexcept: rows(other.rows), cols(other.cols) {
+Blob::Blob(Blob&& other) noexcept: shape(other.shape) {
     *this = std::move(other);
 }
 
-Blob::Blob(const LazyBlob& other): Blob(other.rows(), other.cols()) {
-    for (int i = 0; i < rows; ++i)
-        for (int j = 0; j < cols; ++j)
-            (*this)[i][j] = other(i, j);
+Blob::Blob(const LazyBlob& other): Blob(Shape {other.shape()}) {
+    for (int k = 0; k < shape.dim4(); ++k)
+        for (int l = 0; l < shape.dim3(); ++l)
+            for (int i = 0; i < shape.rows(); ++i)
+                for (int j = 0; j < shape.cols(); ++j)
+                    (*this)(k, l, i, j) = other(k, l, i, j);
 }
 
 Blob::~Blob() {
@@ -43,59 +45,104 @@ const LazyBlob& Blob::lazy() const {
     return *(new(location) LazyBlobView(*this));
 }
 
+float Blob::operator() (size_t k, size_t l, size_t i, size_t j) const {
+    assert(shape.dimsCount > 0);
+    return *getAddress(k, l, i, j);
+}
+
+float Blob::operator() (size_t l, size_t i, size_t j) const {
+    assert(shape.dimsCount == 3);
+    return *getAddress(0, l, i, j);
+}
+
 float Blob::operator() (size_t i, size_t j) const {
-    return (*this)[i][j];
+    assert(shape.dimsCount == 2);
+    return *getAddress(0, 0, i, j);
 }
-const float* Blob::operator [] (size_t index) const {
-    return data + cols * index;
+
+float Blob::operator() (size_t j) const {
+    assert(shape.dimsCount == 1);
+    return *getAddress(0, 0, 0, j);
 }
-float* Blob::operator [] (size_t index) {
-    return data + cols * index;
+
+float& Blob::operator() (size_t k, size_t l, size_t i, size_t j) {
+    assert(shape.dimsCount > 0);
+    return *getAddress(k, l, i, j);
+}
+
+float& Blob::operator() (size_t l, size_t i, size_t j) {
+    assert(shape.dimsCount == 3);
+    return *getAddress(0, l, i, j);
+}
+
+float& Blob::operator() (size_t i, size_t j) {
+    assert(shape.dimsCount == 2);
+    return *getAddress(0, 0, i, j);
+}
+
+float& Blob::operator() (size_t j) {
+    assert(shape.dimsCount == 1);
+    return *getAddress(0, 0, 0, j);
+}
+
+float* Blob::getAddress(size_t k, size_t l, size_t i, size_t j) const {
+    size_t indices[] = {k, l, i, j};
+    
+    size_t res = 0;
+    for (short int i = 0; i < 4; ++i)
+        res += shape.stride(i) * indices[i];
+    return data + res;
 }
 
 void Blob::clear() {
-    memset(this->data, 0, rows * cols * sizeof(float));
+    memset(this->data, 0, shape.size() * sizeof(float));
 }
 
 Blob& Blob::operator = (Blob&& t) noexcept {
-    assert(rows == t.rows && cols == t.cols);
+    assert(shape == t.shape);
     this->data = exchange(t.data, nullptr);
     return *this;
 }
 
 bool operator == (const Blob &a, const Blob &b) {
-    if (a.rows!= b.rows || a.cols!= b.cols) return false;
-    return equal(a.data, a.data + a.rows * a.cols, b.data);
+    if (!(a.shape == b.shape)) return false;
+    return equal(a.data, a.data + a.shape.size(), b.data);
 };
 bool operator != (const LazyBlob &a, const LazyBlob &b) {
     return !(a == b);
 };
 
 std::ostream& operator<<(std::ostream& os, const Blob& b) {
-    for (int i = 0; i < b.rows; ++i) {
-        for (int j = 0; j < b.cols; ++j)
-            os << b(i, j) << " ";
+    for (int l = 0; l < b.shape.dim4(); ++l) {
+        for (int k = 0; k < b.shape.dim3(); ++k){
+            for (int i = 0; i < b.shape.rows(); ++i) {
+                for (int j = 0; j < b.shape.cols(); ++j)
+                    os << b(i, j) << " ";
+                os << std::endl;
+            }
+            os << std::endl;
+        }
         os << std::endl;
     }
     return os;
 };
 
-Blob Blob::fill(size_t rows, size_t cols, float value) {
-    Blob a {rows, cols};
-    fill_n(a.data, rows * cols, value);
+Blob Blob::fill(Shape shape, float value) {
+    Blob a {shape};
+    fill_n(a.data, shape.size(), value);
     return a;
 }
-Blob Blob::zeros(size_t rows, size_t cols) {
-    return fill(rows, cols, 0);
+Blob Blob::zeros(Shape shape) {
+    return fill(shape, 0);
 }
-Blob Blob::ones(size_t rows, size_t cols) {
-    return fill(rows, cols, 1);
-}
-
-Blob Blob::constBlob(std::size_t rows, std::size_t cols, const float* data) {
-    return Blob(rows, cols, data, true);
+Blob Blob::ones(Shape shape) {
+    return fill(shape, 1);
 }
 
-Blob Blob::constBlobRandom(std::size_t rows, std::size_t cols, RandomObject* object) {
-    return Blob(rows, cols, true, object);
+Blob Blob::constBlob(Shape shape, const float* data) {
+    return Blob(shape, data, true);
+}
+
+Blob Blob::constRandomBlob(Shape shape, RandomObject* object) {
+    return Blob(shape, true, object);
 }

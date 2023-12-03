@@ -1,25 +1,27 @@
 #pragma once
 
-#include "LazyBlob.h"
-#include "RandomInit.h"
-
 #include <iostream>
 #include <cstddef>
 #include <functional>
+
+#include "LazyBlob.h"
+#include "RandomInit.h"
+#include "Shape.h"
 
 typedef float (*UnaryTransform)(float x);
 
 class Blob final {
 private:
     float* data = NULL;
-    Blob(std::size_t rows, std::size_t cols, const float* data, bool constMemory = false);
-    Blob(std::size_t rows, std::size_t cols, bool constMemory, RandomObject* object = nullptr);
+    Blob(Shape shape, const float* data, bool constMemory = false);
+    Blob(Shape shape, bool constMemory, RandomObject* object = nullptr);
+
+    float* getAddress(size_t k, size_t l, size_t i, size_t j) const;
 public:
     /// Keep it `const`, PLEASE
-    const std::size_t rows;
-    const std::size_t cols;
+    const Shape shape;
 
-    Blob(std::size_t rows, std::size_t cols);
+    Blob(Shape shape);
     Blob(float value);
     /// Move constructor, it takes data away from `other`
     Blob(Blob&& other) noexcept;
@@ -29,19 +31,25 @@ public:
     Blob(const LazyBlob& other);
     ~Blob();
 
-    static Blob fill(std::size_t rows, std::size_t cols, float value);
-    static Blob zeros(std::size_t rows, std::size_t cols);
-    static Blob ones(std::size_t rows, std::size_t cols);
-    static Blob constBlob(std::size_t rows, std::size_t cols, const float* data);
-    static Blob constBlobRandom(std::size_t rows, std::size_t cols, RandomObject* object = nullptr);
+    static Blob fill(Shape shape, float value);
+    static Blob zeros(Shape shape);
+    static Blob ones(Shape shape);
+    static Blob constBlob(Shape shape, const float* data);
+    static Blob constRandomBlob(Shape shape, RandomObject* object = nullptr);
 
     /// Convert to lazy with these
     operator const LazyBlob&() const;
     const LazyBlob& lazy() const;
 
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const;
+    float operator() (std::size_t l, std::size_t i, std::size_t j) const;
     float operator() (std::size_t i, std::size_t j) const;
-    const float* operator[] (std::size_t index) const;
-    float* operator[] (std::size_t index);
+    float operator() (std::size_t j) const;
+
+    float& operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j);
+    float& operator() (std::size_t l, std::size_t i, std::size_t j);
+    float& operator() (std::size_t i, std::size_t j);
+    float& operator() (std::size_t j);
 
     void clear();
 
