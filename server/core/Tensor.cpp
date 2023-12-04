@@ -1,91 +1,93 @@
+#include "Tensor.h"
+#include "Allocator.h"
 #include <algorithm>
 #include <functional>
 #include <cassert>
 
-#include "Blob.h"
-#include "Tensor.h"
-
 using namespace std;
 
-static const OpNone noop = OpNone();
+static const Noop noop = Noop();
 
-void Tensor::getParentsData(vector<BlobRef> &datas) {
+void Tensor::getParentsData(vector<LazyBlobRef> &datas) {
     for (auto p: parents) datas.push_back(p.get().forward());
 }
 
-void Tensor::getParentsGrads(vector<BlobRef> &grads) {
-    for (auto p: parents) grads.push_back(p.get().gradient.value());
+void Tensor::getParentsGrads(vector<LazyBlobRef> &grads) {
+    for (auto p: parents) grads.push_back(*p.get().gradient);
 }
 
-Tensor::Tensor(const Operation& operation, const vector<TensorRef>& parents)
-               : operation(operation), parents(parents) {
+Tensor::Tensor(const Operation& operation, const vector<TensorRef>& parents): operation(operation), parents(parents) {
     for (auto p: parents) p.get().childrenCount++;
-
-    vector<BlobRef> datas;
-    getParentsData(datas);
-
-    vector<size_t> dims = operation.computeDim(datas);
-    output = Blob {dims[0], dims[1]};
-    operation.compute(datas, output.value());
-    outputIsNull = false;
-    gradient = Blob {output->rows, output->cols};
 }
 
-Tensor::Tensor(const Blob& data): operation(noop), parents({}) {
-    output = Blob {data.rows, data.cols, data.getData()};
-    outputIsNull = false;
-    gradient = Blob {data.rows, data.cols};
+Tensor::Tensor(Blob data): operation(noop), parents({}) {
+    this->output = std::move(data);
 }
 
-BlobRef Tensor::forward() {
-    if (outputIsNull) {
-        vector<BlobRef> datas;
+Tensor::Tensor(Tensor&& other) noexcept: operation(other.operation) {
+    swap(this->parents, other.parents);
+    swap(this->output, other.output);
+    swap(this->gradient, other.gradient);
+    swap(this->childrenCount, other.childrenCount);
+    swap(this->childrenGradReady, other.childrenGradReady);
+}
+
+Tensor& Tensor::operator = (Tensor&& other) noexcept {
+    this->operation = other.operation;
+    swap(this->parents, other.parents);
+    swap(this->output, other.output);
+    swap(this->gradient, other.gradient);
+    swap(this->childrenCount, other.childrenCount);
+    swap(this->childrenGradReady, other.childrenGradReady);
+    return *this;
+};
+
+const Blob& Tensor::forward() {
+    if (!output) {
+        vector<LazyBlobRef> datas;
         getParentsData(datas);
-        vector<size_t> dims = operation.computeDim(datas);
-        if (dims[0] != output->rows) {
-            output.emplace(Blob{dims[0], dims[1]});
-        }
-        operation.compute(datas, output.value());
-        outputIsNull = false;
+        // here the blob's move constructor is used
+        this->output = operation.compute(datas);
+        // Don't need references to parents datas anymore
+        Allocator::endSession();
     }
     return *output;
 }
 
 void Tensor::backward() {
-    vector<BlobRef> datas;
-    vector<BlobRef> grads;
+    // go backward only if we have parents
+    if (!parents.size()) return;
+
+    assert(childrenGradReady <= childrenCount);
+    if (childrenGradReady < childrenCount) return;
+
+    vector<LazyBlobRef> datas;
     getParentsData(datas);
-    getParentsGrads(grads);
-    operation.grad(*gradient, datas, grads);
+    auto grads = operation.grad(*gradient, datas);
     assert(grads.size() == parents.size());
     for (int i = 0; i < parents.size(); ++i)
-        parents[i].get().accumulate();
+        parents[i].get().accumulate(grads[i]);
+
+    // We need to end session in the allocator after all gradients
+    // have been used and we don't need to store references to them anymore
+    Allocator::endSession();
+
+    for (auto p: parents) p.get().backward();
 }
 
-void Tensor::accumulate(){
+void Tensor::accumulate(const LazyBlob& gradient) {
+    if (!this->gradient)
+        this->gradient = gradient;
+    else 
+        *this->gradient += gradient;
     childrenGradReady++;
-    if (childrenGradReady == childrenCount)
-        backward();
 }
 
 void Tensor::clear() {
-    gradient->clear();
     // if has parents, then clear output cache
-    if (parents.size()) {
-        this->output->clear();
-        outputIsNull = true;
-    }
+    this->gradient = {};
+    if (parents.size())
+        this->output = {};
     this->childrenGradReady = 0;
     for (auto p: parents) p.get().clear();
-}
-
-Tensor& Tensor::operator=(const Tensor & other) {
-    this->operation = other.operation;
-    this->outputIsNull = other.outputIsNull;
-    this->childrenCount = other.childrenCount;
-    this->childrenGradReady = other.childrenGradReady;
-    this->parents = other.parents;
-    this->output = other.output;
-    this->gradient = other.gradient;
-    return *this;
 }

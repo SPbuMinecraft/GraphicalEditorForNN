@@ -26,14 +26,20 @@ void train(json::rvalue& json, Graph** graph, int model_id) {
     (*graph)->Initialize(json, data, &initObject, SGD);
     std::cout << "Graph is ready!" << std::endl;
 
-    Blob result {1, 1};
-
     auto& lastNode = (*graph)->getLastTrainLayers()[0]->result.value();  // Пока не думаем о нескольких выходах (!) Hard-coded
+
+    lastNode.forward();
+    lastNode.gradient = Blob::ones({{1}});
+    lastNode.backward();
+    Allocator::endSession();
+    lastNode.clear();
+    Allocator::endVirtualMode();
+
     for (int j = 0; j < 1000; ++j) {
-        result = lastNode.forward();
-        printf("%d: %f\n", j, result[0][0]);
+        auto& result = lastNode.forward();
+        printf("%d: %f\n", j, result(0, 0, 0, 0));
         // lastNode.gradient = result;
-        lastNode.gradient.value()[0][0] = 1;
+        lastNode.gradient = Blob::ones({{1}});
         lastNode.backward();
         SGD.step();
         lastNode.clear();
@@ -46,14 +52,13 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer) {
 
     auto& lastNode = graph->getLastPredictLayers()[0]->result.value();  // Пока не думаем о нескольких выходах (!) Hard-coded
     lastNode.clear();
-    Blob result = lastNode.forward();
-    lastNode.clear();
-    
-    answer.reserve(result.rows * result.cols);
-    for (size_t j = 0; j < result.rows; ++j) {
-        for (size_t i = 0; i < result.cols; ++i) {
-            answer.push_back(result[j][i]);
-            std::cout << result[j][i] << std::endl;
+    const Blob& result = lastNode.forward();
+
+    answer.reserve(result.shape.rows() * result.shape.cols());
+    for (size_t j = 0; j < result.shape.rows(); ++j) {
+        for (size_t i = 0; i < result.shape.cols(); ++i) {
+            answer.push_back(result(j, i));
+            std::cout << result(j, i) << std::endl;
         }
     }
 }

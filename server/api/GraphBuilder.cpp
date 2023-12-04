@@ -1,9 +1,10 @@
 #include "GraphBuilder.h"
-#include <vector>
+#include "Allocator.h"
 
-void Graph::OverviewLayers(const crow::json::rvalue& layers, const std::vector<std::vector<float>>& data,
-                 std::unordered_map<int, crow::json::rvalue>& layer_dicts,
-                 std::unordered_map<int, std::vector<float>>& data_dicts) {
+void Graph::OverviewLayers(const crow::json::rvalue& layers, 
+                           const std::vector<std::vector<float>>& data,
+                           std::unordered_map<int, crow::json::rvalue>& layer_dicts,
+                           std::unordered_map<int, std::vector<float>>& data_dicts) {
     std::vector<float> instances;
     std::vector<float> answers;
     ParseCsvData(data, instances, answers);
@@ -90,7 +91,7 @@ void Graph::Initialize(crow::json::rvalue modelJson,
              const std::vector<std::vector<float>>& data,
              RandomObject* randomInit,
              OptimizerBase& SGD) {
-
+    Allocator::startVirtualMode();
     CHECK_HAS_FIELD(modelJson, "graph");
     CHECK_HAS_FIELD(modelJson["graph"], "layers");
     CHECK_HAS_FIELD(modelJson["graph"], "connections");
@@ -150,12 +151,13 @@ void Graph::ChangeInputData(std::vector<float> data) {
     for (int id : dataIds_) {
         Data2dLayer* layer = reinterpret_cast<Data2dLayer*>(layers_[id]);
 
-        // Needs checks!!
-        size_t width = layer->result->output->cols;
+        size_t width = layer->result->output->shape.cols();
         if (data.size() % width != 0) {
             throw std::invalid_argument("Sizes mismatch!");
         }
-        layer->result->output.emplace(Blob{data.size() / width, width, data.data()});
+        Shape expectedShape = layer->result->output->shape;
+        data.resize(expectedShape.size(), 0);
+        layer->result->output.emplace(Blob::constBlob(expectedShape, data.data()));
     }
 }
 
@@ -163,6 +165,7 @@ Graph::~Graph() {
     for (auto it = layers_.begin(); it != layers_.end(); ++it) {
         delete it->second;
     }
+    Allocator::end();
 }
 
 std::vector<Layer*> Graph::getLastTrainLayers() const {

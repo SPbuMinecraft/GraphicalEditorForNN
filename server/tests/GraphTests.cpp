@@ -107,7 +107,9 @@ TEST_CASE("Linear-ReLU-Linear-MSE") {
         {0, 0, 0, 0, 0, 0, 0}
     };
 
-    CheckFullProcess("linear_relu_linear_mse.json", "and-train.csv", layer_ids_expected, data_ids_expected,
+    Allocator::startVirtualMode();
+    CheckFullProcess("linear_relu_linear_mse.json", "and-train.csv", 
+                     layer_ids_expected, data_ids_expected,
                      edges_expected, edges_storage_size_expected,
                      entries_expected, less_matrix_expected);
 }
