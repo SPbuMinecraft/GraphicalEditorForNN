@@ -3,6 +3,9 @@ dirCore = core
 dirTests = tests
 dirBuild = Build
 dirBin = bin
+dirModelData = model_data
+dirPredict = $(dirModelData)/predict
+dirTrain = $(dirModelData)/data
 
 # Preprocessor flags
 CPPFLAGS = -I $(dirCore) -isystem $(dirApi)
@@ -121,7 +124,8 @@ serverFiles = $(wildcard $(dirApi)/*.cpp)
 serverFiles := $(filter-out $(serverMain), $(serverFiles))
 serverObjects = $(call getObjects,$(serverFiles),$(dirApi))
 
-serve: $(server); $< $(host) $(port)
+serve: $(server) | $(dirTrain) $(dirPredict)
+	$< $(host) $(port)
 
 $(server): $(serverMain) $(serverObjects) $(coreArchive) | checkboost $(dirBin)
 	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11 -lpng
@@ -160,9 +164,11 @@ checkboost:
 		fi; \
 	fi
 
-$(dirBuild) $(dirBin): ; mkdir $@
+$(dirPredict) $(dirTrain): $(dirModelData) ; mkdir $@
 
-clean: ; $(RM) -r $(dirBin) $(dirBuild)
+$(dirModelData) $(dirBuild) $(dirBin): ; mkdir $@
+
+clean: ; $(RM) -r $(dirBin) $(dirBuild) $(dirModelData)
 
 # api: 
 # 	crow.h

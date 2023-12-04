@@ -6,17 +6,20 @@
 #include "doctest.h"
 
 #include "GraphBuilder.h"
+#include "CsvLoader.h"
 
 using Pair = std::pair<int, int>;
 
 
 void CheckFullProcess(const std::string& json_path,
+                      const std::string& csv_path,
                       const std::vector<int>& layer_ids_expected,
                       const std::vector<int>& data_ids_expected,
                       const std::vector<Pair>& edges_expected,
                       int edges_storage_size_expected,
                       const std::vector<int>& entries_expected,
                       const std::vector<std::vector<bool>>& less_matrix_expected) {
+    std::vector<std::vector<float>> data = CsvLoader::load_csv("./tests/data/" + csv_path);
     Graph g;
 
     std::ifstream input("./tests/" + json_path);
@@ -29,13 +32,14 @@ void CheckFullProcess(const std::string& json_path,
 
     auto layersJson = json["graph"]["layers"];
     auto edgesJson = json["graph"]["connections"];
-    auto dataJson = json["dataset"];
+    //auto dataJson = json["dataset"];
 
     // #################################################################
     //                     PARSE LAYERS IDS
     // #################################################################
-    std::unordered_map<int, crow::json::rvalue> layerDicts, dataDicts;
-    g.OverviewLayers(layersJson, dataJson, layerDicts, dataDicts);
+    std::unordered_map<int, crow::json::rvalue> layerDicts;
+    std::unordered_map<int, std::vector<float>> dataDicts;
+    g.OverviewLayers(layersJson, data, layerDicts, dataDicts);
 
     CHECK(layerDicts.size() == layer_ids_expected.size());
     for (auto id : layer_ids_expected) {
@@ -103,7 +107,7 @@ TEST_CASE("Linear-ReLU-Linear-MSE") {
         {0, 0, 0, 0, 0, 0, 0}
     };
 
-    CheckFullProcess("linear_relu_linear_mse.json", layer_ids_expected, data_ids_expected,
+    CheckFullProcess("linear_relu_linear_mse.json", "and-train.csv", layer_ids_expected, data_ids_expected,
                      edges_expected, edges_storage_size_expected,
                      entries_expected, less_matrix_expected);
 }
