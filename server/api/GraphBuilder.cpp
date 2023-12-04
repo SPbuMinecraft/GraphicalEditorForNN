@@ -1,10 +1,13 @@
 #include "GraphBuilder.h"
 #include "Allocator.h"
 
-
-void Graph::OverviewLayers(const crow::json::rvalue& layers, const crow::json::rvalue& data,
-                 std::unordered_map<int, crow::json::rvalue>& layer_dicts,
-                 std::unordered_map<int, crow::json::rvalue>& data_dicts) {
+void Graph::OverviewLayers(const crow::json::rvalue& layers, 
+                           const std::vector<std::vector<float>>& data,
+                           std::unordered_map<int, crow::json::rvalue>& layer_dicts,
+                           std::unordered_map<int, std::vector<float>>& data_dicts) {
+    std::vector<float> instances;
+    std::vector<float> answers;
+    ParseCsvData(data, instances, answers);
     for (auto& layer : layers) {
         CHECK_HAS_FIELD(layer, "id");
         CHECK_HAS_FIELD(layer, "type");
@@ -14,9 +17,12 @@ void Graph::OverviewLayers(const crow::json::rvalue& layers, const crow::json::r
         layerTypes_[id] = type;
         layer_dicts[id] = layer;
 
-        if (type == "Data" || type == "Target") {
-            CHECK_HAS_FIELD(data, std::to_string(id));
-            data_dicts[id] = data[std::to_string(id)];
+        if (type == "Data") {
+            data_dicts[id] = instances; // All data goes for all data layers. May be should be splitted by them
+            dataIds_.push_back(id);
+        }
+        if (type == "Target") {
+            data_dicts[id] = answers;
         }
     }
 }
@@ -82,21 +88,21 @@ void Graph::TopologySort(std::unordered_map<int, std::vector<int>>& edges,
 }
 
 void Graph::Initialize(crow::json::rvalue modelJson,
+             const std::vector<std::vector<float>>& data,
              RandomObject* randomInit,
              OptimizerBase& SGD) {
     Allocator::startVirtualMode();
     CHECK_HAS_FIELD(modelJson, "graph");
-    CHECK_HAS_FIELD(modelJson, "dataset");
     CHECK_HAS_FIELD(modelJson["graph"], "layers");
     CHECK_HAS_FIELD(modelJson["graph"], "connections");
 
     auto layersJson = modelJson["graph"]["layers"];
     auto edgesJson = modelJson["graph"]["connections"];
-    auto dataJson = modelJson["dataset"];
 
     // Parse Jsons into dicts of Jsons
-    std::unordered_map<int, crow::json::rvalue> layerDicts, dataDicts;
-    OverviewLayers(layersJson, dataJson, layerDicts, dataDicts);
+    std::unordered_map<int, crow::json::rvalue> layerDicts;
+    std::unordered_map<int, std::vector<float>> dataDicts;
+    OverviewLayers(layersJson, data, layerDicts, dataDicts);
 
     std::unordered_map<int, std::vector<int>> straightEdges, reversedEdges;
     std::unordered_set<int> entryNodes;
@@ -122,13 +128,11 @@ void Graph::Initialize(crow::json::rvalue modelJson,
         } else if (type == "Data" || type == "Target") {
             CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
             auto params = ParseData2d(layerDicts[layer_id]["parameters"]);
-            std::vector<float> values;
-            ParseInputData(dataDicts[layer_id], values);
-            if (values.size() % params.width != 0) {
+            if (dataDicts[layer_id].size() % params.width != 0) {
                 throw std::invalid_argument("Sizes mismatch!");
             }
-            params.height = values.size() / params.width;
-            layers_.emplace(layer_id, new Data2dLayer{params, values});
+            params.height = dataDicts[layer_id].size() / params.width;
+            layers_.emplace(layer_id, new Data2dLayer{params, dataDicts[layer_id]});
         } else if (type == "Output") {
             for (auto prevLayerId : reversedEdges[layer_id]) {
                 lastPredictIds_.push_back(prevLayerId);
@@ -142,28 +146,18 @@ void Graph::Initialize(crow::json::rvalue modelJson,
     }
 }
 
-void Graph::ChangeInputData(crow::json::rvalue& data) {
-    std::vector<std::string> keys = data.keys();
-    for (auto& key : keys) {
-        int id = std::stoi(key);
-        if (layerTypes_.find(id) == layerTypes_.end()) {
-            throw std::out_of_range("No layer with such an id: " + key);
-        }
-        if (layerTypes_[id] != "Data" && layerTypes_[id] != "Target") {
-            throw std::domain_error("Layer with id " + key + " is not a Data layer");
-        }
+void Graph::ChangeInputData(std::vector<float> data) {
+    // All data goes to every data layer. Should be changed?
+    for (int id : dataIds_) {
         Data2dLayer* layer = reinterpret_cast<Data2dLayer*>(layers_[id]);
 
-        // Needs checks!!
-        std::vector<float> values;
-        ParseInputData(data[key], values);
         size_t width = layer->result->output->shape.cols();
-        if (values.size() % width != 0) {
+        if (data.size() % width != 0) {
             throw std::invalid_argument("Sizes mismatch!");
         }
         Shape expectedShape = layer->result->output->shape;
-        values.resize(expectedShape.size(), 0);
-        layer->result->output.emplace(Blob::constBlob(expectedShape, values.data()));
+        data.resize(expectedShape.size(), 0);
+        layer->result->output.emplace(Blob::constBlob(expectedShape, data.data()));
     }
 }
 
