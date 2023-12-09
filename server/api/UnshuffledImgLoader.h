@@ -1,17 +1,16 @@
 #pragma once
 
+#include "UnshuffledDataLoader.h"
+#include "Blob.h"
 #include <vector>
 #include <string>
-#include "UnshuffledDataLoader.h"
-#include "Allocator.h"
 
-
-class UnshuffledCsvLoader: public UnshuffledDataLoader {
+class UnshuffledImgLoader: public UnshuffledDataLoader {
 private:
-    std::vector<std::pair<std::vector<float>, float>> data;
+    std::vector<std::pair<std::string, float>> data;
 public:
-    UnshuffledCsvLoader() = default;
-    void load_data(std::string path) override;
+    UnshuffledImgLoader() = default;
+    void load_data(std::string path) override; // path to folder
     std::pair<Blob, float> operator[](std::size_t index) const override;
     void add_data(const UnshuffledDataLoader* other, int index) override;
     std::size_t size() const override;

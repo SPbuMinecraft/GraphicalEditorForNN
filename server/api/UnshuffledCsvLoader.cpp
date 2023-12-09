@@ -22,8 +22,8 @@ std::pair<Blob, float> UnshuffledCsvLoader::operator[](std::size_t index) const 
     return {Blob::constBlob(Shape({0, 0, 1, data[index].first.size()}), data[index].first.data()), data[index].second};
 }
 
-void UnshuffledCsvLoader::add_data(std::pair<std::vector<float>, float> instance)  {
-    data.push_back(instance);
+void UnshuffledCsvLoader::add_data(const UnshuffledDataLoader* other, int index) {
+    data.push_back(other->get_raw(index));
 }
 
 std::size_t UnshuffledCsvLoader::size() const {

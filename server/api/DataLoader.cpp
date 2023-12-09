@@ -39,8 +39,8 @@ std::size_t DataLoader::size() const {
     return loader->size();
 }
 
-void DataLoader::add_data(std::pair<std::vector<float>, float> instance) {
-    loader->add_data(instance);
+void DataLoader::add_data(const DataLoader& other, int index) {
+    loader->add_data(other.loader, index);
 }
 
 std::pair<std::vector<float>, float> DataLoader::get_raw(std::size_t index) const {
