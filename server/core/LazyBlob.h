@@ -28,7 +28,9 @@ public:
     const LazyBlob& transposed() const;
     const LazyBlob& applying(const UnaryTransform t) const;
     const LazyBlob& sum(std::vector<short> axis) const;
-    const LazyBlob& mean(std::vector<short> axis) const;
+    const LazyBlob& mean(std::vector<short> axis, bool minusOne = false) const;
+    const LazyBlob& reverseLast2Dims() const;
+    const LazyBlob& transposeFirst2Dims() const;
 
     /// To repeat some dimensions several times
     /// - Parameter shape: the size we want to get
@@ -39,6 +41,7 @@ public:
     friend const LazyBlob& operator - (const LazyBlob &a);
     /// ELEMENT-WISE
     friend const LazyBlob& operator * (const LazyBlob &a, const LazyBlob &b);
+    friend const LazyBlob& operator / (const LazyBlob &a, const LazyBlob &b);
     /// MATRIX
     friend const LazyBlob& operator & (const LazyBlob &a, const LazyBlob &b);
 
@@ -49,6 +52,10 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const LazyBlob& b);
 };
+
+LazyBlob&  conv(const LazyBlob &a, const LazyBlob &b);
+LazyBlob&  conv_i(const LazyBlob &a, const LazyBlob &b, std::size_t kernelSize, std::size_t i);
+LazyBlob& zeroBlob(const Shape& shape);
 
 class LazyBlobView final: public LazyBlob {
 private:
