@@ -1,8 +1,6 @@
 #include <stdexcept>
 #include "UnshuffledCsvLoader.h"
 #include "CsvLoader.h"
-#include "Allocator.h"
-#include "Blob.h"
 
 void UnshuffledCsvLoader::load_data(std::string path) {
     data.clear();
@@ -13,13 +11,6 @@ void UnshuffledCsvLoader::load_data(std::string path) {
         file_data[i].pop_back();
         data[i] = {file_data[i], result};
     }
-}
-
-std::pair<Blob, float> UnshuffledCsvLoader::operator[](std::size_t index) const {
-    if (index >= data.size()) {
-        throw std::out_of_range("Index out of range");
-    }
-    return {Blob::constBlob(Shape({0, 0, 1, data[index].first.size()}), data[index].first.data()), data[index].second};
 }
 
 void UnshuffledCsvLoader::add_data(const UnshuffledDataLoader* other, int index) {
@@ -35,4 +26,8 @@ std::pair<std::vector<float>, float> UnshuffledCsvLoader::get_raw(std::size_t in
         throw std::out_of_range("Index out of range");
     }
     return {data[index].first, data[index].second};
+}
+
+Shape UnshuffledCsvLoader::get_appropriate_shape(std::size_t index, std::size_t batch_size) const {
+    return Shape({batch_size, data[index].first.size()});
 }

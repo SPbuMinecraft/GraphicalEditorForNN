@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include "DataLoader.h"
 #include "Blob.h"
+#include "Allocator.h"
 
 void generate_rearrangement(std::vector<int>& rearrangement, std::size_t size) {
     rearrangement.resize(size);
@@ -15,11 +16,11 @@ void generate_rearrangement(std::vector<int>& rearrangement, std::size_t size) {
     std::shuffle(rearrangement.begin(), rearrangement.end(), rng);
 }
 
-DataLoader::DataLoader(UnshuffledDataLoader* _loader): loader(_loader) {
+DataLoader::DataLoader(UnshuffledDataLoader* _loader, std::size_t _batch_size): loader(_loader), batch_size(_batch_size) {
     generate_rearrangement(rearrangement, loader->size());
 }
 
-DataLoader::DataLoader(UnshuffledDataLoader* _loader, std::string path): loader(_loader) {
+DataLoader::DataLoader(UnshuffledDataLoader* _loader, std::size_t _batch_size, std::string path): loader(_loader), batch_size(_batch_size) {
     loader->load_data(path);
     generate_rearrangement(rearrangement, loader->size());
 }
@@ -28,11 +29,13 @@ void DataLoader::load_data(std::string path) {
     loader->load_data(path);
 }
 
-std::pair<Blob, float> DataLoader::operator[](std::size_t index) const {
+std::pair<Blob, std::vector<float>> DataLoader::operator[](std::size_t index) const { // batch_size lines from index
     if (index >= loader->size()) {
         throw std::out_of_range("Index out of range");
     }
-    return (*loader)[rearrangement[index]];
+    auto data = get_raw(index);
+    Shape shape = loader->get_appropriate_shape(index, batch_size);
+    return {Blob::constBlob(shape, data.first.data()), data.second};
 }
 
 std::size_t DataLoader::size() const {
@@ -43,9 +46,30 @@ void DataLoader::add_data(const DataLoader& other, int index) {
     loader->add_data(other.loader, index);
 }
 
-std::pair<std::vector<float>, float> DataLoader::get_raw(std::size_t index) const {
+std::pair<std::vector<float>, std::vector<float>> DataLoader::get_raw(std::size_t index) const { // batch_size lines from index
     if (index >= loader->size()) {
         throw std::out_of_range("Index out of range");
     }
-    return loader->get_raw(index);
+    std::vector<float> data;
+    std::vector<float> res(batch_size, 0);
+    Shape shape = loader->get_appropriate_shape(index, batch_size);
+    auto dims = shape.getDims();
+    int data_size = 1;
+    for (int i = 0; i < dims.size(); ++i) {
+        data_size *= dims[i];
+    }
+    data.resize(data_size, 0);
+    int cur_data = 0;
+    for (int i = index; i < index + batch_size; ++i) {
+        if (i >= loader->size()) {
+            break;
+        }
+        auto line = loader->get_raw(i);
+        res[i - index] = line.second;
+        for (int j = 0; j < line.first.size(); ++j) {
+            data[cur_data] = line.first[j];
+            cur_data++;
+        }
+    }
+    return {data, res};
 }

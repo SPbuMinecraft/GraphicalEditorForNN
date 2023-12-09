@@ -19,11 +19,9 @@ void UnshuffledImgLoader::load_data(std::string path) {
     }
 }
 
-std::pair<Blob, float> UnshuffledImgLoader::operator[](std::size_t index) const {
-
-    auto index_data = get_raw(index);
+Shape UnshuffledImgLoader::get_appropriate_shape(std::size_t index, std::size_t batch_size) const {
     auto img_size = ImageLoader::get_size(data[index].first.c_str());
-    return {Blob::constBlob(Shape({1, 3, img_size.first, img_size.second}), index_data.first.data()), index_data.second};
+    return Shape({batch_size, 3, img_size.first, img_size.second});
 }
 
 std::pair<std::vector<float>, float> UnshuffledImgLoader::get_raw(std::size_t index) const {

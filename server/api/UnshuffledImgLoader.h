@@ -11,8 +11,8 @@ private:
 public:
     UnshuffledImgLoader() = default;
     void load_data(std::string path) override; // path to folder
-    std::pair<Blob, float> operator[](std::size_t index) const override;
     void add_data(const UnshuffledDataLoader* other, int index) override;
     std::size_t size() const override;
-    virtual std::pair<std::vector<float>, float> get_raw(std::size_t index) const override;
+    std::pair<std::vector<float>, float> get_raw(std::size_t index) const override;
+    Shape get_appropriate_shape(std::size_t index, std::size_t batch_size) const override;
 };

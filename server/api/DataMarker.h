@@ -14,7 +14,7 @@ private:
     DataLoader check_loader;
 public:
     DataMarker() = default;
-    DataMarker(std::string path, FileExtension file_type, int percentage_for_train);
+    DataMarker(std::string path, FileExtension file_type, int percentage_for_train, std::size_t batch_size);
     ~DataMarker();
     DataLoader get_train_loader();
     DataLoader get_check_loader();
