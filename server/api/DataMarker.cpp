@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include "DataMarker.h"
 #include "UnshuffledCsvLoader.h"
+#include "UnshuffledImgLoader.h"
 #include "Blob.h"
 
 DataMarker::DataMarker(std::string path, FileExtension type, int percentage_for_train) {
@@ -8,20 +9,21 @@ DataMarker::DataMarker(std::string path, FileExtension type, int percentage_for_
         throw std::logic_error("Wrong percentage");
     }
     DataLoader file_loader;
-    UnshuffledCsvLoader file_unshuffled_loader;
+    UnshuffledDataLoader* file_unshuffled_loader;
     if (type == FileExtension::Csv) {
-        file_unshuffled_loader = UnshuffledCsvLoader();
-
+        file_unshuffled_loader = new UnshuffledCsvLoader;
         train_unshuffled_loader = new UnshuffledCsvLoader;
         check_unshuffled_loader = new UnshuffledCsvLoader;
     }
     else if (type == FileExtension::Png) {
-        throw std::logic_error("Not implemented");
+        file_unshuffled_loader = new UnshuffledImgLoader;
+        train_unshuffled_loader = new UnshuffledImgLoader;
+        check_unshuffled_loader = new UnshuffledImgLoader;
     }
     else {
         throw std::logic_error("Unsupported type");
     }
-    file_loader = DataLoader(&file_unshuffled_loader, path);
+    file_loader = DataLoader(file_unshuffled_loader, path);
     std::vector<int> rearrangement;
     generate_rearrangement(rearrangement, file_loader.size());
     train_loader = DataLoader(train_unshuffled_loader);
@@ -35,6 +37,7 @@ DataMarker::DataMarker(std::string path, FileExtension type, int percentage_for_
             check_loader.add_data(file_loader, rearrangement[i]);
         }
     }
+    delete file_unshuffled_loader;
 }
 
 DataMarker::~DataMarker() {

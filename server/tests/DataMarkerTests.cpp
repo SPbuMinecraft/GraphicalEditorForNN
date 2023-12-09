@@ -46,3 +46,20 @@ TEST_CASE("Csv-test") {
         check_vectors(ans, res);
     }
 }
+
+TEST_CASE("Image-test") {
+    DataMarker loader = DataMarker("./tests/data/1", FileExtension::Png, 80);
+    DataLoader for_train = loader.get_train_loader();
+    DataLoader for_check = loader.get_check_loader();
+    std::vector<std::pair<std::vector<float>, float>> ans = {{{255, 255, 255}, 0}, {{0, 0, 0}, 0}, {{159, 252, 253}, 0}, {{255, 255, 0, 0, 255, 255, 0, 0, 0}, 1}, {{0, 255, 100, 153, 136, 255, 0, 174, 100, 217, 0, 255, 0, 201, 100, 234, 21, 255}, 1}};
+    std::vector<std::pair<std::vector<float>, float>> res;
+    CHECK(for_train.size() == 4);
+    CHECK(for_check.size() == 1);
+    for (int i = 0; i < 4; ++i) {
+        res.push_back(for_train.get_raw(i));
+    }
+    res.push_back(for_check.get_raw(0));
+    sort(res.begin(), res.end());
+    sort(ans.begin(), ans.end());
+    check_vectors(ans, res);
+}

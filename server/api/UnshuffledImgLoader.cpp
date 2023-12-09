@@ -14,6 +14,9 @@ void UnshuffledImgLoader::load_data(std::string path) {
             break;
         }
     }
+    for (int i = 0; i < data.size(); ++i) {
+        data[i].first = path + "/" + data[i].first;
+    }
 }
 
 std::pair<Blob, float> UnshuffledImgLoader::operator[](std::size_t index) const {
