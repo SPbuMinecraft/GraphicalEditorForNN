@@ -19,4 +19,5 @@ public:
     void add_data(const DataLoader& other, int index);
     std::size_t size() const;
     std::pair<std::vector<float>, std::vector<float>> get_raw(std::size_t index) const;
+    void shuffle();
 };

@@ -11,8 +11,7 @@ void generate_rearrangement(std::vector<int>& rearrangement, std::size_t size) {
         rearrangement[i] = i;
     }
     // Some shuffle magic from StackOverflow
-    auto rd = std::random_device {};
-    auto rng = std::default_random_engine { rd() };
+    auto rng = std::default_random_engine { 32 };
     std::shuffle(rearrangement.begin(), rearrangement.end(), rng);
 }
 
@@ -52,7 +51,7 @@ std::pair<std::vector<float>, std::vector<float>> DataLoader::get_raw(std::size_
     }
     std::vector<float> data;
     std::vector<float> res(batch_size, 0);
-    Shape shape = loader->get_appropriate_shape(index, batch_size);
+    Shape shape = loader->get_appropriate_shape(rearrangement[index], batch_size);
     auto dims = shape.getDims();
     int data_size = 1;
     for (int i = 0; i < dims.size(); ++i) {
@@ -64,7 +63,7 @@ std::pair<std::vector<float>, std::vector<float>> DataLoader::get_raw(std::size_
         if (i >= loader->size()) {
             break;
         }
-        auto line = loader->get_raw(i);
+        auto line = loader->get_raw(rearrangement[i]);
         res[i - index] = line.second;
         for (int j = 0; j < line.first.size(); ++j) {
             data[cur_data] = line.first[j];
@@ -72,4 +71,8 @@ std::pair<std::vector<float>, std::vector<float>> DataLoader::get_raw(std::size_
         }
     }
     return {data, res};
+}
+
+void DataLoader::shuffle() {
+    generate_rearrangement(rearrangement, loader->size());
 }

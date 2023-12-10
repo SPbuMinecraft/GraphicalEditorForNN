@@ -37,6 +37,8 @@ DataMarker::DataMarker(std::string path, FileExtension type, int percentage_for_
             check_loader.add_data(file_loader, rearrangement[i]);
         }
     }
+    train_loader.shuffle();
+    check_loader.shuffle();
     delete file_unshuffled_loader;
 }
 
