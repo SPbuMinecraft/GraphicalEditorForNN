@@ -128,7 +128,7 @@ serve: $(server) | $(dirTrain) $(dirPredict)
 	$< $(host) $(port)
 
 $(server): $(serverMain) $(serverObjects) $(coreArchive) | checkboost $(dirBin)
-	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11 -lpng
+	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11 -lpng -lzip
 
 
 ### TESTS ###

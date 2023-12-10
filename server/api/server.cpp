@@ -2,8 +2,10 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <filesystem>
 
 #include <crow_all.h>
+#include "zip.h"
 #include "GraphBuilder.h"
 #include "CsvLoader.h"
 
@@ -11,11 +13,11 @@ using namespace std;
 using namespace crow;
 
 std::string getDataPath(int id) {
-    return "./model_data/data/" + std::to_string(id) + ".csv";
+    return "./model_data/data/" + std::to_string(id);
 }
 
 std::string getPredictPath(int id) {
-    return "./model_data/predict/" + std::to_string(id) + ".csv";
+    return "./model_data/predict/" + std::to_string(id);
 }
 
 void train(json::rvalue& json, Graph** graph, int model_id) {
@@ -63,6 +65,27 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer) {
     }
 }
 
+void extract_from_zip(std::string path, std::string root) {
+    zip_t* z;
+    int err;
+    z = zip_open(path.c_str(), 0, &err);
+    if (z == nullptr) {
+        throw std::runtime_error("File doesn't exist");
+    }
+    zip_stat_t info;
+    for (int i = 0; i < zip_get_num_files(z); ++i) {
+        if (zip_stat_index(z, i, 0, &info) == 0) {
+            ofstream fout(root + "/" + info.name, ios::binary);
+            zip_file* file = zip_fopen_index(z, i, 0);
+            char file_data[info.size];
+            zip_fread(file, file_data, info.size);
+            fout.write(file_data, info.size);
+            fout.close();
+        }
+    }
+    std::filesystem::remove(path);
+}
+
 void invalidArgs() { 
     cout << "Usage: ./server <host: str> <port: int>" << endl;
     exit(1);
@@ -105,16 +128,28 @@ int main(int argc, char *argv[]) {
         return response(status::OK, "done");
     });
 
-    //curl -X POST -F "InputFile=@filename" http://0.0.0.0:2000/upload_data/1/0 (last can be 1)
-    CROW_ROUTE(app, "/upload_data/<int>/<int>").methods(HTTPMethod::Post)
-    ([&](const request& req, int model_id, int type) -> response {
+    // curl -X POST -F "InputFile=@filename" http://0.0.0.0:2000/upload_data/1/0/0
+    // Second argument is for request type (train or predict), third - for file type (csv or zip)
+    CROW_ROUTE(app, "/upload_data/<int>/<int>/<int>").methods(HTTPMethod::Post)
+    ([&](const request& req, int model_id, int type, int file_type) -> response {
         crow::multipart::message file_message(req);
-        std::string path;
+        std::string path, root;
         if (type == 0) {
             path = getDataPath(model_id);
         }
         else {
             path = getPredictPath(model_id);
+        }
+        root = path;
+        if (std::filesystem::exists(path)) {
+            std::filesystem::remove_all(path);
+        }
+        std::filesystem::create_directory(path);
+        if (file_type == 0) {
+            path += "/1.csv";
+        }
+        else {
+            path += "/1.zip";
         }
         std::ofstream out_file(path);
         if (!out_file) {
@@ -126,6 +161,14 @@ int main(int argc, char *argv[]) {
         }
         out_file << (*content).second.body;
         out_file.close();
+        if (file_type != 0) {
+            try {
+                extract_from_zip(path, root);
+            }
+            catch (...) {
+                return response(status::INTERNAL_SERVER_ERROR, "Error in extracting from zip");
+            }
+        }
         return crow::response(status::OK, "done");
     });
 
