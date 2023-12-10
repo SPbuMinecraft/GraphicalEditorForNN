@@ -4,10 +4,9 @@
 #include <string>
 #include <sstream>
 
+#include <zip.h>
 #include <filesystem>
-
 #include <crow_all.h>
-
 
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
@@ -22,7 +21,6 @@
 #include "GraphBuilder.h"
 #include "CsvLoader.h"
 #include "DataMarker.h"
-#include <zip.h>
 
 using namespace std;
 using namespace crow;
