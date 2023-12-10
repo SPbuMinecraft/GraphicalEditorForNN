@@ -200,9 +200,8 @@
           <h3></h3>
           <label for="loss-type-parameter">Loss type</label>
           <select id="loss-type-parameter">
-            <option value="MSE">MSE</option>
-            <option value="NLL">NLL</option>
-            <option value="KLDiv">KLDiv</option>
+            <option value="MSELoss">MSELoss</option>
+            <option value="CrossEntropyLoss">CrossEntropyLoss</option>
           </select>
           <div id="loss-input-selection">
             <ul id="loss-inputs-sortable-list"></ul>
@@ -501,6 +500,26 @@
         last_changed_parameters_layer_id = last_selected_node_id
       })
 
+      const loss_type_selector = document.getElementById("loss-type-parameter")
+      loss_type_selector.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const parameters = getParametersFromNode(last_selected_node_id)
+        console.log("last id: " + last_selected_layer_id)
+        const new_value = document.getElementById("loss-type-parameter").value
+
+        for (i in parameters) {
+          if (parameters[i][0] == "type") {
+            if (new_value == "MSELoss") {
+              parameters[i][1] = "MSELoss"
+            } else {
+              parameters[i][1] = "CrossEntropyLoss"
+            }
+            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            break
+          }
+        }
+      })
+
       /* DRAG EVENT */
       /* Mouse and Touch Actions */
       var elements = document.getElementsByClassName("drag-drawflow")
@@ -620,7 +639,7 @@
           relu: "",
           data: "width=2",
           output: "width=1",
-          loss: "width=1;type=MSE",
+          loss: "width=1;type=MSELoss",
           target: "width=1",
         }
 
@@ -929,7 +948,7 @@
 
           let ObjLoss = {
             type: "MSELoss",
-            parameters: "width=1;type=MSE",
+            parameters: "width=1;type=MSELoss",
           }
 
           addLayer(ObjData)
@@ -1252,7 +1271,6 @@
                 document.querySelector("#special-width-parameter").value = layer_parameters[i][1]
               }
               if (layer_parameters[i][0] == "type") {
-                console.log("MOROZ I SOLNCE DENb CHUDESNY")
                 document.querySelector("#loss-type-parameter").value = layer_parameters[i][1]
               }
             }
