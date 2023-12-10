@@ -322,7 +322,7 @@
         0,
         760,
         450,
-        "loss",
+        "special",
         {},
         '<div class="title-box"><i class="fas fa-file-signature"></i> Loss </div>',
       )
@@ -677,7 +677,7 @@
             break
           case "loss":
             const loss = '<div class="title-box"><i class="fas fa-file-signature"></i> Loss </div>'
-            editor.addNode("MSELoss", 1, 0, pos_x, pos_y, "loss", attrs, loss)
+            editor.addNode("MSELoss", 1, 0, pos_x, pos_y, "special", attrs, loss)
             break
           default:
             throw "Unreachable"
@@ -1160,16 +1160,17 @@
         pathsWithWrittenID = []
       }
 
-      function getSortableInputList(layerClass) {
-        switch (layerClass) {
+      function getSortableInputList(layer) {
+        switch (layer.class) {
           case "linear":
             return document.querySelector("#linear-inputs-sortable-list")
           case "relu":
             return document.querySelector("#relu-inputs-sortable-list")
           case "special":
+            if (layer.name == "Loss") {
+              return document.querySelector("#loss-inputs-sortable-list")
+            }
             return document.querySelector("#special-inputs-sortable-list")
-          case "loss":
-            return document.querySelector("#loss-inputs-sortable-list")
         }
       }
 
@@ -1185,7 +1186,7 @@
 
         // Input selection
         writeIdOnConnections(correct_id)
-        let sortable_list = getSortableInputList(node.class)
+        let sortable_list = getSortableInputList(node)
         let child = sortable_list.lastElementChild
 
         while (child) {
@@ -1241,14 +1242,14 @@
         })
 
         document.getElementById("layer-data").style.display = "block"
-        setupLayerParameters(node.class, correct_id)
+        setupLayerParameters(node, correct_id)
       }
 
-      function setupLayerParameters(layer_class, layer_id) {
+      function setupLayerParameters(layer, layer_id) {
         let layer_parameters = getParametersFromNode(layer_id)
         console.log(layer_parameters)
 
-        switch (layer_class) {
+        switch (layer.class) {
           case "linear":
             document.querySelector("#linear-layer-parameters").style.display = "block"
             for (i in layer_parameters) {
@@ -1265,13 +1266,25 @@
             break
 
           case "special":
-            document.querySelector("#special-layer-parameters").style.display = "block"
-            for (i in layer_parameters) {
-              if (layer_parameters[i][0] == "width") {
-                document.querySelector("#special-width-parameter").value = layer_parameters[i][1]
+            if (layer.name == "Loss") {
+              document.querySelector("#loss-layer-parameters").style.display = "block"
+              for (i in layer_parameters) {
+                if (layer_parameters[i][0] == "width") {
+                  document.querySelector("#loss-width-parameter").value = layer_parameters[i][1]
+                }
+                if (layer_parameters[i][0] == "type") {
+                  document.querySelector("#loss-type-parameter").value = layer_parameters[i][1]
+                }
               }
-              if (layer_parameters[i][0] == "type") {
-                document.querySelector("#loss-type-parameter").value = layer_parameters[i][1]
+            } else {
+              document.querySelector("#special-layer-parameters").style.display = "block"
+              for (i in layer_parameters) {
+                if (layer_parameters[i][0] == "width") {
+                  document.querySelector("#special-width-parameter").value = layer_parameters[i][1]
+                }
+                if (layer_parameters[i][0] == "type") {
+                  document.querySelector("#loss-type-parameter").value = layer_parameters[i][1]
+                }
               }
             }
             break
@@ -1281,18 +1294,6 @@
             for (i in layer_parameters) {
               if (layer_parameters[i][0] == "width") {
                 document.querySelector("#relu-width-parameter").value = layer_parameters[i][1]
-              }
-            }
-            break
-
-          case "loss":
-            document.querySelector("#loss-layer-parameters").style.display = "block"
-            for (i in layer_parameters) {
-              if (layer_parameters[i][0] == "width") {
-                document.querySelector("#loss-width-parameter").value = layer_parameters[i][1]
-              }
-              if (layer_parameters[i][0] == "type") {
-                document.querySelector("#loss-type-parameter").value = layer_parameters[i][1]
               }
             }
             break
