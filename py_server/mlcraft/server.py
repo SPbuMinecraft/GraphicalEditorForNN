@@ -8,8 +8,11 @@ import numpy as np
 import os
 
 from .utils import (
-    convert_model_parameters, is_valid_model, convert_model,
-    plot_metrics, delete_file,
+    convert_model_parameters,
+    is_valid_model,
+    convert_model,
+    plot_metrics,
+    delete_file,
 )
 from .check_dimensions import assert_dimensions_match
 
@@ -202,14 +205,21 @@ def predict(user_id: int, model_id: int):
 @app.route("/update_metrics/<int:user_id>/<int:model_id>", methods=["PUT"])
 def update_metrics(user_id: int, model_id: int):
     sql_worker.verify_access(user_id, model_id)
-    
-    json = request.json
-    outputs = np.array(json["outputs"])
+
+    json = request.json or {}
     targets = np.array(json["targets"])
+    n_epochs, n_samples = targets.shape
+    outputs = np.array(json["outputs"])
+    if targets.shape != outputs.shape:
+        outputs = outputs.reshape(n_epochs, n_samples, -1)
+
+    assert targets.shape == outputs.shape  # Это временное
     metrics = np.mean((targets - outputs) ** 2, axis=1)
     sql_worker.update_metrics(
-        model_id, list(metrics),
-        json.get("label", "default"), json.get("rewrite", False),
+        model_id,
+        list(metrics),
+        json.get("label", "default"),
+        json.get("rewrite", False),
     )
     return "", HTTPStatus.OK
 
@@ -217,10 +227,12 @@ def update_metrics(user_id: int, model_id: int):
 @app.route("/protect_metrics/<int:user_id>/<int:model_id>", methods=["PUT"])
 def protect_metrics(user_id: int, model_id: int):
     sql_worker.verify_access(user_id, model_id)
-    
-    json = request.json
+
+    json = request.json or {}
     sql_worker.protect_metrics(
-        model_id, json.get("label", "default"), json.get("protected", True),
+        model_id,
+        json.get("label", "default"),
+        json.get("protected", True),
     )
     return "", HTTPStatus.OK
 
@@ -229,9 +241,10 @@ def protect_metrics(user_id: int, model_id: int):
 def get_metircs(user_id: int, model_id: int):
     sql_worker.verify_access(user_id, model_id)
 
-    json = request.json
+    json = request.json or {}
     values = sql_worker.get_metrics(
-        model_id, json.get("label", "default"),
+        model_id,
+        json.get("label", "default"),
     )
     return {"values": list(map(float, values.split()))}, HTTPStatus.OK
 
@@ -241,10 +254,11 @@ def get_metircs(user_id: int, model_id: int):
 def get_plots(user_id: int, model_id: int):
     sql_worker.verify_access(user_id, model_id)
 
-    json = request.json
+    json = request.json or {}
     label = json.get("label", "default")
     values = sql_worker.get_metrics(
-        model_id, label,
+        model_id,
+        label,
     )
 
     plot_path = plot_metrics(list(map(float, values.split())), user_id, model_id, label)
