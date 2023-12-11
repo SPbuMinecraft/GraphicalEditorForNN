@@ -352,8 +352,11 @@ class SQLWorker:
 
     def update_metrics(self, model_id, values: list[float], label: str, rewrite: bool):
         with current_app.app_context(), self.content_lock:
-            metrics = Metrics.query.filter_by(model=model_id, label=label)\
-                                    .order_by(Metrics.id.desc()).first()
+            metrics = (
+                Metrics.query.filter_by(model=model_id, label=label)
+                .order_by(Metrics.id.desc())
+                .first()
+            )
             if not metrics:
                 metrics = Metrics()
                 metrics.model = model_id
@@ -374,8 +377,11 @@ class SQLWorker:
 
     def protect_metrics(self, model_id, label: str, protected: bool):
         with current_app.app_context(), self.content_lock:
-            metrics = Metrics.query.filter_by(model=model_id, label=label)\
-                                    .order_by(Metrics.id.desc()).first()
+            metrics = (
+                Metrics.query.filter_by(model=model_id, label=label)
+                .order_by(Metrics.id.desc())
+                .first()
+            )
             if not metrics:
                 raise Error(
                     f"No recordings found for model with id {model_id} and label {label}.",
@@ -388,18 +394,20 @@ class SQLWorker:
 
     def get_metrics(self, model_id, label: str) -> str:
         with current_app.app_context(), self.content_lock:
-            metrics = Metrics.query.filter_by(
-                model=model_id, label=label
-            ).order_by(Metrics.id.desc()).first()
+            metrics = (
+                Metrics.query.filter_by(model=model_id, label=label)
+                .order_by(Metrics.id.desc())
+                .first()
+            )
             if not metrics:
                 raise Error(
                     f"No recordings found for model with id {model_id} and label {label}.",
-                    HTTPStatus.NOT_FOUND,    
+                    HTTPStatus.NOT_FOUND,
                 )
             return metrics.values
 
     # Пока без ручки, просто как напоминание о том, что метрики нужно чистить
-    def delete_old_metrics():
+    def delete_old_metrics(self):
         with current_app.app_context(), self.content_lock:
             Metrics.query.filter(
                 Metrics.end_time < datetime.datetime.now() - datetime.timedelta(days=30)

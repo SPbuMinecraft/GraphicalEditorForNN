@@ -22,56 +22,41 @@ std::string getDataPath(int id) {
     return "./model_data/data/" + std::to_string(id) + ".csv";
 }
 
-<<<<<<< HEAD
 std::string getPredictPath(int id) {
     return "./model_data/predict/" + std::to_string(id) + ".csv";
 }
 
-void train(json::rvalue& json, Graph** graph, int model_id) {
-    RandomObject initObject(0, 1, 42);
-=======
 web::json::value GetLogs(const std::optional<Blob>& node) {
+    assert(node.has_value() && node.value().shape.dimsCount <= 2);
     std::vector<web::json::value> values;
-    values.reserve(node.value().rows * node.value().cols);
-    for (size_t sample_index = 0; sample_index < node.value().rows; ++sample_index) {
-        for (size_t feature_index = 0; feature_index < node.value().cols; ++feature_index) {
-            values.push_back(web::json::value::number(node.value()[sample_index][feature_index]));
+    values.reserve(node.value().shape.size());
+    for (size_t sample_index = 0; sample_index < node.value().shape.rows(); ++sample_index) {
+        for (size_t feature_index = 0; feature_index < node.value().shape.cols(); ++feature_index) {
+            values.push_back(web::json::value::number(node.value()(0, 0, sample_index, feature_index)));
         }
     }
     return web::json::value::array(values);
 }
 
-void train(json::rvalue& json, Graph** graph, int user_id, int model_id) {
-    RandomObject initObject(0, 1, 17);
->>>>>>> 6b9ee4f (Makes preparations for metrics logging on python)
+void train(json::rvalue& json, Graph** graph, int model_id, int user_id) {
+    RandomObject initObject(0, 1, 42);
     OptimizerBase SGD = OptimizerBase(0.1);
     std::vector<std::vector<float>> data = CsvLoader::load_csv(getDataPath(model_id));
     *graph = new Graph();
     (*graph)->Initialize(json, data, &initObject, SGD);
     std::cout << "Graph is ready!" << std::endl;
 
-<<<<<<< HEAD
-    auto& lastNode = (*graph)->getLastTrainLayers()[0]->result.value();  // Пока не думаем о нескольких выходах (!) Hard-coded
-
-    lastNode.forward();
-    lastNode.gradient = Blob::ones({{1}});
-    lastNode.backward();
-    Allocator::endSession();
-    lastNode.clear();
-    Allocator::endVirtualMode();
-
-    for (int j = 0; j < 1000; ++j) {
-        auto& result = lastNode.forward();
-        printf("%d: %f\n", j, result(0, 0, 0, 0));
-        // lastNode.gradient = result;
-        lastNode.gradient = Blob::ones({{1}});
-        lastNode.backward();
-=======
-    Blob result {1, 1};
-
     auto& lastTrainNode = (*graph)->getLayers(BaseLayerType::TrainOut)[0]->result.value();
     auto& lastPredictNode = (*graph)->getLayers(BaseLayerType::PredictOut)[0]->result.value().output;
     auto& targetsNode = (*graph)->getLayers(BaseLayerType::Targets)[0]->result.value().output;
+
+    lastTrainNode.forward();
+    lastTrainNode.gradient = Blob::ones({{1}});
+    lastTrainNode.backward();
+    Allocator::endSession();
+    lastTrainNode.clear();
+    Allocator::endVirtualMode();
+
     size_t buffer_size = 5;
     std::vector<web::json::value> targets, outputs;
     targets.reserve(buffer_size);
@@ -79,8 +64,8 @@ void train(json::rvalue& json, Graph** graph, int user_id, int model_id) {
 
     size_t max_epochs = 1000;
     for (size_t epoch = 0; epoch < max_epochs; ++epoch) {
-        result = lastTrainNode.forward();
-        printf("%ld: %f\n", epoch, result[0][0]);
+        auto& result = lastTrainNode.forward();
+        // printf("%ld: %f\n", epoch, result[0][0]);
 
         outputs.push_back(GetLogs(lastPredictNode));
         targets.push_back(GetLogs(targetsNode));
@@ -106,23 +91,16 @@ void train(json::rvalue& json, Graph** graph, int user_id, int model_id) {
         }
 
         // lastTrainNode.gradient = result;
-        lastTrainNode.gradient.value()[0][0] = 1;
+        lastTrainNode.gradient = Blob::ones({{1}});
         lastTrainNode.backward();
->>>>>>> 6b9ee4f (Makes preparations for metrics logging on python)
         SGD.step();
         lastTrainNode.clear();
     }
 }
 
-<<<<<<< HEAD
 void predict(int model_id, Graph* graph, std::vector<float>& answer) {
     std::vector<std::vector<float>> predict_data = CsvLoader::load_csv(getPredictPath(model_id));
     graph->ChangeInputData(predict_data[0]);
-=======
-void predict(json::rvalue& json, Graph* graph, int user_id, int model_id,
-             std::vector<float>& answer) {
-    graph->ChangeInputData(json);
->>>>>>> 6b9ee4f (Makes preparations for metrics logging on python)
 
     // Пока не думаем о нескольких выходах (!) Hard-coded
     auto& lastNode = graph->getLayers(BaseLayerType::PredictOut)[0]->result.value();
@@ -149,23 +127,12 @@ int main(int argc, char *argv[]) {
 
     std::map<int, Graph*> sessions;
 
-<<<<<<< HEAD
     CROW_ROUTE(app, "/predict/<int>").methods(HTTPMethod::POST)
     ([&](const request& req, int model_id) -> response {
         if (sessions.find(model_id) == sessions.end()) return response(status::METHOD_NOT_ALLOWED, "Not trained");
         std::vector<float> answer;
         try {
             predict(model_id, sessions[model_id], answer);
-=======
-    CROW_ROUTE(app, "/predict/<int>/<int>").methods(HTTPMethod::POST)
-    ([&](const request& req, int user_id, int model_id) -> response {
-        auto body = json::load(req.body);
-        if (!body) return response(status::BAD_REQUEST, "No model provided");
-        if (sessions.find(model_id) == sessions.end()) return response(status::METHOD_NOT_ALLOWED, "Not trained");
-        std::vector<float> answer;
-        try {
-            predict(body, sessions[model_id], user_id, model_id, answer);
->>>>>>> 6b9ee4f (Makes preparations for metrics logging on python)
         } catch (const std::runtime_error &err) {
             return response(status::BAD_REQUEST, "Invalid body");
         }
@@ -186,11 +153,8 @@ int main(int argc, char *argv[]) {
             delete sessions[model_id];
         }
         Graph* g = nullptr;
-<<<<<<< HEAD
-        train(body, &g, model_id);
-=======
+
         train(body, &g, user_id, model_id);
->>>>>>> 6b9ee4f (Makes preparations for metrics logging on python)
         sessions[model_id] = g;
         return response(status::OK, "done");
     });
