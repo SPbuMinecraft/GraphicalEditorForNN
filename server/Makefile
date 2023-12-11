@@ -12,11 +12,9 @@ CPPFLAGS = -I $(dirCore) -isystem $(dirApi)
 
 # C++ compiler flags
 maxErrors = 4 # number of errors compiler will print to the console
-# LDFLAGS = -lX11
 CXXFLAGS = -std=c++20 -pthread
 CXXFLAGS += -Wall -Wextra -pedantic
 CXXFLAGS += -fmax-errors=$(maxErrors) # for g++
-# CXXFLAGS += -lX11 -lm
 # CXXFLAGS += -ferror-limit=$(maxErrors) # uncomment for clang
 CXXFLAGS += -Wno-sign-compare
 CXXFLAGS += -Wno-unused-parameter
@@ -117,7 +115,6 @@ getField = $(shell node -p "require('$(CONFIG_PATH)').cpp_server.$1")
 port = $(call getField,PORT)
 host = $(call getField,HOST)
 boost = $(call getField,BOOST_ROOT)
-cpprest = /lib/x86_64-linux-gnu/libcpprest.so.2.10
 
 CPPFLAGS += -isystem $(boost)/include
 
@@ -129,7 +126,7 @@ serve: $(server) | $(dirTrain) $(dirPredict)
 	$< $(host) $(port)
 
 $(server): $(serverMain) $(serverObjects) $(coreArchive) | checkboost $(dirBin)
-	$(LINK.cpp) -L $(boost)/lib -L $(cpprest) $^ -o $@ -lX11 -lcpprest -lssl -lcrypto -lpng
+	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11 -lpng -lcpprest -lssl -lcrypto
 
 
 ### TESTS ###
@@ -165,7 +162,7 @@ checkboost:
 		fi; \
 	fi
 
-$(dirPredict) $(dirTrain): $(dirModelData) ; mkdir $@
+$(dirPredict) $(dirTrain): $(dirModelData) ; mkdir -p $@
 
 $(dirModelData) $(dirBuild) $(dirBin): ; mkdir $@
 
