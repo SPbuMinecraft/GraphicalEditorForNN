@@ -1,6 +1,10 @@
 Build/
 build/
 
+# Large-files
+zip-examples
+model_data
+
 # IDE
 .vscode
 .idea
@@ -10,6 +14,7 @@ build/
 .DS_Store
 .AppleDouble
 .LSOverride
+*.entitlements
 
 # Javascript
 package-lock.json

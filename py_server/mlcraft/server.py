@@ -1,6 +1,3 @@
-from json import dumps
-from sqlite3 import IntegrityError
-import datetime
 import requests
 from http import HTTPStatus
 from flask import Blueprint, request, current_app, send_file
@@ -12,17 +9,19 @@ from .utils import (
     is_valid_model,
     convert_model,
     plot_metrics,
-    delete_file,
 )
 from .check_dimensions import assert_dimensions_match
 
 from .errors import Error
 
 from .db import sql_worker
-from .dataset import extract_predict_data, extract_train_data
 
 
 app = Blueprint("make a better name", __name__)
+
+
+def cpp_url(method: str):
+    return current_app.config["CPP_SERVER"] + "/" + method
 
 
 @app.route("/user", methods=["POST"])
@@ -52,7 +51,7 @@ def add_model(user_id: int):
     return {"model_id": inserted_id}, HTTPStatus.CREATED
 
 
-@app.route("/<int:user_id>/<int:model_id>", methods=["GET", "PUT", "DELETE"])
+@app.route("/<int:user_id>/<int:model_id>", methods=["GET", "PUT", "PATCH", "DELETE"])
 def model(user_id: int, model_id: int):
     sql_worker.verify_access(user_id, model_id)
     match request.method:
@@ -63,6 +62,14 @@ def model(user_id: int, model_id: int):
             d: dict[str, str | None] = defaultdict(lambda: None, **request.json)  # type: ignore
             sql_worker.update_model(model_id, d["name"], d["raw"])
             return "", HTTPStatus.OK
+        case "PATCH":
+            response = requests.post(
+                cpp_url(f"upload_data/{model_id}/0"),
+                data=request.data,
+                headers={"Content-Type": request.content_type},
+                timeout=10,
+            )
+            return "", response.status_code
         case "DELETE":
             sql_worker.delete_model(model_id)
             return "", HTTPStatus.OK
@@ -166,7 +173,7 @@ def train_model(
     model = {"graph": model}
 
     response = requests.post(
-        current_app.config["CPP_SERVER"] + f"/train/{user_id}/{model_id}",
+        cpp_url(f"train/{model_id}"),
         json=model,
         timeout=3,
     )
@@ -179,14 +186,11 @@ def train_model(
 def predict(user_id: int, model_id: int):
     sql_worker.verify_access(user_id, model_id)
 
-    model = sql_worker.get_graph_elements(model_id)
-    convert_model_parameters(model)
-
     if not sql_worker.is_model_trained(model_id):
         raise Error("Not trained", HTTPStatus.PRECONDITION_FAILED)
 
     response = requests.put(
-        current_app.config["CPP_SERVER"] + f"/predict/{model_id}",
+        cpp_url(f"/predict/{model_id}"),
         timeout=3,
     )
 
