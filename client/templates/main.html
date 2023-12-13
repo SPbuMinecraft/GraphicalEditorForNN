@@ -315,6 +315,7 @@
 
           deleteConnection(connectionToDelete).then(response => {
             if (response.ok) {
+              setModelView("irrelevant")
               this.connection_selected = selectedConnection
               super.removeConnection()
 
@@ -1217,6 +1218,7 @@
             }
             updateParentOrder(new_inputs_object).then(response => {
               if (response.ok) {
+                setModelView("irrelevant")
                 editor.updateNodeDataFromId(correct_id, {
                   DBID: layer_dbid,
                   Connections: newConnections,
