@@ -158,7 +158,7 @@
       </div>
 
       <div class="layer-data" id="layer-data">
-        <h2>Layer parameters</h2>
+        <h2>Parameters</h2>
         <label id="layer-id"></label>
         <h3></h3>
         <div class="linear-layer-parameters layer-parameters" id="linear-layer-parameters" style="display: none">
@@ -175,14 +175,14 @@
           <input id="linear-outFeatures-parameter" type="number" value="1" size="4" />
           <h3></h3>
           <div id="linear-input-selection">
-            <label class="layer-input-list" style="display: none"> Input order: </label>
+            <label class="layer-input-list" style="display: none"> Input ID order: </label>
             <ul id="linear-inputs-sortable-list"></ul>
           </div>
         </div>
 
         <div class="relu-layer-parameters layer-parameters" id="relu-layer-parameters" style="display: none">
           <div id="relu-input-selection">
-            <label class="layer-input-list" style="display: none">Input order: </label>
+            <label class="layer-input-list" style="display: none">Input ID order: </label>
             <ul id="relu-inputs-sortable-list"></ul>
           </div>
         </div>
@@ -192,7 +192,7 @@
           <input id="special-width-parameter" type="number" value="1" size="4" />
           <h3></h3>
           <div id="special-input-selection">
-            <label class="layer-input-list" style="display: none"> Input order: </label>
+            <label class="layer-input-list" style="display: none"> Input ID order: </label>
             <ul id="special-inputs-sortable-list"></ul>
           </div>
         </div>
@@ -1217,8 +1217,9 @@
         for (let connection of connections) {
           for (let elem of input_list) elem.style.display = "block"
           let new_element = document.createElement("LI")
+          new_element.classList.add("button-wrapper")
           counter += 1
-          const text_for_new_element = document.createTextNode(`${counter} input ID: ` + connection.split(";")[0])
+          const text_for_new_element = document.createTextNode(connection.split(";")[0])
           new_element.appendChild(text_for_new_element)
           sortable_list.appendChild(new_element)
         }
