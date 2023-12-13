@@ -1,6 +1,6 @@
 #include "ImageLoader.h"
 
-std::vector<float> ImageLoader::load_image(char* path) {
+std::vector<float> ImageLoader::load_image(const char* path) {
     cimg_library::CImg<unsigned char> image(path);
     return get_pixels(image);
 }
@@ -22,4 +22,9 @@ std::vector<float> ImageLoader::get_pixels(cimg_library::CImg<unsigned char> img
         }
     }
     return ans;
+}
+
+std::pair<std::size_t, std::size_t> ImageLoader::get_size(const char *path) {
+    cimg_library::CImg<unsigned char> image(path);
+    return {image.width(), image.height()};
 }
