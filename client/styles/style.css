@@ -63,7 +63,7 @@ header {
 .menu {
     position: absolute;
     top: 0;
-    right: 100px;
+    right: 50px;
     width: 500px;
     height: var(--header-height);
     display: block;
@@ -194,13 +194,6 @@ header .button-wrapper {
 }
 #new-nn {
     background-color: var(--background0);
-}
-
-/*Terminal screen*/
-.terminal {
-    width: 100%;
-    height: calc(100vh - var(--header-height));
-    display: none;
 }
 
 /*Metrics screen*/

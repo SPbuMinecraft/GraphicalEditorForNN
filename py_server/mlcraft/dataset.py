@@ -1,39 +1,46 @@
 import csv
+from http import HTTPStatus
 from io import StringIO
-from .db import sql_worker
+from .errors import Error
 
 
-def get_data_id(model_id: int) -> int:
-    # TODO: think about asynchronous requests
-    items = sql_worker.get_graph_elements(model_id)
-    layer = next(filter(lambda l: l["type"] == "Data", items["layers"]))
-    return layer["id"]
+def get_layer(type: str, model: dict) -> dict:
+    layer = next(filter(lambda l: l["type"] == type, model["layers"]), None)
+    if layer is None:
+        raise Error(f"No {type} block in model", HTTPStatus.PRECONDITION_FAILED)
+    return layer
 
 
-def get_target_id(model_id: int) -> int:
-    items = sql_worker.get_graph_elements(model_id)
-    layer = next(filter(lambda l: l["type"] == "Target", items["layers"]))
-    return layer["id"]
-
-
-def extract_train_data(bytes: bytes, model_id: int) -> dict:
-    # TODO: when we define formats, errors will be handled
-    data_id = get_data_id(model_id)
-    target_id = get_target_id(model_id)
+def extract_train_data(bytes: bytes, model: dict) -> dict:
+    data_layer = get_layer("Data", model)
+    target_layer = get_layer("Target", model)
 
     reader = csv.reader(StringIO(bytes.decode()))
 
     data: list[float] = []
     target: list[float] = []
     for row in reader:
+        if (
+            int(data_layer["parameters"]["width"]) != len(row) - 1
+        ):  # columns = features + 1 for target
+            raise Error("Input csv column count doesn't match data's feature count")
+
         data.extend(map(float, row[:-1]))
         target.append(float(row[-1]))
 
-    return {data_id: data, target_id: target}
+    return {data_layer["id"]: data, target_layer["id"]: target}
 
 
-def extract_predict_data(bytes: bytes, model_id: int) -> dict:
-    data_id = get_data_id(model_id)
+def extract_predict_data(bytes: bytes, model: dict) -> dict:
+    data_layer = get_layer("Data", model)
     reader = csv.reader(StringIO(bytes.decode()))
-    row = next(reader)
-    return {data_id: list(map(float, row))}
+    row = next(reader, None)
+
+    if row is None:
+        raise Error("Bad csv format")
+    if int(data_layer["parameters"]["width"]) != len(
+        row
+    ):  # predict request - one row with data only
+        raise Error("Input csv column count doesn't match data's feature count")
+
+    return {data_layer["id"]: list(map(float, row))}

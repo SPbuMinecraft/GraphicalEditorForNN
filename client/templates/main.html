@@ -54,7 +54,6 @@
         <ul>
           <li id="select-home" onclick="showMode(event);">Home</li>
           <li id="select-constructor" onclick="showMode(event);" class="selected">Constructor</li>
-          <li id="select-terminal" onclick="showMode(event);">Terminal</li>
           <li id="select-metrics" onclick="showMode(event);">Metrics</li>
         </ul>
       </div>
@@ -180,7 +179,10 @@
           </div>
         </div>
 
-        <div class="relu-layer-parameters layer-parameters" id="relu-layer-parameters" style="display: none">
+        <div class="relu-layer-parameters" id="relu-layer-parameters" style="display: none">
+          <label for="relu-width-parameter">Width</label>
+          <input id="relu-width-parameter" type="number" value="1" size="4" />
+          <h3></h3>
           <div id="relu-input-selection">
             <label class="layer-input-list" style="display: none">Input ID order: </label>
             <ul id="relu-inputs-sortable-list"></ul>
@@ -196,10 +198,22 @@
             <ul id="special-inputs-sortable-list"></ul>
           </div>
         </div>
+
+        <div class="loss-layer-parameters" id="loss-layer-parameters" style="display: none">
+          <label for="loss-width-parameter">Width</label>
+          <input id="loss-width-parameter" type="number" value="1" size="4" />
+          <h3></h3>
+          <label for="loss-type-parameter">Loss type</label>
+          <select id="loss-type-parameter">
+            <option value="MSELoss">MSELoss</option>
+            <option value="CrossEntropyLoss">CrossEntropyLoss</option>
+          </select>
+          <div id="loss-input-selection">
+            <ul id="loss-inputs-sortable-list"></ul>
+          </div>
+        </div>
       </div>
     </div>
-
-    <div class="terminal" id="terminal">Coming soon!</div>
 
     <div class="metrics" id="metrics">Coming soon!</div>
 
@@ -315,6 +329,7 @@
 
           deleteConnection(connectionToDelete).then(response => {
             if (response.ok) {
+              setModelView("irrelevant")
               this.connection_selected = selectedConnection
               super.removeConnection()
 
@@ -561,7 +576,6 @@
       linear_bias_selector.addEventListener("change", () => {
         setModelView("irrelevant")
         const parameters = getParametersFromNode(last_selected_node_id)
-        console.log("last id: " + last_selected_layer_id)
         const new_value = document.getElementById("bias-parameter").value
 
         for (i in parameters) {
@@ -583,7 +597,6 @@
       linear_inFeatures_input.addEventListener("change", () => {
         setModelView("irrelevant")
         const parameters = getParametersFromNode(last_changed_parameters_layer_id)
-        console.log("last id: " + last_selected_layer_id)
         const new_value = document.getElementById("linear-inFeatures-parameter").value
 
         for (i in parameters) {
@@ -603,7 +616,6 @@
       linear_outFeatures_input.addEventListener("change", () => {
         setModelView("irrelevant")
         const parameters = getParametersFromNode(last_changed_parameters_layer_id)
-        console.log("last id: " + last_selected_layer_id)
         const new_value = document.getElementById("linear-outFeatures-parameter").value
 
         for (i in parameters) {
@@ -623,7 +635,6 @@
       special_width_input.addEventListener("change", () => {
         setModelView("irrelevant")
         const parameters = getParametersFromNode(last_changed_parameters_layer_id)
-        console.log("last id: " + last_selected_layer_id)
         const new_value = document.getElementById("special-width-parameter").value
 
         for (i in parameters) {
@@ -637,6 +648,21 @@
       special_width_input.addEventListener("input", () => {
         setModelView("irrelevant")
         last_changed_parameters_layer_id = last_selected_node_id
+      })
+
+      const loss_type_selector = document.getElementById("loss-type-parameter")
+      loss_type_selector.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const parameters = getParametersFromNode(last_selected_node_id)
+        const new_value = loss_type_selector.value
+
+        for (i in parameters) {
+          if (parameters[i][0] == "type") {
+            parameters[i][1] = new_value
+            joinUpdatedLayerParameters(parameters, last_selected_node_id)
+            break
+          }
+        }
       })
 
       /* DRAG EVENT */
@@ -965,7 +991,7 @@
     <script>
       function showMode(event) {
         let all = document.querySelectorAll(".menu ul li")
-        let modes = document.querySelectorAll("div.home, div.constructor, div.terminal, div.metrics")
+        let modes = document.querySelectorAll("div.home, div.constructor, div.metrics")
         for (let i = 0; i < all.length; i++) {
           all[i].classList.remove("selected")
           modes[i].style.display = "none"
@@ -1048,7 +1074,7 @@
       function changeNNShowMode() {}
       function openConstructior() {
         const all = document.querySelectorAll(".menu ul li")
-        const modes = document.querySelectorAll("div.home, div.constructor, div.terminal, div.metrics")
+        const modes = document.querySelectorAll("div.home, div.constructor, div.metrics")
         for (let i = 0; i < all.length; i++) {
           all[i].classList.remove("selected")
           modes[i].style.display = "none"
@@ -1140,20 +1166,23 @@
           try {
             path.setAttribute("display", "none")
           } catch (e) {
-            console.log(e)
+            console.error(e)
           }
         }
         pathsWithWrittenID = []
         is_id_on_paths = false
       }
 
-      function getSortableInputList(layerClass) {
-        switch (layerClass) {
+      function getSortableInputList(layer) {
+        switch (layer.class) {
           case "linear":
             return document.querySelector("#linear-inputs-sortable-list")
           case "relu":
             return document.querySelector("#relu-inputs-sortable-list")
           case "special":
+            if (layer.name == "Loss") {
+              return document.querySelector("#loss-inputs-sortable-list")
+            }
             return document.querySelector("#special-inputs-sortable-list")
         }
       }
@@ -1165,9 +1194,9 @@
       function matchConnectionsAfterSelection(new_input_order) {
         let newConnections = []
         let connections = editor.getNodeFromId(input_selection_layer_id).data.Connections
-        for (let i = 0; i < new_input_order.length; i++) {
+        for (let input of new_input_order) {
           for (let connection of connections) {
-            if (new_input_order[i] == connection.split(";")[0]) {
+            if (input == connection.split(";")[0]) {
               newConnections.push(connection)
             }
           }
@@ -1244,42 +1273,77 @@
         })
 
         document.getElementById("layer-data").style.display = "block"
-        document.getElementById("layer-id").innerHTML = "ID: " + layer_dbid.toString()
+        setupLayerParameters(node, correct_id)
+      }
 
-        const layer_parameters = getParametersFromNode(correct_id)
+      function setupLayerParameters(layer, layer_id) {
+        let layer_parameters = getParametersFromNode(layer_id)
 
-        if (node.class == "linear") {
-          document.querySelector("#linear-layer-parameters").style.display = "block"
+        switch (layer.class) {
+          case "linear":
+            document.querySelector("#linear-layer-parameters").style.display = "block"
 
-          for (i in layer_parameters) {
-            if (layer_parameters[i][0] == "bias") {
-              document.querySelector("#bias-parameter").value = layer_parameters[i][1] == "1"
+            for (i in layer_parameters) {
+              switch (layer_parameters[i][0]) {
+                case "bias":
+                  document.querySelector("#bias-parameter").value = layer_parameters[i][1] == "1"
+                  break
+                case "inFeatures":
+                  document.querySelector("#linear-inFeatures-parameter").value = layer_parameters[i][1]
+                  break
+                case "outFeatures":
+                  document.querySelector("#linear-outFeatures-parameter").value = layer_parameters[i][1]
+                  break
+              }
             }
-            if (layer_parameters[i][0] == "inFeatures") {
-              document.querySelector("#linear-inFeatures-parameter").value = layer_parameters[i][1]
-            }
-            if (layer_parameters[i][0] == "outFeatures") {
-              document.querySelector("#linear-outFeatures-parameter").value = layer_parameters[i][1]
-            }
-          }
-        } else if (node.class == "special") {
-          document.querySelector("#special-layer-parameters").style.display = "block"
+            break
 
-          for (i in layer_parameters) {
-            if (layer_parameters[i][0] == "width") {
-              document.querySelector("#special-width-parameter").value = layer_parameters[i][1]
+          case "special":
+            if (layer.name == "Loss") {
+              document.querySelector("#loss-layer-parameters").style.display = "block"
+              for (i in layer_parameters) {
+                switch (layer_parameters[i][0]) {
+                  case "width":
+                    document.querySelector("#loss-width-parameter").value = layer_parameters[i][1]
+                    break
+                  case "type":
+                    document.querySelector("#loss-type-parameter").value = layer_parameters[i][1]
+                    break
+                }
+              }
+            } else {
+              document.querySelector("#special-layer-parameters").style.display = "block"
+              for (i in layer_parameters) {
+                switch (layer_parameters[i][0]) {
+                  case "width":
+                    document.querySelector("#special-width-parameter").value = layer_parameters[i][1]
+                    break
+                  case "type":
+                    document.querySelector("#loss-type-parameter").value = layer_parameters[i][1]
+                    break
+                }
+              }
             }
-          }
-        } else if (node.class == "relu") {
-          document.querySelector("#relu-layer-parameters").style.display = "block"
+            break
+
+          case "relu":
+            document.querySelector("#relu-layer-parameters").style.display = "block"
+            for (i in layer_parameters) {
+              if (layer_parameters[i][0] == "width") {
+                document.querySelector("#relu-width-parameter").value = layer_parameters[i][1]
+              }
+            }
+            break
         }
       }
+
       function hideLayerInfo() {
         document.getElementById("layer-data").style.display = "none"
 
         document.querySelector("#linear-layer-parameters").style.display = "none"
         document.querySelector("#special-layer-parameters").style.display = "none"
         document.querySelector("#relu-layer-parameters").style.display = "none"
+        document.querySelector("#loss-layer-parameters").style.display = "none"
 
         if (is_id_on_paths) {
           deleteIdOnConnections()

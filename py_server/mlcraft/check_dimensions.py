@@ -1,13 +1,8 @@
-from enum import Enum
 from collections import defaultdict
+from http import HTTPStatus
 
 from .utils import topology_sort
-
-
-class DimensionsCheckStatus(Enum):
-    OK = 0
-    InvalidNumberOfInputs = 1
-    DimensionsMismatch = 2
+from .errors import Error
 
 
 class Data2dChecker:
@@ -80,9 +75,7 @@ def create_checker(layer: dict):
             raise TypeError(f"Unknown layer type: {layer['type']}")
 
 
-def check_dimensions(
-    layers: list[dict],
-) -> tuple[DimensionsCheckStatus, int | None]:
+def assert_dimensions_match(layers: list[dict]):
     layer_checkers = {}
     data_layers = []
 
@@ -112,7 +105,13 @@ def check_dimensions(
                 ]
             )
             if not acceptable:
-                return DimensionsCheckStatus.DimensionsMismatch, layer_id
-    except TypeError as e:
-        return DimensionsCheckStatus.InvalidNumberOfInputs, current_layer_id
-    return DimensionsCheckStatus.OK, None
+                raise Error(
+                    f"Layer {layer_id} does not match with it's parents in dimensions",
+                    HTTPStatus.NOT_ACCEPTABLE,
+                    problemNode=layer_id,
+                )
+    except TypeError:
+        raise Error(
+            f"Invalid number of inputs for layer {current_layer_id}",
+            HTTPStatus.NOT_ACCEPTABLE,
+        )
