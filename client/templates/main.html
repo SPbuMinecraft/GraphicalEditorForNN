@@ -1140,7 +1140,7 @@
           try {
             path.setAttribute("display", "none")
           } catch (e) {
-            console.log(e)
+            console.error(e)
           }
         }
         pathsWithWrittenID = []
@@ -1165,9 +1165,9 @@
       function matchConnectionsAfterSelection(new_input_order) {
         let newConnections = []
         let connections = editor.getNodeFromId(input_selection_layer_id).data.Connections
-        for (let i = 0; i < new_input_order.length; i++) {
+        for (let input of new_input_order) {
           for (let connection of connections) {
-            if (new_input_order[i] == connection.split(";")[0]) {
+            if (input == connection.split(";")[0]) {
               newConnections.push(connection)
             }
           }
