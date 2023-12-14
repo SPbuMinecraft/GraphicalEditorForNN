@@ -440,7 +440,6 @@
           }
         }
         click(e) {
-          deleteIdOnConnections()
           hideLayerInfo()
           super.click(e)
         }
@@ -538,7 +537,7 @@
           if (response.ok) {
             editor.updateNodeDataFromId(connection.input_id, {
               DBID: data2.DBID,
-              Connections: data2.Connections.concat(`${data1.DBID};${connection.output_id}`), // "db_id;drawflow_id"
+              Connections: [].concat(`${data1.DBID};${connection.output_id}`, data2.Connections), // "db_id;drawflow_id"
               Parameters: data2.Parameters,
             })
           } else {
@@ -1160,14 +1159,20 @@
           const tmp = addLabelText(htmlConnection, connection.split(";")[0]) // Writes id on connection
           pathsWithWrittenID.push(tmp)
         }
+        is_id_on_paths = true
       }
 
       // Remove id written on connection
       function deleteIdOnConnections() {
         for (let path of pathsWithWrittenID) {
-          path.setAttribute("display", "none")
+          try {
+            path.setAttribute("display", "none")
+          } catch (e) {
+            console.error(e)
+          }
         }
         pathsWithWrittenID = []
+        is_id_on_paths = false
       }
 
       function getSortableInputList(layer) {
@@ -1187,7 +1192,36 @@
       function hideResult() {
         document.getElementById("predict-result-wrapper").style.display = "none"
       }
+
+      function matchConnectionsAfterSelection(new_input_order) {
+        let newConnections = []
+        let connections = editor.getNodeFromId(input_selection_layer_id).data.Connections
+        for (let input of new_input_order) {
+          for (let connection of connections) {
+            if (input == connection.split(";")[0]) {
+              newConnections.push(connection)
+            }
+          }
+        }
+        let new_inputs_object = {
+          new_parents: new_input_order,
+          layer_id: input_selection_layer_dbid,
+        }
+        updateParentOrder(new_inputs_object).then(response => {
+          if (response.ok) {
+            editor.updateNodeDataFromId(input_selection_layer_id, {
+              DBID: input_selection_layer_dbid,
+              Connections: newConnections,
+              Parameters: editor.getNodeFromId(input_selection_layer_id).data.Parameters,
+            })
+          } else {
+            errorNotification("Failed to update input order.\n Server is not responding now.")
+          }
+        })
+      }
+
       function showLayerInfo(id) {
+        hideLayerInfo()
         // id format "node-<id>"
         let correct_id = id
         if (id.includes("node")) {
@@ -1196,10 +1230,13 @@
         const node = editor.getNodeFromId(correct_id)
         const connections = editor.getNodeFromId(correct_id).data.Connections
         const layer_dbid = editor.getNodeFromId(correct_id).data.DBID
+        input_selection_layer_id = correct_id
+        input_selection_layer_dbid = layer_dbid
 
         // Input selection
-        writeIdOnConnections(correct_id)
-        let sortable_list = getSortableInputList(node)
+        writeIdOnConnections(input_selection_layer_id)
+        let sortable_list = getSortableInputList(node.class)
+
         let child = sortable_list.lastElementChild
 
         while (child) {
@@ -1233,30 +1270,7 @@
                 continue
               }
             }
-
-            let newConnections = []
-            for (let i = 0; i < new_input_order.length; i++) {
-              for (let connection of connections) {
-                if (new_input_order[i] == connection.split(";")[0]) {
-                  newConnections[i] = connection
-                }
-              }
-            }
-            let new_inputs_object = {
-              new_parents: new_input_order,
-              layer_id: layer_dbid,
-            }
-            updateParentOrder(new_inputs_object).then(response => {
-              if (response.ok) {
-                editor.updateNodeDataFromId(correct_id, {
-                  DBID: layer_dbid,
-                  Connections: newConnections,
-                  Parameters: editor.getNodeFromId(correct_id).data.Parameters,
-                })
-              } else {
-                errorNotification("Failed to update input order.\n Server is not responding now.")
-              }
-            })
+            matchConnectionsAfterSelection(new_input_order)
           },
         })
 
@@ -1333,7 +1347,9 @@
         document.querySelector("#relu-layer-parameters").style.display = "none"
         document.querySelector("#loss-layer-parameters").style.display = "none"
 
-        deleteIdOnConnections()
+        if (is_id_on_paths) {
+          deleteIdOnConnections()
+        }
       }
 
       function addLabelText(path, labelText) {
