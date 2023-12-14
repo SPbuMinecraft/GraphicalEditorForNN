@@ -54,7 +54,6 @@
         <ul>
           <li id="select-home" onclick="showMode(event);">Home</li>
           <li id="select-constructor" onclick="showMode(event);" class="selected">Constructor</li>
-          <li id="select-terminal" onclick="showMode(event);">Terminal</li>
           <li id="select-metrics" onclick="showMode(event);">Metrics</li>
         </ul>
       </div>
@@ -216,8 +215,6 @@
       </div>
     </div>
 
-    <div class="terminal" id="terminal">Coming soon!</div>
-
     <div class="metrics" id="metrics">Coming soon!</div>
 
     <!--Работа с Drawflow-->
@@ -332,6 +329,7 @@
 
           deleteConnection(connectionToDelete).then(response => {
             if (response.ok) {
+              setModelView("irrelevant")
               this.connection_selected = selectedConnection
               super.removeConnection()
 
@@ -993,7 +991,7 @@
     <script>
       function showMode(event) {
         let all = document.querySelectorAll(".menu ul li")
-        let modes = document.querySelectorAll("div.home, div.constructor, div.terminal, div.metrics")
+        let modes = document.querySelectorAll("div.home, div.constructor, div.metrics")
         for (let i = 0; i < all.length; i++) {
           all[i].classList.remove("selected")
           modes[i].style.display = "none"
@@ -1076,7 +1074,7 @@
       function changeNNShowMode() {}
       function openConstructior() {
         const all = document.querySelectorAll(".menu ul li")
-        const modes = document.querySelectorAll("div.home, div.constructor, div.terminal, div.metrics")
+        const modes = document.querySelectorAll("div.home, div.constructor, div.metrics")
         for (let i = 0; i < all.length; i++) {
           all[i].classList.remove("selected")
           modes[i].style.display = "none"
