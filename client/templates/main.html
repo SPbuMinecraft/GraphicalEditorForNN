@@ -422,7 +422,6 @@
       linear_bias_selector.addEventListener("change", () => {
         setModelView("irrelevant")
         const parameters = getParametersFromNode(last_selected_node_id)
-        console.log("last id: " + last_selected_layer_id)
         const new_value = document.getElementById("bias-parameter").value
 
         for (i in parameters) {
@@ -444,7 +443,6 @@
       linear_inFeatures_input.addEventListener("change", () => {
         setModelView("irrelevant")
         const parameters = getParametersFromNode(last_changed_parameters_layer_id)
-        console.log("last id: " + last_selected_layer_id)
         const new_value = document.getElementById("linear-inFeatures-parameter").value
 
         for (i in parameters) {
@@ -464,7 +462,6 @@
       linear_outFeatures_input.addEventListener("change", () => {
         setModelView("irrelevant")
         const parameters = getParametersFromNode(last_changed_parameters_layer_id)
-        console.log("last id: " + last_selected_layer_id)
         const new_value = document.getElementById("linear-outFeatures-parameter").value
 
         for (i in parameters) {
@@ -484,7 +481,6 @@
       special_width_input.addEventListener("change", () => {
         setModelView("irrelevant")
         const parameters = getParametersFromNode(last_changed_parameters_layer_id)
-        console.log("last id: " + last_selected_layer_id)
         const new_value = document.getElementById("special-width-parameter").value
 
         for (i in parameters) {
@@ -504,16 +500,11 @@
       loss_type_selector.addEventListener("change", () => {
         setModelView("irrelevant")
         const parameters = getParametersFromNode(last_selected_node_id)
-        console.log("last id: " + last_selected_layer_id)
-        const new_value = document.getElementById("loss-type-parameter").value
+        const new_value = loss_type_selector.value
 
         for (i in parameters) {
           if (parameters[i][0] == "type") {
-            if (new_value == "MSELoss") {
-              parameters[i][1] = "MSELoss"
-            } else {
-              parameters[i][1] = "CrossEntropyLoss"
-            }
+            parameters[i][1] = new_value
             joinUpdatedLayerParameters(parameters, last_selected_node_id)
             break
           }
@@ -1247,20 +1238,22 @@
 
       function setupLayerParameters(layer, layer_id) {
         let layer_parameters = getParametersFromNode(layer_id)
-        console.log(layer_parameters)
 
         switch (layer.class) {
           case "linear":
             document.querySelector("#linear-layer-parameters").style.display = "block"
+
             for (i in layer_parameters) {
-              if (layer_parameters[i][0] == "bias") {
-                document.querySelector("#bias-parameter").value = layer_parameters[i][1] == "1"
-              }
-              if (layer_parameters[i][0] == "inFeatures") {
-                document.querySelector("#linear-inFeatures-parameter").value = layer_parameters[i][1]
-              }
-              if (layer_parameters[i][0] == "outFeatures") {
-                document.querySelector("#linear-outFeatures-parameter").value = layer_parameters[i][1]
+              switch (layer_parameters[i][0]) {
+                case "bias":
+                  document.querySelector("#bias-parameter").value = layer_parameters[i][1] == "1"
+                  break
+                case "inFeatures":
+                  document.querySelector("#linear-inFeatures-parameter").value = layer_parameters[i][1]
+                  break
+                case "outFeatures":
+                  document.querySelector("#linear-outFeatures-parameter").value = layer_parameters[i][1]
+                  break
               }
             }
             break
@@ -1269,21 +1262,25 @@
             if (layer.name == "Loss") {
               document.querySelector("#loss-layer-parameters").style.display = "block"
               for (i in layer_parameters) {
-                if (layer_parameters[i][0] == "width") {
-                  document.querySelector("#loss-width-parameter").value = layer_parameters[i][1]
-                }
-                if (layer_parameters[i][0] == "type") {
-                  document.querySelector("#loss-type-parameter").value = layer_parameters[i][1]
+                switch (layer_parameters[i][0]) {
+                  case "width":
+                    document.querySelector("#loss-width-parameter").value = layer_parameters[i][1]
+                    break
+                  case "type":
+                    document.querySelector("#loss-type-parameter").value = layer_parameters[i][1]
+                    break
                 }
               }
             } else {
               document.querySelector("#special-layer-parameters").style.display = "block"
               for (i in layer_parameters) {
-                if (layer_parameters[i][0] == "width") {
-                  document.querySelector("#special-width-parameter").value = layer_parameters[i][1]
-                }
-                if (layer_parameters[i][0] == "type") {
-                  document.querySelector("#loss-type-parameter").value = layer_parameters[i][1]
+                switch (layer_parameters[i][0]) {
+                  case "width":
+                    document.querySelector("#special-width-parameter").value = layer_parameters[i][1]
+                    break
+                  case "type":
+                    document.querySelector("#loss-type-parameter").value = layer_parameters[i][1]
+                    break
                 }
               }
             }
