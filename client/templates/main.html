@@ -1271,7 +1271,7 @@
             matchConnectionsAfterSelection(new_input_order)
           },
         })
-
+        document.getElementById("layer-id").innerHTML = "ID: " + layer_dbid.toString()
         document.getElementById("layer-data").style.display = "block"
         setupLayerParameters(node, correct_id)
       }
