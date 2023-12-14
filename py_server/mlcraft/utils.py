@@ -3,33 +3,6 @@ import typing as tp
 from enum import Enum
 from collections import deque, defaultdict
 
-from flask import Response, abort
-
-
-class VerificationStatus(Enum):
-    OK = 0
-    NotFound = 1
-    Forbidden = 2
-
-
-class LayersConnectionStatus(Enum):
-    OK = 0
-    DoNotExist = 1
-    AccessDenied = 2
-    WrongDirection = 3
-    Cycle = 4
-
-
-class DeleteStatus(Enum):
-    OK = 0
-    ModelNotExist = 1
-    ElementNotExist = 2
-    LayerNotFree = 3
-
-
-def error(code: int, message: str) -> tp.NoReturn:
-    abort(Response(message, code))
-
 
 def get_edges_from_model(model_dict):
     edges = defaultdict(list)
@@ -117,3 +90,36 @@ def topology_sort(entry_nodes: list[int], edges: dict[int, list[int]]) -> list[i
                 closed.add(current_node)
                 dfs_stack.pop()
     return list(reversed(final_order))
+
+
+def convert_model_parameters(model):
+    """Convert from frontend style parameters to json style"""
+
+    for i in range(len(model["layers"])):
+        model["layers"][i]["parameters"] = parse_parameters(
+            model["layers"][i]["parameters"]
+        )
+
+
+def convert_model(model):
+    """Convert json to another format for C++ by deleting connsetcions ids and rename layers_type"""
+
+    model["connections"] = list(
+        {
+            "layer_from": layer_from,
+            "layer_to": layer_to["id"],
+        }
+        for layer_to in model["layers"]
+        for layer_from in layer_to["parents"]
+    )  # Create list of connections for C++ server
+
+    model["layers"] = list(
+        map(
+            lambda layer: {
+                "id": layer["id"],
+                "type": layer["type"],
+                "parameters": layer["parameters"],
+            },
+            model["layers"],
+        )
+    )

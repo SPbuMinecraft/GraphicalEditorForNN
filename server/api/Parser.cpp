@@ -6,10 +6,13 @@ void CHECK_HAS_FIELD(const crow::json::rvalue& layer, const std::string& field) 
     }
 }
 
-void ParseInputData(const crow::json::rvalue& data, std::vector<float>& result) {
+void ParseCsvData(const std::vector<std::vector<float>>& data, std::vector<float>& instances, std::vector<float>& answers) {
     // Think about optimization via reservation
-    for (auto& inputValue : data) {
-        result.push_back(static_cast<float>(inputValue.d()));
+    for (auto& instance : data) {
+        answers.push_back(instance.back());
+        for (int i = 0; i < instance.size() - 1; ++i) {
+            instances.push_back(instance[i]);
+        }
     }
 }
 
@@ -23,9 +26,9 @@ LinearLayerParameters ParseLinear(const crow::json::rvalue& parameters) {
     inFeatures = static_cast<size_t>(parameters["inFeatures"].i());
     outFeatures = static_cast<size_t>(parameters["outFeatures"].i());
 
-//    if (parameters.has("bias")) {
-//        bias = parameters["bias"].b();
-//    }
+    if (parameters.has("bias")) {
+        bias = parameters["bias"].b();
+    }
 
     return LinearLayerParameters{inFeatures, outFeatures, bias};
 }

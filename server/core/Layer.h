@@ -52,6 +52,5 @@ public:
 class MultLayer: public Layer {
 public:
     Multiply mult;
-    MultLayer(
-        const std::vector<TensorRef>& args, RandomObject* randomInit = nullptr);
+    MultLayer(const std::vector<TensorRef>& args);
 };
