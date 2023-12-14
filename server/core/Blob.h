@@ -4,57 +4,59 @@
 #include <cstddef>
 #include <functional>
 
+#include "LazyBlob.h"
 #include "RandomInit.h"
+#include "Shape.h"
 
 typedef float (*UnaryTransform)(float x);
 
-class Blob {
+class Blob final {
 private:
-    float* data;
-public:
-    const std::size_t rows;
-    const std::size_t cols;
+    float* data = NULL;
+    Blob(Shape shape, const float* data, bool constMemory = false);
+    Blob(Shape shape, bool constMemory, RandomObject* object = nullptr);
 
-    Blob(std::size_t rows, std::size_t cols, const float* data);
-    Blob(std::size_t rows, std::size_t cols, const float value);
-    Blob(std::size_t rows, std::size_t cols, RandomObject* object = nullptr);
-    Blob();
-    Blob(const Blob& other);
+    float* getAddress(size_t k, size_t l, size_t i, size_t j) const;
+public:
+    /// Keep it `const`, PLEASE
+    const Shape shape;
+
+    Blob(Shape shape);
+    Blob(float value);
+    /// Move constructor, it takes data away from `other`
+    Blob(Blob&& other) noexcept;
+    /// Now it is ILLIGAL to copy a blob
+    Blob(const Blob& other) = delete;
+    /// But forcing evaluation in LazyBlob creates a Blob
+    Blob(const LazyBlob& other);
     ~Blob();
 
-    Blob& operator=(const float* data);
+    static Blob fill(Shape shape, float value);
+    static Blob zeros(Shape shape);
+    static Blob ones(Shape shape);
+    static Blob constBlob(Shape shape, const float* data);
+    static Blob constRandomBlob(Shape shape, RandomObject* object = nullptr);
 
-    float* getData() const;
+    /// Convert to lazy with these
+    operator const LazyBlob&() const;
+    const LazyBlob& lazy() const;
 
-    float at(std::size_t i, std::size_t j) const;
-    const float* operator[](std::size_t index) const;
-    float* operator[](std::size_t index);
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const;
+    float operator() (std::size_t l, std::size_t i, std::size_t j) const;
+    float operator() (std::size_t i, std::size_t j) const;
+    float operator() (std::size_t j) const;
+
+    float& operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j);
+    float& operator() (std::size_t l, std::size_t i, std::size_t j);
+    float& operator() (std::size_t i, std::size_t j);
+    float& operator() (std::size_t j);
 
     void clear();
 
-    bool operator==(const Blob& t) const;
-    bool operator!=(const Blob& t) const;
+    /// Also move assignment, so `t` is useles after this
+    Blob& operator = (Blob&& t) noexcept;
 
-    Blob operator-() const;
-    Blob operator+(const Blob& t) const;
-    Blob operator-(const Blob& t) const;
-    Blob operator*(const Blob& t) const;
-    Blob transposed() const;
-    Blob applying(UnaryTransform transform) const;
-
-    friend Blob operator*(float x, const Blob& b);
-    friend Blob operator*(const Blob& b, float x);
-
-    Blob& operator*=(const float t);
-
-    friend void swap(Blob& first, Blob& second);
-    Blob& operator=(const Blob& t);
-
-    Blob& operator+=(const Blob& t);
-    Blob& operator-=(const Blob& t);
-    Blob& operator*=(const Blob& t);
-
-    friend std::ostream& operator<<(std::ostream& os, const Blob& b);
+    friend bool operator == (const Blob &a, const Blob &b);
+    friend bool operator != (const Blob &a, const Blob &b);
+    friend std::ostream& operator<<(std::ostream& os, const LazyBlob& b);
 };
-
-typedef std::reference_wrapper<Blob> BlobRef;
