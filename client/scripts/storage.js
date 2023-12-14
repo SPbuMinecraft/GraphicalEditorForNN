@@ -14,3 +14,7 @@ let last_selected_node_id // layer's drawflow id
 let last_changed_parameters_layer_id
 let layer_drag_offset_X = 0
 let layer_drag_offset_Y = 0
+
+let is_id_on_paths = false // Is there written id's on connections
+let input_selection_layer_id
+let input_selection_layer_dbid
