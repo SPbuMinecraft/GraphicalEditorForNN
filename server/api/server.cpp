@@ -16,6 +16,8 @@
 #include "zip.h"
 #include "GraphBuilder.h"
 #include "CsvLoader.h"
+#include "ImageLoader.h"
+#include "DataMarker.h"
 
 using namespace std;
 using namespace crow;
@@ -40,10 +42,28 @@ web::json::value GetLogs(const std::optional<Blob>& node) {
     return web::json::value::array(values);
 }
 
-void train(json::rvalue& json, Graph** graph, int model_id, int user_id) {
+void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExtension extension) {
     RandomObject initObject(0, 1, 42);
     OptimizerBase SGD = OptimizerBase(0.1);
-    std::vector<std::vector<float>> data = CsvLoader::load_csv(getDataPath(model_id));
+
+    // Should be adopted for DataLoader possibilities
+    std::string path = getDataPath(model_id);
+    if (extension == FileExtension::Csv) {
+        path += "/1.csv";
+    }
+    DataMarker dataMarker = DataMarker(path, extension, 100, 1);
+    DataLoader dataLoader = dataMarker.get_train_loader();
+    std::vector<std::vector<float>> data;
+    for (int i = 0; i < dataLoader.size(); ++i) {
+        auto p = dataLoader.get_raw(i);
+        p.first.push_back(p.second[0]);
+        for (auto x: p.first) {
+            std::cout << x << ' ';
+        }
+        std::cout << std::endl;
+        data.push_back(p.first);
+    }
+
     *graph = new Graph();
     (*graph)->Initialize(json, data, &initObject, SGD);
     std::cout << "Graph is ready!" << std::endl;
@@ -100,8 +120,14 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id) {
     }
 }
 
-void predict(int model_id, Graph* graph, std::vector<float>& answer) {
-    std::vector<std::vector<float>> predict_data = CsvLoader::load_csv(getPredictPath(model_id));
+void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtension extension) {
+    std::vector<std::vector<float>> predict_data;
+    if (extension == FileExtension::Csv) {
+        predict_data = CsvLoader::load_csv(getPredictPath(model_id) + "/1.csv");
+    }
+    else {
+        predict_data = {ImageLoader::load_image((getPredictPath(model_id) + "/1.png").c_str())};
+    }
     graph->ChangeInputData(predict_data[0]);
 
     // Пока не думаем о нескольких выходах (!) Hard-coded
@@ -149,20 +175,18 @@ int main(int argc, char *argv[]) {
     SimpleApp app;
 
     std::map<int, Graph*> sessions;
+    std::map<int, FileExtension> file_types;
 
     CROW_ROUTE(app, "/predict/<int>").methods(HTTPMethod::POST)
     ([&](const request& req, int model_id) -> response {
         if (sessions.find(model_id) == sessions.end()) return response(status::METHOD_NOT_ALLOWED, "Not trained");
         std::vector<float> answer;
         try {
-            predict(model_id, sessions[model_id], answer);
+            predict(model_id, sessions[model_id], answer, file_types[model_id]);
         } catch (const std::runtime_error &err) {
             return response(status::BAD_REQUEST, "Invalid body");
         }
-        json::wvalue response;
-        for (int i = 0; i < answer.size(); ++i) {
-            response[i] = answer[i];
-        }
+        json::wvalue response = answer[0];
         return crow::response(status::OK, response);
     });
 
@@ -176,8 +200,12 @@ int main(int argc, char *argv[]) {
             delete sessions[model_id];
         }
         Graph* g = nullptr;
+<<<<<<< HEAD
 
         train(body, &g, user_id, model_id);
+=======
+        train(body, &g, model_id, file_types[model_id]);
+>>>>>>> 105c02e (Change train and predict for zip file case)
         sessions[model_id] = g;
         return response(status::OK, "done");
     });
@@ -201,12 +229,16 @@ int main(int argc, char *argv[]) {
         std::filesystem::create_directory(path);
         if (file_type == 0) {
             path += "/1.csv";
-        }
-        else if (type == 0) {
-            path += "/1.zip";
+            file_types[model_id] = FileExtension::Csv;
         }
         else {
-            path += "/1.png";
+            file_types[model_id] = FileExtension::Png;
+            if (type == 0) {
+                path += "/1.zip";
+            }
+            else {
+                path += "/1.png";
+            }
         }
         std::ofstream out_file(path);
         if (!out_file) {
