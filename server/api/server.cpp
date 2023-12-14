@@ -148,8 +148,11 @@ int main(int argc, char *argv[]) {
         if (file_type == 0) {
             path += "/1.csv";
         }
-        else {
+        else if (type == 0) {
             path += "/1.zip";
+        }
+        else {
+            path += "/1.png";
         }
         std::ofstream out_file(path);
         if (!out_file) {
@@ -161,7 +164,7 @@ int main(int argc, char *argv[]) {
         }
         out_file << (*content).second.body;
         out_file.close();
-        if (file_type != 0) {
+        if (file_type != 0 && type == 0) {
             try {
                 extract_from_zip(path, root);
             }
