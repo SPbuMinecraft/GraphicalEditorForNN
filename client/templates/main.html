@@ -816,11 +816,12 @@
       }
     </script>
 
+
     <!--Метрики-->
     <script>
 async function getMetricsFromServer() {
     let metricsPage = document.querySelector("#metrics");
-    const response = await fetch(`http://${pyServerAddress}/get_plots/${userId}/${modelId}`, {
+    const response = await fetch(`http://${py_server_address}/get_plots/${user_id}/${model_id}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
