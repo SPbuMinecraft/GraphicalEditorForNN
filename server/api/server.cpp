@@ -37,13 +37,13 @@ std::string getPredictPath(int id) {
     return "./model_data/predict/" + std::to_string(id);
 }
 
-web::json::value GetLogs(const std::optional<Blob>& node) {
-    assert(node.has_value() && node.value().shape.dimsCount <= 2);
+web::json::value GetLogs(const Blob& node) {
+    assert(node.shape.dimsCount <= 2);
     std::vector<web::json::value> values;
-    values.reserve(node.value().shape.size());
-    for (size_t sample_index = 0; sample_index < node.value().shape.rows(); ++sample_index) {
-        for (size_t feature_index = 0; feature_index < node.value().shape.cols(); ++feature_index) {
-            values.push_back(web::json::value::number(node.value()(0, 0, sample_index, feature_index)));
+    values.reserve(node.shape.size());
+    for (size_t sample_index = 0; sample_index < node.shape.rows(); ++sample_index) {
+        for (size_t feature_index = 0; feature_index < node.shape.cols(); ++feature_index) {
+            values.push_back(web::json::value::number(node(0, 0, sample_index, feature_index)));
         }
     }
     return web::json::value::array(values);
@@ -60,16 +60,6 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     }
     DataMarker dataMarker = DataMarker(path, extension, 100, 4);
     DataLoader dataLoader = dataMarker.get_train_loader();
-    std::vector<std::vector<float>> data;
-    for (int i = 0; i < dataLoader.size(); ++i) {
-        auto p = dataLoader.get_raw(i);
-        p.first.push_back(p.second[0]);
-        for (auto x: p.first) {
-            std::cout << x << ' ';
-        }
-        std::cout << std::endl;
-        data.push_back(p.first);
-    }
 
     size_t batch_size = 4;  // hard-coded
     *graph = new Graph();
@@ -92,8 +82,13 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     targets.reserve(buffer_size);
     outputs.reserve(buffer_size);
 
-    size_t max_epochs = 1000;
+    size_t max_epochs = 30;
     std::pair<std::vector<float>, std::vector<float>> batch;
+
+    web::http::client::http_client client(U("http://localhost:3000"));
+    std::ostringstream request_url;
+    request_url << "/update_metrics/" << user_id << "/" << model_id;
+
     for (size_t epoch = 0; epoch < max_epochs; ++epoch) {
         for (size_t batch_index = 0; batch_index < dataLoader.size(); ++batch_index) {
             batch = dataLoader.get_raw(batch_index);
@@ -103,8 +98,10 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
         lastTrainNode.forward();
         // printf("%ld: %f\n", epoch, result[0][0]);
 
-        outputs.push_back(GetLogs(lastPredictNode));
-        targets.push_back(GetLogs(targetsNode));
+        outputs.push_back(GetLogs(lastPredictNode.value()));
+        targets.push_back(GetLogs(targetsNode.value()));
+        // outputs.push_back(web::json::value::array({web::json::value::number(1.0)}));
+        // targets.push_back(web::json::value::array({web::json::value::number(1.0)}));
 
         if ((epoch == max_epochs - 1 && outputs.size() > 0) ||
             outputs.size() == buffer_size) {
@@ -119,17 +116,13 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
             targets.clear();
             outputs.clear();
 
-            std::ostringstream request_url;
-            request_url << "/update_metrics/" << user_id << "/" << model_id;
-
-            web::http::client::http_client client(U("http://localhost:3000"));
             client.request(web::http::methods::PUT, U(request_url.str()), json);
         }
 
-        // lastTrainNode.gradient = result;
         lastTrainNode.gradient = Blob::ones({{1}});
         lastTrainNode.backward();
         SGD.step();
+        // Allocator::endSession();
         lastTrainNode.clear();
     }
 }

@@ -48,7 +48,7 @@ string Shape::toString() const {
 
 vector<size_t> Shape::getDims() const {
     vector<size_t> dims;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 4 - dimsCount; i < 4; i++) {
         dims.push_back(this->dims[i]);
     }
     return dims;
