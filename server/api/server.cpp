@@ -51,7 +51,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     if (extension == FileExtension::Csv) {
         path += "/1.csv";
     }
-    DataMarker dataMarker = DataMarker(path, extension, 100, 1);
+    DataMarker dataMarker = DataMarker(path, extension, 100, 4);
     DataLoader dataLoader = dataMarker.get_train_loader();
     std::vector<std::vector<float>> data;
     for (int i = 0; i < dataLoader.size(); ++i) {
@@ -200,12 +200,8 @@ int main(int argc, char *argv[]) {
             delete sessions[model_id];
         }
         Graph* g = nullptr;
-<<<<<<< HEAD
 
-        train(body, &g, user_id, model_id);
-=======
-        train(body, &g, model_id, file_types[model_id]);
->>>>>>> 105c02e (Change train and predict for zip file case)
+        train(body, &g, model_id, user_id, file_types[model_id]);
         sessions[model_id] = g;
         return response(status::OK, "done");
     });

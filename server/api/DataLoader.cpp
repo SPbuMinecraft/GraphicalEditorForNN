@@ -38,39 +38,34 @@ std::pair<Blob, std::vector<float>> DataLoader::operator[](std::size_t index) co
 }
 
 std::size_t DataLoader::size() const {
-    return loader->size();
+    return (loader->size() + batch_size - 1) / batch_size;
 }
 
 void DataLoader::add_data(const DataLoader& other, int index) {
     loader->add_data(other.loader, index);
 }
 
-std::pair<std::vector<float>, std::vector<float>> DataLoader::get_raw(std::size_t index) const { // batch_size lines from index
-    if (index >= loader->size()) {
+std::pair<std::vector<float>, std::vector<float>> DataLoader::get_raw(std::size_t batch_index) const { // batch_size lines from index
+    if (batch_index >= loader->size()) {
         throw std::out_of_range("Index out of range");
     }
     std::vector<float> data;
     std::vector<float> res(batch_size, 0);
-    Shape shape = loader->get_appropriate_shape(rearrangement[index], batch_size);
+    Shape shape = loader->get_appropriate_shape(rearrangement[batch_index], batch_size);
     auto dims = shape.getDims();
-    int data_size = 1;
-    for (int i = 0; i < dims.size(); ++i) {
-        data_size *= dims[i];
-    }
-    data.resize(data_size, 0);
+    data.resize(dims.size(), 0);
     int cur_data = 0;
-    for (int i = index; i < index + batch_size; ++i) {
+    for (int i = batch_size * batch_index; i < (batch_size + 1) * batch_index; ++i) {
         if (i >= loader->size()) {
             break;
         }
         auto line = loader->get_raw(rearrangement[i]);
-        res[i - index] = line.second;
+        res[i - batch_size * batch_index] = line.second;
         for (int j = 0; j < line.first.size(); ++j) {
-            data[cur_data] = line.first[j];
-            cur_data++;
+            data[cur_data++] = line.first[j];
         }
     }
-    return {data, res};
+    return {std::move(data), std::move(res)};
 }
 
 void DataLoader::shuffle() {
