@@ -1,5 +1,6 @@
 #include <unordered_map>
 #include <functional>
+#include <cassert>
 #include <string>
 
 #include "Layer.h"
@@ -113,4 +114,40 @@ LayerNorm::LayerNorm(const AxisParameters& params,
     pipeline.push_back(std::move(_fill));
 
     result = Tensor(div, {pipeline[2], pipeline[5]});
-    }
+}
+
+SoftMax::SoftMax(const AxisParameters& params,
+                   const std::vector<TensorRef>& args)
+    : sum(params.axis) {
+    assert(args.size() == 1);
+    pipeline.reserve(3);
+    TensorRef tensor = args[0];
+
+    Tensor exp_(exp, {tensor});
+    pipeline.push_back(std::move(exp_));
+
+    Tensor sum_(sum, {pipeline[0]});
+    pipeline.push_back(std::move(sum_));
+
+    Tensor fill_(fill, {pipeline[0], pipeline[1]});
+    pipeline.push_back(std::move(fill_));
+
+    result = Tensor(div, {pipeline[0], pipeline[2]});
+}
+
+EntropyLoss::EntropyLoss(const CrossEntropyLossParameters& params,
+                        const std::vector<TensorRef>& args)
+    : softmax({{3}}, {args[0]}), mean({0, 1, 2, 3}), entropy(params.classCount) {
+    assert(args.size() == 2);
+    pipeline.reserve(1);
+
+    Tensor entropy_(entropy, {softmax.result.value(), args[1]});
+    pipeline.push_back(std::move(entropy_));
+
+    result = Tensor(mean, {pipeline[0]});
+}
+
+MaxPool::MaxPool(const std::vector<TensorRef>& args) {
+    assert(args.size() == 1);
+    result = Tensor(maxPool, {args[0]});
+}

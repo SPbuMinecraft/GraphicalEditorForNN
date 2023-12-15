@@ -24,3 +24,7 @@ struct AxisParameters
     std::vector<short> axis;
 };
 
+struct CrossEntropyLossParameters
+{
+    std::size_t classCount; 
+};

@@ -87,3 +87,28 @@ public:
     LayerNorm(const AxisParameters& params,
         const std::vector<TensorRef>& args);
 };
+
+class SoftMax: public Layer {
+public:
+    Exp exp;
+    SumAxis sum;
+    Fill fill;
+    Divide div;
+    SoftMax(const AxisParameters& params,
+        const std::vector<TensorRef>& args);
+};
+
+class EntropyLoss: public Layer {
+public:
+    SoftMax softmax;
+    Mean mean;
+    Entropy entropy;
+    EntropyLoss(const CrossEntropyLossParameters& params, 
+        const std::vector<TensorRef>& args);
+};
+
+class MaxPool: public Layer {
+public:
+    MaxPoolOp maxPool;
+    MaxPool(const std::vector<TensorRef>& args);
+};

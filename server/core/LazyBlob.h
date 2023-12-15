@@ -31,6 +31,10 @@ public:
     const LazyBlob& mean(std::vector<short> axis, bool minusOne = false) const;
     const LazyBlob& reverseLast2Dims() const;
     const LazyBlob& transposeFirst2Dims() const;
+    const LazyBlob& entropy(const LazyBlob& b, int classCount) const;
+    const LazyBlob& entropyDerivative(const LazyBlob& b, int classCount) const;
+    const LazyBlob& maxPool() const;
+    const LazyBlob& maxPoolDerivative(const LazyBlob& b) const;
 
     /// To repeat some dimensions several times
     /// - Parameter shape: the size we want to get
