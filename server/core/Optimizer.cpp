@@ -5,13 +5,18 @@
 #include "Tensor.h"
 #include "Optimizer.h"
 
+OptimizerBase::OptimizerBase(float lr) : lr(lr) {
+}
+
 void OptimizerBase::append(std::vector<TensorRef>& newParams) {
-    params.reserve(params.size() + newParams.size() * sizeof(TensorRef));
-    params.insert(params.end(),newParams.begin(),newParams.end());
+    params.reserve(params.size() + newParams.size());
+    params.insert(params.end(), newParams.begin(), newParams.end());
 }
 
 void OptimizerBase::step() {
     for (int i = 0; i < params.size(); i++) {
-        *params[i].get().output -= lr * *params[i].get().gradient;
+        if (params[i].get().gradient.has_value() && params[i].get().output.has_value()) {
+            params[i].get().output.value() -= lr * params[i].get().gradient.value();
+        }
     }
 }

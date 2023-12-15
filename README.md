@@ -85,6 +85,9 @@ Other targets available:
 > **Important:** If you want to build a c++ server, you need to install [Boost](https://www.boost.org/users/download/).  
 > Then, **in the `config.json` file** add the path to the boost root (folder with `include` and `lib` inside).  
 > For example: `"BOOST_ROOT": "/usr/local/Cellar/boost/1.81.0_1"`  
+
+> Also you need `cpprest`: on MacOS: `brew install cpprestsdk`  
+> on Linux: `sudo apt-get install libcpprest-dev`  
 > After that you should be able to build everything just fine...
 
 There are 3(4) main targets available to build:

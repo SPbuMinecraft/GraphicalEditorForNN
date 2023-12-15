@@ -5,8 +5,8 @@ from mlcraft.errors import Error
 
 def test_correct_simple():
     layers = [
-        {"id": 0, "type": "Target", "parameters": {"width": 1}, "parents": []},
-        {"id": 1, "type": "Data", "parameters": {"width": 2}, "parents": []},
+        {"id": 0, "type": "Target", "parameters": {"shape": [1]}, "parents": []},
+        {"id": 1, "type": "Data", "parameters": {"shape": [2]}, "parents": []},
         {
             "id": 2,
             "type": "Linear",
@@ -23,8 +23,8 @@ def test_correct_simple():
 
 def test_correct_harder():
     layers = [
-        {"id": 0, "type": "Target", "parameters": {"width": 1}, "parents": []},
-        {"id": 1, "type": "Data", "parameters": {"width": 2}, "parents": []},
+        {"id": 0, "type": "Target", "parameters": {"shape": [1]}, "parents": []},
+        {"id": 1, "type": "Data", "parameters": {"shape": [2]}, "parents": []},
         {
             "id": 2,
             "type": "Linear",
@@ -55,8 +55,8 @@ def test_correct_harder():
 
 def test_mismatch_simple():
     layers = [
-        {"id": 0, "type": "Target", "parameters": {"width": 1}, "parents": []},
-        {"id": 1, "type": "Data", "parameters": {"width": 2}, "parents": []},
+        {"id": 0, "type": "Target", "parameters": {"shape": [1]}, "parents": []},
+        {"id": 1, "type": "Data", "parameters": {"shape": [2]}, "parents": []},
         {
             "id": 2,
             "type": "Linear",
@@ -77,8 +77,8 @@ def test_mismatch_simple():
 
 def test_mismatch_harder():
     layers = [
-        {"id": 0, "type": "Target", "parameters": {"width": 1}, "parents": []},
-        {"id": 1, "type": "Data", "parameters": {"width": 2}, "parents": []},
+        {"id": 0, "type": "Target", "parameters": {"shape": [1]}, "parents": []},
+        {"id": 1, "type": "Data", "parameters": {"shape": [2]}, "parents": []},
         {
             "id": 2,
             "type": "Linear",
