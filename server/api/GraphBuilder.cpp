@@ -127,12 +127,14 @@ void Graph::Initialize(crow::json::rvalue modelJson,
             layers_.emplace(layer_id, new ReLULayer{prevLayers});
         } else if (type == "Data" || type == "Target") {
             CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
-            auto params = ParseData2d(layerDicts[layer_id]["parameters"]);
-            if (dataDicts[layer_id].size() % params.width != 0) {
-                throw std::invalid_argument("Sizes mismatch!");
+            Shape shape = ParseData(layerDicts[layer_id]["parameters"]);
+            if (shape.size() == 0 || shape.size() % dataDicts[layer_id].size() != 0) {
+                std::string message = "Object of size " +
+                                      std::to_string(dataDicts[layer_id].size()) +
+                                      " can not have shape Nx" + shape.toString();
+                throw std::runtime_error(message);
             }
-            params.height = dataDicts[layer_id].size() / params.width;
-            layers_.emplace(layer_id, new Data2dLayer{params, dataDicts[layer_id]});
+            layers_.emplace(layer_id, new DataLayer{shape, dataDicts[layer_id]});
         } else if (type == "Output") {
             for (auto prevLayerId : reversedEdges[layer_id]) {
                 lastPredictIds_.push_back(prevLayerId);
@@ -149,15 +151,17 @@ void Graph::Initialize(crow::json::rvalue modelJson,
 void Graph::ChangeInputData(std::vector<float> data) {
     // All data goes to every data layer. Should be changed?
     for (int id : dataIds_) {
-        Data2dLayer* layer = reinterpret_cast<Data2dLayer*>(layers_[id]);
+        DataLayer* layer = reinterpret_cast<DataLayer*>(layers_[id]);
 
         size_t width = layer->result->output->shape.cols();
         if (data.size() % width != 0) {
             throw std::invalid_argument("Sizes mismatch!");
         }
-        Shape expectedShape = layer->result->output->shape;
-        data.resize(expectedShape.size(), 0);
-        layer->result->output.emplace(Blob::constBlob(expectedShape, data.data()));
+        Shape expected_shape = layer->result->output->shape;
+        size_t new_size = (data.size() + expected_shape.size() - 1) / expected_shape.size() *
+                          expected_shape.size();
+        data.resize(new_size, 0);
+        layer->result->output.emplace(Blob::constBlob(expected_shape, data.data()));
     }
 }
 

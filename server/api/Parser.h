@@ -21,4 +21,4 @@ void CHECK_HAS_FIELD(const crow::json::rvalue& layer, const std::string& field);
 void ParseCsvData(const std::vector<std::vector<float>>& data, std::vector<float>& instances, std::vector<float>& answers);
 
 LinearLayerParameters ParseLinear(const crow::json::rvalue& parameters);
-Data2dLayerParameters ParseData2d(const crow::json::rvalue& parameters);
+Shape ParseData(const crow::json::rvalue& parameters);
