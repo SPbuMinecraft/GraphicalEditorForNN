@@ -796,25 +796,29 @@
         ev.preventDefault()
       }
       function drag(ev, layer) {
-        if (layer == "linear") {
-          layer_drag_offset_X = ev.clientX - 50 // Linear layer offset X coord
-          layer_drag_offset_Y = ev.clientY - 97 // Linear layer offset Y coord
-        }
-        if (layer == "relu") {
-          layer_drag_offset_X = ev.clientX - 50 // Relu layer offset X coord
-          layer_drag_offset_Y = ev.clientY - 163 // Relu layer offset Y coord
-        }
-        if (layer == "pooling") {
-          layer_drag_offset_X = ev.clientX - 50 // Pooling layer offset X coord
-          layer_drag_offset_Y = ev.clientY - 229 // Pooling layer offset Y coord
-        }
-        if (layer == "layernorm") {
-          layer_drag_offset_X = ev.clientX - 50 // LayerNorm layer offset X coord
-          layer_drag_offset_Y = ev.clientY - 295 // LayerNorm layer offset Y coord
-        }
-        if (layer == "conv2d") {
-          layer_drag_offset_X = ev.clientX - 50 // Conv2D layer offset X coord
-          layer_drag_offset_Y = ev.clientY - 361 // Conv2D layer offset Y coord
+        switch (layer) {
+          case "linear":
+            layer_drag_offset_X = ev.clientX - 50 // Linear layer offset X coord
+            layer_drag_offset_Y = ev.clientY - 97 // Linear layer offset Y coord
+            break
+          case "relu":
+            layer_drag_offset_X = ev.clientX - 50 // Relu layer offset X coord
+            layer_drag_offset_Y = ev.clientY - 163 // Relu layer offset Y coord
+            break
+          case "pooling":
+            layer_drag_offset_X = ev.clientX - 50 // Pooling layer offset X coord
+            layer_drag_offset_Y = ev.clientY - 229 // Pooling layer offset Y coord
+            break
+          case "layernorm":
+            layer_drag_offset_X = ev.clientX - 50 // LayerNorm layer offset X coord
+            layer_drag_offset_Y = ev.clientY - 295 // LayerNorm layer offset Y coord
+            break
+          case "conv2d":
+            layer_drag_offset_X = ev.clientX - 50 // Conv2D layer offset X coord
+            layer_drag_offset_Y = ev.clientY - 361 // Conv2D layer offset Y coord
+            break
+          default:
+            throw "Unreachable"
         }
 
         if (ev.type === "touchstart") {
