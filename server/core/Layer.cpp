@@ -36,6 +36,13 @@ DataLayer::DataLayer(const Shape& shape, const std::vector<float>& values) {
     result = Tensor(Blob::constBlob(shape, values.data()));
 }
 
+DataLayer::DataLayer(const Shape& shape, size_t batch_size) {
+    std::vector<size_t> dims = shape.getDims();
+    dims.insert(dims.begin(), batch_size);
+    Shape batch_shape(dims);
+    result = Tensor(Blob::constRandomBlob(batch_shape, nullptr));
+}
+
 MSELoss::MSELoss(const std::vector<TensorRef>& args) : mean({0, 1, 2, 3}) {
     pipeline.reserve(2);
 

@@ -6,18 +6,25 @@
 
 #include <boost/asio.hpp>
 
+#include <filesystem>
+
+#include <crow_all.h>
+
+
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
 #include <cpprest/uri.h>
 #include <cpprest/json.h>
-#include <filesystem>
 
-#include <crow_all.h>
-#include "zip.h"
+#pragma push_macro("U")
+#undef U
+#include "ImageLoader.h"
+#pragma pop_macro("U")
+
 #include "GraphBuilder.h"
 #include "CsvLoader.h"
-#include "ImageLoader.h"
 #include "DataMarker.h"
+#include <zip.h>
 
 using namespace std;
 using namespace crow;
@@ -64,8 +71,9 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
         data.push_back(p.first);
     }
 
+    size_t batch_size = 4;  // hard-coded
     *graph = new Graph();
-    (*graph)->Initialize(json, data, &initObject, SGD);
+    (*graph)->Initialize(json, &initObject, SGD, batch_size);
     std::cout << "Graph is ready!" << std::endl;
 
     auto& lastTrainNode = (*graph)->getLayers(BaseLayerType::TrainOut)[0]->result.value();
@@ -85,8 +93,14 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     outputs.reserve(buffer_size);
 
     size_t max_epochs = 1000;
+    std::pair<std::vector<float>, std::vector<float>> batch;
     for (size_t epoch = 0; epoch < max_epochs; ++epoch) {
-        auto& result = lastTrainNode.forward();
+        for (size_t batch_index = 0; batch_index < dataLoader.size(); ++batch_index) {
+            batch = dataLoader.get_raw(batch_index);
+            (*graph)->ChangeLayersData(batch.first, BaseLayerType::Data);
+            (*graph)->ChangeLayersData(batch.second, BaseLayerType::Targets);
+        }
+        lastTrainNode.forward();
         // printf("%ld: %f\n", epoch, result[0][0]);
 
         outputs.push_back(GetLogs(lastPredictNode));
@@ -128,12 +142,14 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtensi
     else {
         predict_data = {ImageLoader::load_image((getPredictPath(model_id) + "/1.png").c_str())};
     }
-    graph->ChangeInputData(predict_data[0]);
+    graph->ChangeLayersData(predict_data[0], BaseLayerType::Targets);
 
     // Пока не думаем о нескольких выходах (!) Hard-coded
     auto& lastNode = graph->getLayers(BaseLayerType::PredictOut)[0]->result.value();
     lastNode.clear();
-    const Blob& result = lastNode.forward();
+    lastNode.forward();
+
+    auto& result = lastNode.output.value();
 
     answer.reserve(result.shape.rows() * result.shape.cols());
     for (size_t j = 0; j < result.shape.rows(); ++j) {
@@ -156,9 +172,9 @@ void extract_from_zip(std::string path, std::string root) {
         if (zip_stat_index(z, i, 0, &info) == 0) {
             ofstream fout(root + "/" + info.name, ios::binary);
             zip_file* file = zip_fopen_index(z, i, 0);
-            char file_data[info.size];
-            zip_fread(file, file_data, info.size);
-            fout.write(file_data, info.size);
+            std::vector<char> file_data(info.size);
+            zip_fread(file, file_data.data(), info.size);
+            fout.write(file_data.data(), info.size);
             fout.close();
         }
     }

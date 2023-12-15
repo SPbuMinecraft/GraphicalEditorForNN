@@ -27,14 +27,13 @@ private:
 public:
     Graph() = default;
     void Initialize(crow::json::rvalue modelJson,
-          const std::vector<std::vector<float>>& data,
-          RandomObject* randomInit,
-          OptimizerBase& SGD);
+                    RandomObject* randomInit,
+                    OptimizerBase& SGD,
+                    size_t batch_size);
     ~Graph();
 
-    void OverviewLayers(const crow::json::rvalue& layers, const std::vector<std::vector<float>>& data,
-                        std::unordered_map<int, crow::json::rvalue>& layer_dicts,
-                        std::unordered_map<int, std::vector<float>>& data_dicts);
+    void OverviewLayers(const crow::json::rvalue& layers,
+                        std::unordered_map<int, crow::json::rvalue>& layer_dicts);
 
     void GetEdges(const crow::json::rvalue& connections,
                   std::unordered_map<int, std::vector<int>>& straightEdges,
@@ -45,7 +44,7 @@ public:
                       std::unordered_set<int>& entryNodes,
                       std::vector<int>& layersOrder);
 
-    void ChangeInputData(std::vector<float> data);
+    void ChangeLayersData(std::vector<float> data, BaseLayerType type);
     
     std::vector<Layer*> getLayers(BaseLayerType type) const;
 

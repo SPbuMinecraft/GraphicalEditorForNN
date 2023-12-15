@@ -20,6 +20,7 @@ public:
 class DataLayer: public Layer {
 public:
     DataLayer(const Shape& params, const std::vector<float>& values);
+    DataLayer(const Shape& params, size_t batch_size);
 };
 
 class LinearLayer: public Layer {
