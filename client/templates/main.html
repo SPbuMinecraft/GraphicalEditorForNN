@@ -1263,8 +1263,9 @@
             new_input_order = []
             for (let i in sortable_list.childNodes) {
               try {
-                if (sortable_list.childNodes[i].textContent.includes("input")) {
-                  new_input_order.push(Number(sortable_list.childNodes[i].textContent.split(" ")[3]))
+                if (sortable_list.childNodes[i].textContent.length > 0) {
+                  console.log(sortable_list.childNodes[i].textContent)
+                  new_input_order.push(Number(sortable_list.childNodes[i].textContent))
                 }
               } catch (e) {
                 continue
