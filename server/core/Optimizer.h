@@ -5,12 +5,12 @@
 #include "Tensor.h"
 
 class OptimizerBase {
-
-const float lr;
-std::vector<TensorRef> params;
-
 public:
-    OptimizerBase(float lr) : lr(lr), params() {};
+    OptimizerBase(float lr);
     void append(std::vector<TensorRef>& newParams);
     void step();
+
+private:
+    const float lr;
+    std::vector<TensorRef> params;
 };

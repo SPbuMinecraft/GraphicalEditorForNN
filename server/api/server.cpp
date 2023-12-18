@@ -39,14 +39,14 @@ std::string getPredictPath(int id) {
 
 web::json::value GetLogs(const Blob& node) {
     assert(node.shape.dimsCount <= 2);
-    std::vector<web::json::value> values;
-    values.reserve(node.shape.size());
+    web::json::value values;
+    size_t elements_stored = 0;
     for (size_t sample_index = 0; sample_index < node.shape.rows(); ++sample_index) {
         for (size_t feature_index = 0; feature_index < node.shape.cols(); ++feature_index) {
-            values.push_back(web::json::value::number(node(0, 0, sample_index, feature_index)));
+            values[elements_stored++] = web::json::value::number(node(0, 0, sample_index, feature_index));
         }
     }
-    return web::json::value::array(values);
+    return values;
 }
 
 void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExtension extension) {
@@ -67,8 +67,8 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     std::cout << "Graph is ready!" << std::endl;
 
     auto& lastTrainNode = (*graph)->getLayers(BaseLayerType::TrainOut)[0]->result.value();
-    auto& lastPredictNode = (*graph)->getLayers(BaseLayerType::PredictOut)[0]->result.value().output;
-    auto& targetsNode = (*graph)->getLayers(BaseLayerType::Targets)[0]->result.value().output;
+    // auto& lastPredictNode = (*graph)->getLayers(BaseLayerType::PredictOut)[0]->result.value().output;
+    // auto& targetsNode = (*graph)->getLayers(BaseLayerType::Targets)[0]->result.value().output;
 
     lastTrainNode.forward();
     lastTrainNode.gradient = Blob::ones({{1}});
@@ -77,10 +77,9 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     lastTrainNode.clear();
     Allocator::endVirtualMode();
 
-    size_t buffer_size = 5;
-    std::vector<web::json::value> targets, outputs;
-    targets.reserve(buffer_size);
-    outputs.reserve(buffer_size);
+    size_t buffer_size = 5, actual_size = 0;
+    web::json::value request;
+    request[U("rewrite")] = web::json::value::boolean(true);
 
     size_t max_epochs = 30;
     std::pair<std::vector<float>, std::vector<float>> batch;
@@ -90,6 +89,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     request_url << "/update_metrics/" << user_id << "/" << model_id;
 
     for (size_t epoch = 0; epoch < max_epochs; ++epoch) {
+        std::cerr << epoch << " Start" << std::endl;
         for (size_t batch_index = 0; batch_index < dataLoader.size(); ++batch_index) {
             batch = dataLoader.get_raw(batch_index);
             (*graph)->ChangeLayersData(batch.first, BaseLayerType::Data);
@@ -98,31 +98,34 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
         lastTrainNode.forward();
         // printf("%ld: %f\n", epoch, result[0][0]);
 
-        outputs.push_back(GetLogs(lastPredictNode.value()));
-        targets.push_back(GetLogs(targetsNode.value()));
-        // outputs.push_back(web::json::value::array({web::json::value::number(1.0)}));
-        // targets.push_back(web::json::value::array({web::json::value::number(1.0)}));
+        auto& lastPredictNode = (*graph)->getLayers(BaseLayerType::PredictOut)[0]->result.value().output.value();
+        auto& targetsNode = (*graph)->getLayers(BaseLayerType::Targets)[0]->result.value().output.value();
+        request[U("targets")][actual_size] = web::json::value(GetLogs(lastPredictNode));
+        request[U("outputs")][actual_size] = web::json::value(GetLogs(targetsNode));
+        ++actual_size;
 
-        if ((epoch == max_epochs - 1 && outputs.size() > 0) ||
-            outputs.size() == buffer_size) {
+        if ((epoch == max_epochs - 1 && actual_size > 0) ||
+            actual_size == buffer_size) {
 
-            web::json::value json;
-            json["targets"] = web::json::value::array(targets);
-            json["outputs"] = web::json::value::array(outputs);
-            json["label"] = web::json::value::string("train");
+            request[U("label")] = web::json::value::string("train");
             if (epoch < buffer_size) {
-                json["rewrite"] = web::json::value::boolean(true);
+                request[U("rewrite")] = web::json::value::boolean(true);
             }
-            targets.clear();
-            outputs.clear();
 
-            client.request(web::http::methods::PUT, U(request_url.str()), json);
+            client.request(web::http::methods::PUT, U(request_url.str()), request);
+            request = web::json::value();
+            actual_size = 0;
         }
 
+        std::cerr << epoch << " OK" << std::endl;
+
         lastTrainNode.gradient = Blob::ones({{1}});
+        std::cerr << epoch << " Gradient vanished" << std::endl;
         lastTrainNode.backward();
+        std::cerr << epoch << " Backwarded" << std::endl;
         SGD.step();
-        // Allocator::endSession();
+        std::cerr << epoch << " Made SGD step" << std::endl;
+        Allocator::endSession();
         lastTrainNode.clear();
     }
 }
