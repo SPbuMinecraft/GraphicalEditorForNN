@@ -9,7 +9,14 @@ using namespace std;
 static const Noop noop = Noop();
 
 void Tensor::getParentsData(vector<LazyBlobRef> &datas) {
-    for (auto p: parents) datas.push_back(p.get().forward());
+    for (auto p: parents) {
+        p.get().forward();
+    }
+
+    for (auto p: parents) {
+        assert(p.get().output.has_value());
+        datas.push_back(p.get().output.value());
+    }
 }
 
 void Tensor::getParentsGrads(vector<LazyBlobRef> &grads) {
@@ -42,16 +49,16 @@ Tensor& Tensor::operator = (Tensor&& other) noexcept {
     return *this;
 };
 
-const Blob& Tensor::forward() {
+void Tensor::forward() {
     if (!output) {
         vector<LazyBlobRef> datas;
+        datas.reserve(parents.size());
         getParentsData(datas);
         // here the blob's move constructor is used
         this->output = operation.compute(datas);
         // Don't need references to parents datas anymore
         Allocator::endSession();
     }
-    return *output;
 }
 
 void Tensor::backward() {
@@ -62,6 +69,7 @@ void Tensor::backward() {
     if (childrenGradReady < childrenCount) return;
 
     vector<LazyBlobRef> datas;
+    datas.reserve(parents.size());
     getParentsData(datas);
     auto grads = operation.grad(*gradient, datas);
     assert(grads.size() == parents.size());

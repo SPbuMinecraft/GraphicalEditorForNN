@@ -111,7 +111,9 @@ public:
 
 class LazyBlobMean final: public LazyBlobReductOperation {
 public:
-    LazyBlobMean(const LazyBlob &a, std::vector<short> axis): LazyBlobReductOperation(a, axis) {};
+    bool minusOne;
+    LazyBlobMean(const LazyBlob &a, std::vector<short> axis, bool minusOne)
+    : LazyBlobReductOperation(a, axis), minusOne(minusOne) {};
 
     float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
         float result = 0;
@@ -132,6 +134,8 @@ public:
             count++;
         });
 
+        if (minusOne)
+            return result / (count - 1);
         return result / count;
     }
 };
@@ -182,6 +186,13 @@ public:
     LazyBlobMult(const LazyBlob &a, const LazyBlob &b): LazyBlobStretchableOperation(a, b, multiply) {};
 };
 
+class LazyBlobDivide final: public LazyBlobStretchableOperation {
+private:
+    static constexpr BinaryTransform divide = [](float x, float y) { return x / y; };
+public:
+    LazyBlobDivide(const LazyBlob &a, const LazyBlob &b): LazyBlobStretchableOperation(a, b, divide) {};
+};
+
 class LazyBlobDot final: public LazyBlobBinaryOperation {
 public:
     LazyBlobDot(const LazyBlob &a, const LazyBlob &b): LazyBlobBinaryOperation(a, b) {};
@@ -222,16 +233,36 @@ public:
 
 class LazyBlobTranspose final: public LazyBlobUnaryOperation {
 public:
-    LazyBlobTranspose(const LazyBlob &a): LazyBlobUnaryOperation(a) {};
+    bool norm;
+    LazyBlobTranspose(const LazyBlob &a, bool norm = true): LazyBlobUnaryOperation(a), norm(norm) {};
 
     void initShape() const final override { 
-        shape_ = Shape {{a.shape().dim4(), a.shape().dim3(), a.shape().cols(), a.shape().rows()}, a.shape().dimsCount};
+        if (norm)
+            shape_ = Shape {{a.shape().dim4(), a.shape().dim3(), a.shape().cols(), a.shape().rows()}, a.shape().dimsCount};
+        else
+            shape_ = Shape {{a.shape().dim3(), a.shape().dim4(), a.shape().rows(), a.shape().cols()}, a.shape().dimsCount};
     }
 
     float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
-        return a(k, l, j, i);
+        if (norm)
+            return a(k, l, j, i);
+        return a(l, k, i, j);
     }
 };
+
+class LazyBlobReverse final: public LazyBlobUnaryOperation {
+public:
+    LazyBlobReverse(const LazyBlob &a): LazyBlobUnaryOperation(a) {};
+
+    void initShape() const final override { 
+        shape_ = Shape {{a.shape().dim4(), a.shape().dim3(), a.shape().rows(), a.shape().cols()}, a.shape().dimsCount};
+    }
+
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        return a(k, l, a.shape().rows() - i - 1, a.shape().cols() - j - 1);
+    }
+};
+
 
 class LazyBlobApply: public LazyBlobUnaryOperation {
 private:
@@ -317,6 +348,11 @@ const LazyBlob& operator * (const LazyBlob &a, const LazyBlob &b) {
     return alloc2<LazyBlobMult>(a, b);
 }
 
+const LazyBlob& operator / (const LazyBlob &a, const LazyBlob &b) {
+    assertStretchable(a, b);
+    return alloc2<LazyBlobDivide>(a, b);
+}
+
 const LazyBlob& LazyBlob::dot(const LazyBlob& a) const {
     assert(shape().cols() == a.shape().rows());
     return alloc2<LazyBlobDot>(*this, a);
@@ -326,14 +362,23 @@ const LazyBlob& LazyBlob::transposed() const {
     return alloc1<LazyBlobTranspose>(*this);
 }
 
+const LazyBlob& LazyBlob::reverseLast2Dims() const {
+    return alloc1<LazyBlobReverse>(*this);
+}
+
+const LazyBlob& LazyBlob::transposeFirst2Dims() const {
+    void* location = Allocator::allocateBytes(sizeof(LazyBlobTranspose));
+    return *(new(location) LazyBlobTranspose(*this, false));
+}
+
 const LazyBlob& LazyBlob::sum(std::vector<short> axis) const {
     void* location = Allocator::allocateBytes(sizeof(LazyBlobSelfSum));
     return *(new(location) LazyBlobSelfSum(*this, axis));
 }
 
-const LazyBlob& LazyBlob::mean(std::vector<short> axis) const {
+const LazyBlob& LazyBlob::mean(std::vector<short> axis, bool minusOne) const {
     void* location = Allocator::allocateBytes(sizeof(LazyBlobMean));
-    return *(new(location) LazyBlobMean(*this, axis));
+    return *(new(location) LazyBlobMean(*this, axis, minusOne));
 }
 
 const LazyBlob& LazyBlob::fill(Shape shape) const {
@@ -415,12 +460,106 @@ Blob& operator *= (Blob& a, const LazyBlob& b) {
     return a;
 }
 
+class LazyBlobConv: public LazyBlob {
+public:
+    const LazyBlob &a, &b;
+    const int size_r, size_c;
+    LazyBlobConv(const LazyBlob &a, const LazyBlob &b): 
+        a(a), b(b), 
+        size_r(b.shape().rows()),
+        size_c(b.shape().cols()) 
+        {};
+
+    float a_get(std::size_t k, std::size_t l, long i, long j) const {
+        if (i < 0 || j < 0 || i >= a.shape().rows() || j >= a.shape().cols())
+            return 0;
+        return a(k, l, i, j);
+    }
+
+    void initShape() const final override { 
+        // TODO: assert
+        shape_ = Shape {{a.shape().dim4(), b.shape().dim4(), a.shape().rows(), a.shape().cols()}, a.shape().dimsCount};
+    }
+
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        float res = 0;
+
+        for (size_t c = 0; c < b.shape().dim3(); ++c) {
+            for (long i1 = 0; i1 < size_r; ++i1) {
+                for (long j1 = 0; j1 < size_c; ++j1) {
+                    res += a_get(k, c, i + i1 - size_r / 2, j + j1 - size_c / 2) * b(l, c, i1, j1);
+                }
+            }
+        }
+        return res;
+    }
+};
+
+LazyBlob&  conv(const LazyBlob &a, const LazyBlob &b) {
+    assert(a.shape().dim3() == b.shape().dim3());
+    void* location = Allocator::allocateBytes(sizeof(LazyBlobConv));
+    return *(new(location) LazyBlobConv(a, b));
+}
+
+class LazyBlobConvI: public LazyBlob {
+public:
+    const LazyBlob &a, &b;
+    const size_t kernelSize, index;
+    LazyBlobConvI(const LazyBlob &a, const LazyBlob &b, size_t kernelSize, size_t i): 
+        a(a), b(b), kernelSize(kernelSize), index(i) {};
+
+    float a_get(std::size_t k, std::size_t l, long i, long j) const {
+        if (i < 0 || j < 0 || i >= a.shape().rows() || j >= a.shape().cols())
+            return 0;
+        return a(k, l, i, j);
+    }
+
+    void initShape() const final override { 
+        shape_ = Shape {{b.shape().dim3(), a.shape().dim3(), kernelSize, kernelSize}, a.shape().dimsCount};
+    }
+
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        float res = 0;
+        for (long i1 = 0; i1 < a.shape().rows(); ++i1) {
+            for (long j1 = 0; j1 < a.shape().cols(); ++j1) {
+                res += a_get(index, l, i1 + i - kernelSize / 2, j1 + j - kernelSize / 2) * b(index, k, i1, j1);
+            }
+        }
+        return res;
+    }
+};
+
+LazyBlob&  conv_i(const LazyBlob &a, const LazyBlob &b, size_t kernelSize, size_t i) {
+    assert(a.shape().dim4() == b.shape().dim4());
+    void* location = Allocator::allocateBytes(sizeof(LazyBlobConvI));
+    return *(new(location) LazyBlobConvI(a, b, kernelSize, i));
+}
+
+class LazyBlobZero: public LazyBlob {
+public:
+    const Shape myShape;
+    LazyBlobZero(const Shape& shape): myShape(shape) {};
+
+    void initShape() const final override {
+        shape_ = myShape;
+    }
+
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        return 0;
+    }
+};
+
+LazyBlob&  zeroBlob(const Shape& shape) {
+    void* location = Allocator::allocateBytes(sizeof(LazyBlobZero));
+    return *(new(location) LazyBlobZero(shape));
+}
+
 std::ostream& operator<<(std::ostream& os, const LazyBlob &b) {
     for (int l = 0; l < b.shape().dim4(); ++l) {
         for (int k = 0; k < b.shape().dim3(); ++k){
             for (int i = 0; i < b.shape().rows(); ++i) {
                 for (int j = 0; j < b.shape().cols(); ++j)
-                    os << b(i, j) << " ";
+                    os << b(l, k, i, j) << " ";
                 os << std::endl;
             }
             os << std::endl;

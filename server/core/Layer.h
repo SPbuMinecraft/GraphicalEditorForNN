@@ -54,3 +54,36 @@ public:
     Multiply mult;
     MultLayer(const std::vector<TensorRef>& args);
 };
+
+class Conv2DLayer: public Layer {
+public:
+    Tensor kernel;
+    Conv2D conv;
+    Conv2DLayer(const Conv2DLayerParameters& params,
+        const std::vector<TensorRef>& args, RandomObject* randomInit = nullptr);
+};
+
+class VarLayer: public Layer {
+public:
+    Mean mean;
+    Mean meanMinusOne;
+    Fill fill;
+    Substract sub;
+    Square sqr;
+    SumAxis sum;
+    VarLayer(const AxisParameters& params,
+        const std::vector<TensorRef>& args);
+};
+
+class LayerNorm: public Layer {
+public:
+    VarLayer varLayer;
+    Mean mean;
+    Fill fill;
+    Substract sub;
+    EPS eps;
+    Root root;
+    Divide div;
+    LayerNorm(const AxisParameters& params,
+        const std::vector<TensorRef>& args);
+};

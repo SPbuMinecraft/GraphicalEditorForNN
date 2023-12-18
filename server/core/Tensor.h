@@ -30,7 +30,7 @@ public:
     Tensor& operator = (Tensor&& other) noexcept;
 //    Tensor& operator=(const Tensor & other);
 
-    const Blob& forward();
+    void forward();
     void backward();
     void accumulate(const LazyBlob& gradient);
 

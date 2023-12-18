@@ -117,7 +117,7 @@ std::ostream& operator<<(std::ostream& os, const Blob& b) {
         for (int k = 0; k < b.shape.dim3(); ++k){
             for (int i = 0; i < b.shape.rows(); ++i) {
                 for (int j = 0; j < b.shape.cols(); ++j)
-                    os << b(i, j) << " ";
+                    os << b(l, k, i, j) << " ";
                 os << std::endl;
             }
             os << std::endl;
