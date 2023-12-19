@@ -174,7 +174,7 @@
           </div>
         </div>
 
-        <div class="relu-layer-parameters" id="relu-layer-parameters" style="display: none">
+        <div class="relu-layer-parameters layer-parameters" id="relu-layer-parameters" style="display: none">
           <label for="relu-width-parameter">Width</label>
           <input id="relu-width-parameter" type="number" value="1" size="4" />
           <h3></h3>
@@ -227,7 +227,7 @@
           </div>
         </div>
 
-        <div class="loss-layer-parameters" id="loss-layer-parameters" style="display: none">
+        <div class="loss-layer-parameters layer-parameters" id="loss-layer-parameters" style="display: none">
           <label for="loss-width-parameter">Width</label>
           <input id="loss-width-parameter" type="number" value="1" size="4" />
           <h3></h3>
@@ -1369,7 +1369,7 @@
 
         // Input selection
         writeIdOnConnections(input_selection_layer_id)
-        let sortable_list = getSortableInputList(node.class)
+        let sortable_list = getSortableInputList(node)
         let child = sortable_list.lastElementChild
 
         while (child) {
