@@ -185,7 +185,6 @@ def predict(user_id: int, model_id: int):
     if not sql_worker.is_model_trained(model_id):
         raise Error("Not trained", HTTPStatus.PRECONDITION_FAILED)
 
-
     response = requests.put(
         current_app.config["CPP_SERVER"] + f"/predict/{model_id}",
         timeout=3,
