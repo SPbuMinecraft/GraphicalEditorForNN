@@ -136,6 +136,11 @@ function trainRequest() {
         }).then(response => {
             showBuildNotification(response.ok)
             onTrainShowPredict(response.ok)
+            if (response.ok) {
+                setModelView("success")
+            } else {
+                setModelView("error")
+            }
         })
     }
 }
@@ -144,6 +149,15 @@ async function predictRequest() {
     if (csv_predict.files.length == 0) {
         errorNotification("Empty predict file.")
         return
+    }
+    if (!(modelIsUpToDate == "success")) {
+        await Swal.fire({
+            position: "center",
+            icon: "warning",
+            title: "Outdated!",
+            text: "Neural network input and/or model is outdated",
+            showConfirmButton: true,
+        })
     }
     const file = csv_predict.files[0]
     const text = await file.text()

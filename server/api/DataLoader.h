@@ -18,6 +18,7 @@ public:
     std::pair<Blob, std::vector<float>> operator[](std::size_t index) const;
     void add_data(const DataLoader& other, int index);
     std::size_t size() const;
+    std::size_t batch_count() const;
     std::pair<std::vector<float>, std::vector<float>> get_raw(std::size_t index) const;
     void shuffle();
 };

@@ -148,13 +148,10 @@ void Graph::ChangeLayersData(std::vector<float> data, BaseLayerType type) {
         DataLayer* layer = reinterpret_cast<DataLayer*>(layers_[id]);
 
         Shape expected_shape = layer->result->output->shape;
-        std::vector<size_t> dims = expected_shape.getDims();
-        size_t sample_size = 1;
-        for (auto it = std::next(dims.begin()); it != dims.end(); ++it) {
-            sample_size *= *it;
-        }
+        size_t sample_size = expected_shape.stride(4 - expected_shape.dimsCount);
 
         if (data.size() % sample_size != 0 || data.size() > expected_shape.size()) {
+            std::cerr << data.size() << " " << sample_size << " " << expected_shape.size() << std::endl;
             throw std::invalid_argument("Sizes mismatch!");
         }
         data.resize(expected_shape.size(), 0);

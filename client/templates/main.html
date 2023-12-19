@@ -54,7 +54,6 @@
         <ul>
           <li id="select-home" onclick="showMode(event);">Home</li>
           <li id="select-constructor" onclick="showMode(event);" class="selected">Constructor</li>
-          <li id="select-terminal" onclick="showMode(event);">Terminal</li>
           <li id="select-metrics" onclick="showMode(event);">Metrics</li>
         </ul>
       </div>
@@ -101,19 +100,14 @@
         <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `relu`)" data-node="relu">
           <span> ReLU</span>
         </div>
-
-        <!--
-    <div
-            class="drag-drawflow"
-            draggable="true"
-            ondragstart="drag(event)"
-            data-node="sigmoid">
-        <span> Sigmoid</span>
-
-    </div>
-    -->
-        <div class="drag-drawflow" draggable="false" onmousedown="return false">
-          <span> Coming soon</span>
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `pooling`)" data-node="pooling">
+          <span> Pooling</span>
+        </div>
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `layernorm`)" data-node="layernorm">
+          <span> LayerNorm</span>
+        </div>
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `conv2d`)" data-node="conv2d">
+          <span> Conv2D</span>
         </div>
         <br />
 
@@ -158,7 +152,7 @@
       </div>
 
       <div class="layer-data" id="layer-data">
-        <h2>Layer parameters</h2>
+        <h2>Parameters</h2>
         <label id="layer-id"></label>
         <h3></h3>
         <div class="linear-layer-parameters layer-parameters" id="linear-layer-parameters" style="display: none">
@@ -175,7 +169,7 @@
           <input id="linear-outFeatures-parameter" type="number" value="1" size="4" />
           <h3></h3>
           <div id="linear-input-selection">
-            <label class="layer-input-list" style="display: none"> Input order: </label>
+            <label class="layer-input-list" style="display: none"> Input ID order: </label>
             <ul id="linear-inputs-sortable-list"></ul>
           </div>
         </div>
@@ -185,8 +179,41 @@
           <input id="relu-width-parameter" type="number" value="1" size="4" />
           <h3></h3>
           <div id="relu-input-selection">
-            <label class="layer-input-list" style="display: none">Input order: </label>
+            <label class="layer-input-list" style="display: none">Input ID order: </label>
             <ul id="relu-inputs-sortable-list"></ul>
+          </div>
+        </div>
+
+        <div class="pooling-layer-parameters layer-parameters" id="pooling-layer-parameters" style="display: none">
+          <div id="pooling-input-selection">
+            <label class="layer-input-list" style="display: none">Input ID order: </label>
+            <ul id="pooling-inputs-sortable-list"></ul>
+          </div>
+        </div>
+
+        <div class="layernorm-layer-parameters layer-parameters" id="layernorm-layer-parameters" style="display: none">
+          <label for="layernorm-axis-parameter">Axis</label>
+          <input id="layernorm-axis-parameter" type="number" value="1" size="4" />
+          <h3></h3>
+          <div id="layernorm-input-selection">
+            <label class="layer-input-list" style="display: none">Input ID order: </label>
+            <ul id="layernorm-inputs-sortable-list"></ul>
+          </div>
+        </div>
+
+        <div class="conv2d-layer-parameters layer-parameters" id="conv2d-layer-parameters" style="display: none">
+          <label for="conv2d-KernelSize-parameter">KernelSize</label>
+          <input id="conv2d-KernelSize-parameter" type="number" value="1" size="4" />
+          <h3></h3>
+          <label for="conv2d-inChannels-parameter">inChannels</label>
+          <input id="conv2d-inChannels-parameter" type="number" value="1" size="4" />
+          <h3></h3>
+          <label for="conv2d-outChannels-parameter">outChannels</label>
+          <input id="conv2d-outChannels-parameter" type="number" value="1" size="4" />
+          <h3></h3>
+          <div id="conv2d-input-selection">
+            <label class="layer-input-list" style="display: none">Input ID order: </label>
+            <ul id="conv2d-inputs-sortable-list"></ul>
           </div>
         </div>
 
@@ -195,7 +222,7 @@
           <input id="special-width-parameter" type="number" value="1" size="4" />
           <h3></h3>
           <div id="special-input-selection">
-            <label class="layer-input-list" style="display: none"> Input order: </label>
+            <label class="layer-input-list" style="display: none"> Input ID order: </label>
             <ul id="special-inputs-sortable-list"></ul>
           </div>
         </div>
@@ -215,8 +242,6 @@
         </div>
       </div>
     </div>
-
-    <div class="terminal" id="terminal">Coming soon!</div>
 
     <div class="metrics" id="metrics">Coming soon!</div>
 
@@ -332,6 +357,7 @@
 
           deleteConnection(connectionToDelete).then(response => {
             if (response.ok) {
+              setModelView("irrelevant")
               this.connection_selected = selectedConnection
               super.removeConnection()
 
@@ -360,18 +386,24 @@
           const nameMap = {
             linear: "Linear",
             relu: "ReLU",
+            pooling: "Pooling",
+            layernorm: "LayerNorm",
+            conv2d: "Conv2D",
             data: "Data",
             output: "Output",
             loss: "MSELoss",
             target: "Target",
           }
           const parametersMap = {
-            linear: "bias=0;inFeatures=1;outFeatures=2",
+            linear: "bias=0;inFeatures=2;outFeatures=1",
             relu: "",
-            data: "width=2",
-            output: "width=1",
-            loss: "width=1",
-            target: "width=1",
+            pooling: "",
+            layernorm: "axis=1",
+            conv2d: "KernelSize=1;inChannels=1;outChannels=1",
+            data: "shape=[2]",
+            output: "",
+            loss: "",
+            target: "shape=[1]",
           }
           const layer = {
             type: nameMap[name],
@@ -574,6 +606,7 @@
         saveCanvasToLocalStorage(editor)
       })
 
+      //linear
       const linear_bias_selector = document.getElementById("bias-parameter")
       linear_bias_selector.addEventListener("change", () => {
         setModelView("irrelevant")
@@ -633,6 +666,85 @@
         last_changed_parameters_layer_id = last_selected_node_id
       })
 
+      //layernorm
+      const layernorm_axis_input = document.getElementById("layernorm-axis-parameter")
+      layernorm_axis_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
+        const new_value = document.getElementById("layernorm-axis-parameter").value
+
+        for (i in parameters) {
+          if (parameters[i][0] == "axis") {
+            parameters[i][1] = new_value
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
+            break
+          }
+        }
+      })
+      layernorm_axis_input.addEventListener("input", () => {
+        setModelView("irrelevant")
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
+
+      //conv2d
+      const conv2d_KernelSize_input = document.getElementById("conv2d-KernelSize-parameter")
+      conv2d_KernelSize_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
+        const new_value = document.getElementById("conv2d-KernelSize-parameter").value
+
+        for (i in parameters) {
+          if (parameters[i][0] == "KernelSize") {
+            parameters[i][1] = new_value
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
+            break
+          }
+        }
+      })
+      conv2d_KernelSize_input.addEventListener("input", () => {
+        setModelView("irrelevant")
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
+
+      const conv2d_inChannels_input = document.getElementById("conv2d-inChannels-parameter")
+      conv2d_inChannels_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
+        const new_value = document.getElementById("conv2d-inChannels-parameter").value
+
+        for (i in parameters) {
+          if (parameters[i][0] == "inChannels") {
+            parameters[i][1] = new_value
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
+            break
+          }
+        }
+      })
+      conv2d_inChannels_input.addEventListener("input", () => {
+        setModelView("irrelevant")
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
+
+      const conv2d_outChannels_input = document.getElementById("conv2d-outChannels-parameter")
+      conv2d_outChannels_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
+        const new_value = document.getElementById("conv2d-outChannels-parameter").value
+
+        for (i in parameters) {
+          if (parameters[i][0] == "outChannels") {
+            parameters[i][1] = new_value
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
+            break
+          }
+        }
+      })
+      conv2d_outChannels_input.addEventListener("input", () => {
+        setModelView("irrelevant")
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
+
+      //special
       const special_width_input = document.getElementById("special-width-parameter")
       special_width_input.addEventListener("change", () => {
         setModelView("irrelevant")
@@ -684,13 +796,29 @@
         ev.preventDefault()
       }
       function drag(ev, layer) {
-        if (layer == "linear") {
-          layer_drag_offset_X = ev.clientX - 50 // Linear layer offset X coord
-          layer_drag_offset_Y = ev.clientY - 97 // Linear layer offset Y coord
-        }
-        if (layer == "relu") {
-          layer_drag_offset_X = ev.clientX - 50 // Relu layer offset X coord
-          layer_drag_offset_Y = ev.clientY - 163 // Relu layer offset Y coord
+        switch (layer) {
+          case "linear":
+            layer_drag_offset_X = ev.clientX - 50 // Linear layer offset X coord
+            layer_drag_offset_Y = ev.clientY - 97 // Linear layer offset Y coord
+            break
+          case "relu":
+            layer_drag_offset_X = ev.clientX - 50 // Relu layer offset X coord
+            layer_drag_offset_Y = ev.clientY - 163 // Relu layer offset Y coord
+            break
+          case "pooling":
+            layer_drag_offset_X = ev.clientX - 50 // Pooling layer offset X coord
+            layer_drag_offset_Y = ev.clientY - 229 // Pooling layer offset Y coord
+            break
+          case "layernorm":
+            layer_drag_offset_X = ev.clientX - 50 // LayerNorm layer offset X coord
+            layer_drag_offset_Y = ev.clientY - 295 // LayerNorm layer offset Y coord
+            break
+          case "conv2d":
+            layer_drag_offset_X = ev.clientX - 50 // Conv2D layer offset X coord
+            layer_drag_offset_Y = ev.clientY - 361 // Conv2D layer offset Y coord
+            break
+          default:
+            throw "Unreachable"
         }
 
         if (ev.type === "touchstart") {
@@ -787,6 +915,18 @@
           case "relu":
             const relu = `<div class="layer"><i class="fab moduleA"></i> ReLU</div>`
             editor.addNode("relu", 1, 1, pos_x, pos_y, "relu", empty_data, relu)
+            break
+          case "pooling":
+            const pooling = `<div class="layer"><i class="fab moduleA"></i> Pooling</div>`
+            editor.addNode("pooling", 1, 1, pos_x, pos_y, "pooling", empty_data, pooling)
+            break
+          case "layernorm":
+            const layernorm = `<div class="layer"><i class="fab moduleA"></i> LayerNorm</div>`
+            editor.addNode("layernorm", 1, 1, pos_x, pos_y, "layernorm", empty_data, layernorm)
+            break
+          case "conv2d":
+            const conv2d = `<div class="layer"><i class="fab moduleA"></i> Conv2D</div>`
+            editor.addNode("conv2d", 1, 1, pos_x, pos_y, "conv2d", empty_data, conv2d)
             break
           case "data":
             const data = '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>'
@@ -993,7 +1133,7 @@
     <script>
       function showMode(event) {
         let all = document.querySelectorAll(".menu ul li")
-        let modes = document.querySelectorAll("div.home, div.constructor, div.terminal, div.metrics")
+        let modes = document.querySelectorAll("div.home, div.constructor, div.metrics")
         for (let i = 0; i < all.length; i++) {
           all[i].classList.remove("selected")
           modes[i].style.display = "none"
@@ -1076,7 +1216,7 @@
       function changeNNShowMode() {}
       function openConstructior() {
         const all = document.querySelectorAll(".menu ul li")
-        const modes = document.querySelectorAll("div.home, div.constructor, div.terminal, div.metrics")
+        const modes = document.querySelectorAll("div.home, div.constructor, div.metrics")
         for (let i = 0; i < all.length; i++) {
           all[i].classList.remove("selected")
           modes[i].style.display = "none"
@@ -1181,6 +1321,12 @@
             return document.querySelector("#linear-inputs-sortable-list")
           case "relu":
             return document.querySelector("#relu-inputs-sortable-list")
+          case "pooling":
+            return document.querySelector("#pooling-inputs-sortable-list")
+          case "layernorm":
+            return document.querySelector("#layernorm-inputs-sortable-list")
+          case "conv2d":
+            return document.querySelector("#conv2d-inputs-sortable-list")
           case "special":
             if (layer.name == "Loss") {
               return document.querySelector("#loss-inputs-sortable-list")
@@ -1249,8 +1395,9 @@
         for (let connection of connections) {
           for (let elem of input_list) elem.style.display = "block"
           let new_element = document.createElement("LI")
+          new_element.classList.add("button-wrapper")
           counter += 1
-          const text_for_new_element = document.createTextNode(`${counter} input ID: ` + connection.split(";")[0])
+          const text_for_new_element = document.createTextNode(connection.split(";")[0])
           new_element.appendChild(text_for_new_element)
           sortable_list.appendChild(new_element)
         }
@@ -1337,6 +1484,48 @@
               }
             }
             break
+
+          case "relu":
+            document.querySelector("#relu-layer-parameters").style.display = "block"
+            for (i in layer_parameters) {
+              if (layer_parameters[i][0] == "width") {
+                document.querySelector("#relu-width-parameter").value = layer_parameters[i][1]
+              }
+            }
+            break
+                
+          case "pooling":
+            document.querySelector("#pooling-layer-parameters").style.display = "block"
+            for (i in layer_parameters) {
+              // Not given
+            }
+            break
+
+          case "layernorm":
+            document.querySelector("#layernorm-layer-parameters").style.display = "block"
+            for (i in layer_parameters) {
+              if (layer_parameters[i][0] == "axis") {
+                document.querySelector("#layernorm-axis-parameter").value = layer_parameters[i][1]
+              }
+            }
+            break
+
+          case "conv2d":
+            document.querySelector("#conv2d-layer-parameters").style.display = "block"
+            for (i in layer_parameters) {
+              switch (layer_parameters[i][0]) {
+                case "KernelSize":
+                  document.querySelector("#conv2d-KernelSize-parameter").value = layer_parameters[i][1]
+                  break
+                case "inChannels":
+                  document.querySelector("#conv2d-inChannels-parameter").value = layer_parameters[i][1]
+                  break
+                case "outChannels":
+                  document.querySelector("#conv2d-outChannels-parameter").value = layer_parameters[i][1]
+                  break
+              }
+            }
+            break
         }
       }
 
@@ -1346,6 +1535,9 @@
         document.querySelector("#linear-layer-parameters").style.display = "none"
         document.querySelector("#special-layer-parameters").style.display = "none"
         document.querySelector("#relu-layer-parameters").style.display = "none"
+        document.querySelector("#pooling-layer-parameters").style.display = "none"
+        document.querySelector("#layernorm-layer-parameters").style.display = "none"
+        document.querySelector("#conv2d-layer-parameters").style.display = "none"
         document.querySelector("#loss-layer-parameters").style.display = "none"
 
         if (is_id_on_paths) {

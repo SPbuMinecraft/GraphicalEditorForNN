@@ -4,8 +4,6 @@
 #include <string>
 #include <sstream>
 
-#include <boost/asio.hpp>
-
 #include <filesystem>
 
 #include <crow_all.h>
@@ -37,16 +35,14 @@ std::string getPredictPath(int id) {
     return "./model_data/predict/" + std::to_string(id);
 }
 
-web::json::value GetLogs(const Blob& node) {
+void GetLogs(const Blob& node, std::vector<web::json::value>& values) {
     assert(node.shape.dimsCount <= 2);
-    web::json::value values;
-    size_t elements_stored = 0;
+    values.reserve(values.size() + node.shape.size());
     for (size_t sample_index = 0; sample_index < node.shape.rows(); ++sample_index) {
         for (size_t feature_index = 0; feature_index < node.shape.cols(); ++feature_index) {
-            values[elements_stored++] = web::json::value::number(node(0, 0, sample_index, feature_index));
+            values.push_back(web::json::value::number(node(0, 0, sample_index, feature_index)));
         }
     }
-    return values;
 }
 
 void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExtension extension) {
@@ -67,8 +63,6 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     std::cout << "Graph is ready!" << std::endl;
 
     auto& lastTrainNode = (*graph)->getLayers(BaseLayerType::TrainOut)[0]->result.value();
-    // auto& lastPredictNode = (*graph)->getLayers(BaseLayerType::PredictOut)[0]->result.value().output;
-    // auto& targetsNode = (*graph)->getLayers(BaseLayerType::Targets)[0]->result.value().output;
 
     lastTrainNode.forward();
     lastTrainNode.gradient = Blob::ones({{1}});
@@ -80,6 +74,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     size_t buffer_size = 5, actual_size = 0;
     web::json::value request;
     request[U("rewrite")] = web::json::value::boolean(true);
+    std::vector<web::json::value> targets, outputs;
 
     size_t max_epochs = 30;
     std::pair<std::vector<float>, std::vector<float>> batch;
@@ -88,45 +83,39 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     std::ostringstream request_url;
     request_url << "/update_metrics/" << user_id << "/" << model_id;
 
+    auto& lastPredictNode = (*graph)->getLayers(BaseLayerType::PredictOut)[0]->result.value().output;
+    auto& targetsNode = (*graph)->getLayers(BaseLayerType::Targets)[0]->result.value().output;
     for (size_t epoch = 0; epoch < max_epochs; ++epoch) {
-        std::cerr << epoch << " Start" << std::endl;
-        for (size_t batch_index = 0; batch_index < dataLoader.size(); ++batch_index) {
+        for (size_t batch_index = 0; batch_index < dataLoader.batch_count(); ++batch_index) {
             batch = dataLoader.get_raw(batch_index);
             (*graph)->ChangeLayersData(batch.first, BaseLayerType::Data);
             (*graph)->ChangeLayersData(batch.second, BaseLayerType::Targets);
-        }
-        lastTrainNode.forward();
-        // printf("%ld: %f\n", epoch, result[0][0]);
 
-        auto& lastPredictNode = (*graph)->getLayers(BaseLayerType::PredictOut)[0]->result.value().output.value();
-        auto& targetsNode = (*graph)->getLayers(BaseLayerType::Targets)[0]->result.value().output.value();
-        request[U("targets")][actual_size] = web::json::value(GetLogs(lastPredictNode));
-        request[U("outputs")][actual_size] = web::json::value(GetLogs(targetsNode));
+            lastTrainNode.forward();
+
+            GetLogs(lastPredictNode.value(), targets);
+            GetLogs(targetsNode.value(), outputs);
+
+            lastTrainNode.gradient = Blob::ones({{1}});
+            lastTrainNode.backward();
+            SGD.step();
+            Allocator::endSession();
+            lastTrainNode.clear();
+        }
+
+        request[U("targets")][actual_size] = web::json::value::array(targets);
+        request[U("outputs")][actual_size] = web::json::value::array(outputs);
+        targets.clear();
+        outputs.clear();
         ++actual_size;
 
         if ((epoch == max_epochs - 1 && actual_size > 0) ||
             actual_size == buffer_size) {
-
             request[U("label")] = web::json::value::string("train");
-            if (epoch < buffer_size) {
-                request[U("rewrite")] = web::json::value::boolean(true);
-            }
-
             client.request(web::http::methods::PUT, U(request_url.str()), request);
             request = web::json::value();
             actual_size = 0;
         }
-
-        std::cerr << epoch << " OK" << std::endl;
-
-        lastTrainNode.gradient = Blob::ones({{1}});
-        std::cerr << epoch << " Gradient vanished" << std::endl;
-        lastTrainNode.backward();
-        std::cerr << epoch << " Backwarded" << std::endl;
-        SGD.step();
-        std::cerr << epoch << " Made SGD step" << std::endl;
-        Allocator::endSession();
-        lastTrainNode.clear();
     }
 }
 
@@ -138,7 +127,7 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtensi
     else {
         predict_data = {ImageLoader::load_image((getPredictPath(model_id) + "/1.png").c_str())};
     }
-    graph->ChangeLayersData(predict_data[0], BaseLayerType::Targets);
+    graph->ChangeLayersData(predict_data[0], BaseLayerType::Data);
 
     // Пока не думаем о нескольких выходах (!) Hard-coded
     auto& lastNode = graph->getLayers(BaseLayerType::PredictOut)[0]->result.value();
@@ -146,14 +135,34 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtensi
     lastNode.forward();
 
     auto& result = lastNode.output.value();
+    assert(result.shape.dimsCount == 2);
 
-    answer.reserve(result.shape.rows() * result.shape.cols());
-    for (size_t j = 0; j < result.shape.rows(); ++j) {
-        for (size_t i = 0; i < result.shape.cols(); ++i) {
-            answer.push_back(result(j, i));
-            std::cout << result(j, i) << std::endl;
+    answer.reserve(result.shape.cols());
+    for (size_t i = 0; i < result.shape.cols(); ++i) {
+        answer.push_back(result(0, i));
+        std::cout << result(0, i) << std::endl;
+    }
+}
+
+void extract_from_zip(std::string path, std::string root) {
+    zip_t* z;
+    int err;
+    z = zip_open(path.c_str(), 0, &err);
+    if (z == nullptr) {
+        throw std::runtime_error("File doesn't exist");
+    }
+    zip_stat_t info;
+    for (int i = 0; i < zip_get_num_files(z); ++i) {
+        if (zip_stat_index(z, i, 0, &info) == 0) {
+            ofstream fout(root + "/" + info.name, ios::binary);
+            zip_file* file = zip_fopen_index(z, i, 0);
+            std::vector<char> file_data(info.size);
+            zip_fread(file, file_data.data(), info.size);
+            fout.write(file_data.data(), info.size);
+            fout.close();
         }
     }
+    std::filesystem::remove(path);
 }
 
 void extract_from_zip(std::string path, std::string root) {
@@ -189,13 +198,14 @@ int main(int argc, char *argv[]) {
     std::map<int, Graph*> sessions;
     std::map<int, FileExtension> file_types;
 
-    CROW_ROUTE(app, "/predict/<int>").methods(HTTPMethod::POST)
+    CROW_ROUTE(app, "/predict/<int>").methods(HTTPMethod::PUT)
     ([&](const request& req, int model_id) -> response {
         if (sessions.find(model_id) == sessions.end()) return response(status::METHOD_NOT_ALLOWED, "Not trained");
         std::vector<float> answer;
         try {
             predict(model_id, sessions[model_id], answer, file_types[model_id]);
         } catch (const std::runtime_error &err) {
+            std::cout << err.what() << std::endl;
             return response(status::BAD_REQUEST, "Invalid body");
         }
         json::wvalue response = answer[0];

@@ -153,8 +153,6 @@ def train_model(
 ):  # Unfortunately, flask don't have convertor for bool
     # checks belonging of the model to user
     sql_worker.verify_access(user_id, model_id)
-    if not request.data:
-        raise Error("No csv data provided")
     if sql_worker.is_model_trained(model_id) and safe:
         raise Error("Already trained", HTTPStatus.PRECONDITION_FAILED)
 
@@ -164,10 +162,8 @@ def train_model(
         raise Error("Invalid model found", HTTPStatus.NOT_ACCEPTABLE)
     assert_dimensions_match(model["layers"])
 
-    dataset = extract_train_data(request.data, model)
-
     convert_model(model)
-    model = {"graph": model, "dataset": dataset}
+    model = {"graph": model}
 
     response = requests.post(
         current_app.config["CPP_SERVER"] + f"/train/{user_id}/{model_id}",
@@ -183,19 +179,15 @@ def train_model(
 def predict(user_id: int, model_id: int):
     sql_worker.verify_access(user_id, model_id)
 
-    if not request.data:
-        raise Error("No csv data provided")
-
     model = sql_worker.get_graph_elements(model_id)
     convert_model_parameters(model)
-    json_data = extract_predict_data(request.data, model)
 
     if not sql_worker.is_model_trained(model_id):
         raise Error("Not trained", HTTPStatus.PRECONDITION_FAILED)
 
-    response = requests.post(
-        current_app.config["CPP_SERVER"] + f"/predict/{user_id}/{model_id}",
-        json=json_data,
+
+    response = requests.put(
+        current_app.config["CPP_SERVER"] + f"/predict/{model_id}",
         timeout=3,
     )
 

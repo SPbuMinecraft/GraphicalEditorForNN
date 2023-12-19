@@ -38,6 +38,11 @@ std::pair<Blob, std::vector<float>> DataLoader::operator[](std::size_t index) co
 }
 
 std::size_t DataLoader::size() const {
+
+    return loader->size();
+}
+
+std::size_t DataLoader::batch_count() const {
     return (loader->size() + batch_size - 1) / batch_size;
 }
 
@@ -46,16 +51,15 @@ void DataLoader::add_data(const DataLoader& other, int index) {
 }
 
 std::pair<std::vector<float>, std::vector<float>> DataLoader::get_raw(std::size_t batch_index) const { // batch_size lines from index
-    if (batch_index >= size()) {
+    if (batch_index >= batch_count()) {
         throw std::out_of_range("Index out of range");
     }
     std::vector<float> data;
     std::vector<float> res(batch_size, 0);
     Shape shape = loader->get_appropriate_shape(rearrangement[batch_index], batch_size);
-    auto dims = shape.getDims();
     data.resize(shape.size(), 0);
     int cur_data = 0;
-    for (int i = batch_size * batch_index; i < (batch_size + 1) * batch_index; ++i) {
+    for (int i = batch_size * batch_index; i < batch_size * (batch_index + 1); ++i) {
         if (i >= loader->size()) {
             break;
         }
