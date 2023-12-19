@@ -329,6 +329,7 @@
           deleteLayer(layer_to_delete).then(response => {
             if (response.ok) {
               super.removeNodeId(id)
+              updateConnectionsInLayers(id.split("-")[1])
             } else {
               errorNotification("Failed to delete layer.\n Server is not responding now.")
             }
@@ -1485,15 +1486,6 @@
             }
             break
 
-          case "relu":
-            document.querySelector("#relu-layer-parameters").style.display = "block"
-            for (i in layer_parameters) {
-              if (layer_parameters[i][0] == "width") {
-                document.querySelector("#relu-width-parameter").value = layer_parameters[i][1]
-              }
-            }
-            break
-
           case "pooling":
             document.querySelector("#pooling-layer-parameters").style.display = "block"
             for (i in layer_parameters) {
@@ -1629,6 +1621,25 @@
             if (connection.classList.contains("connection-predict-success"))
               connection.classList.remove("connection-predict-success")
           }
+        }
+      }
+
+      function updateConnectionsInLayers(deleted_id) {
+        let nodes = document.getElementsByClassName("drawflow-node")
+        for (let i of nodes) {
+          const data1 = editor.getNodeFromId(i.id.split("-")[1]).data
+          let updatedConnections = []
+          for (let connection of data1.Connections) {
+            if (connection.split(";")[1] == deleted_id) {
+              continue
+            }
+            updatedConnections.unshift(connection)
+          }
+          editor.updateNodeDataFromId(i.id.split("-")[1], {
+            DBID: data1.DBID,
+            Connections: updatedConnections,
+            Parameters: data1.Parameters,
+          })
         }
       }
     </script>
