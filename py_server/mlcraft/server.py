@@ -173,7 +173,7 @@ def train_model(
     model = {"graph": model}
 
     response = requests.post(
-        cpp_url(f"train/{model_id}"),
+        cpp_url(f"train/{user_id}/{model_id}"),
         json=model,
         timeout=3,
     )
@@ -182,17 +182,25 @@ def train_model(
     return response.text, response.status_code
 
 
-@app.route("/predict/<int:user_id>/<int:model_id>", methods=["PUT"])
+@app.route("/predict/<int:user_id>/<int:model_id>", methods=["GET", "PUT"])
 def predict(user_id: int, model_id: int):
+    """PUT method is for uploading the png, GET method is for receiving the result"""
     sql_worker.verify_access(user_id, model_id)
 
     if not sql_worker.is_model_trained(model_id):
         raise Error("Not trained", HTTPStatus.PRECONDITION_FAILED)
 
-    response = requests.put(
-        cpp_url(f"/predict/{model_id}"),
-        timeout=3,
-    )
+    match request.method:
+        case "GET":
+            response = requests.put(
+                cpp_url(f"predict/{model_id}"),
+            )
+        case "PUT":
+            response = requests.post(
+                cpp_url(f"upload_data/{model_id}/1"),
+                data=request.data,
+                headers={"Content-Type": "image/png"},
+            )
 
     return response.text, response.status_code
 
