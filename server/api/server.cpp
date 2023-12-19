@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
     std::map<int, Graph*> sessions;
     std::map<int, FileExtension> file_types;
 
-    CROW_ROUTE(app, "/predict/<int>").methods(HTTPMethod::PUT)
+    CROW_ROUTE(app, "/predict/<int>").methods(HTTPMethod::GET)
     ([&](const request& req, int model_id) -> response {
         (void)req;
         if (sessions.find(model_id) == sessions.end()) return response(status::METHOD_NOT_ALLOWED, "Not trained");
@@ -232,6 +232,9 @@ int main(int argc, char *argv[]) {
         }
         else if (content_type == "application/zip") {
             path += "/1.zip";
+            file_types[model_id] = FileExtension::Png;
+        } else if (content_type == "image/png") {
+            path += "/1.png";
             file_types[model_id] = FileExtension::Png;
         } else {
             return response(status::BAD_REQUEST, "Invalid content type: " + content_type);

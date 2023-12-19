@@ -162,28 +162,22 @@ function uploadRequest() {
 }
 
 function trainRequest() {
-    if (!train_data) {
-        errorNotification("No training data was set.")
-    } else {
-        fetch(`http://${py_server_address}/train/${user_id}/${model_id}/0`, {
-            method: "PUT",
-            mode: "cors",
-            headers: {"Content-Type": "text/csv"},
-            body: train_data,
-        }).then(response => {
-            showBuildNotification(response.ok)
-            onTrainShowPredict(response.ok)
-            if (response.ok) {
-                setModelView("success")
-            } else {
-                setModelView("error")
-            }
-        })
-    }
+    fetch(`http://${py_server_address}/train/${user_id}/${model_id}/0`, {
+        method: "PUT",
+        mode: "cors",
+    }).then(response => {
+        showBuildNotification(response.ok)
+        onTrainShowPredict(response.ok)
+        if (response.ok) {
+            setModelView("success")
+        } else {
+            setModelView("error")
+        }
+    })
 }
 
 async function predictRequest() {
-    if (csv_predict.files.length == 0) {
+    if (predict_button.files.length == 0) {
         errorNotification("Empty predict file.")
         return
     }
@@ -196,25 +190,34 @@ async function predictRequest() {
             showConfirmButton: true,
         })
     }
-    const file = csv_predict.files[0]
-    const text = await file.text()
-    const response = await fetch(
+    const file = predict_button.files[0]
+    let response = await fetch(
         `http://${py_server_address}/predict/${user_id}/${model_id}`,
         {
             method: "PUT",
             mode: "cors",
-            headers: {"Content-Type": "text/csv"},
-            body: text,
+            body: file,
         },
     )
-    const responseJson = await response.json()
-    hideResult() // hide previous predict result
-    if (response.ok) onPredictShowResult(responseJson)
-    else {
-        Swal.fire("Error!", "Server is not responding now.", "error")
-        errorNotification("Failed to predict.\n" + responseJson.error)
-        console.log(
-            `Predict failed with ${response.statusText}: ${responseJson.error}`,
+    if (!response.ok) {
+        Swal.fire("Error!", "Failed to upload the png image", "error")
+        console.error(
+            `Failed to upload the png with ${response.statusText}: ${responseJson.error}`,
         )
+        return
     }
+    response = await fetch(
+        `http://${py_server_address}/predict/${user_id}/${model_id}`,
+        {method: "GET", mode: "cors"},
+    )
+    const responseJson = await response.json()
+    if (!response.ok) {
+        Swal.fire("Error!", "Failed to predict", "error")
+        console.error(
+            `Failed to predict with with ${response.statusText}: ${responseJson.error}`,
+        )
+        return
+    }
+    hideResult() // hide previous predict result
+    onPredictShowResult(responseJson)
 }
