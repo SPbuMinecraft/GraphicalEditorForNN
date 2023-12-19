@@ -157,7 +157,7 @@ void extract_from_zip(std::string path, std::string root) {
             char *file_data = new char[info.size];
             zip_fread(file, file_data, info.size);
             fout.write(file_data, info.size);
-            fout.close();
+            delete[] file_data;
         }
     }
 }
