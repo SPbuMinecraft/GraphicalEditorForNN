@@ -113,7 +113,7 @@
 
         <label class="button-wrapper">
           Upload
-          <input type="file" id="csv-upload-button" accept=".csv" />
+          <input type="file" id="dataset-upload-button" accept=".csv,.zip" />
         </label>
 
         <label class="button-wrapper" id="train-button" disabled>
@@ -123,7 +123,7 @@
 
         <label class="button-wrapper" disabled>
           Predict
-          <input type="file" accept=".csv" id="csv-predict-button" disabled />
+          <input type="file" accept=".png" id="predict-button" disabled />
         </label>
         <div class="predict-result-wrapper" id="predict-result-wrapper">
           <output class="form-control-res" id="res-value-out" name="res-value" for="x-value y-value"></output>
@@ -395,15 +395,15 @@
             target: "Target",
           }
           const parametersMap = {
-            linear: "bias=0;inFeatures=1;outFeatures=2",
+            linear: "bias=0;inFeatures=2;outFeatures=1",
             relu: "",
             pooling: "",
             layernorm: "axis=1",
             conv2d: "KernelSize=1;inChannels=1;outChannels=1",
-            data: "width=2",
-            output: "width=1",
-            loss: "width=1",
-            target: "width=1",
+            data: "shape=[2]",
+            output: "",
+            loss: "",
+            target: "shape=[1]",
           }
           const layer = {
             type: nameMap[name],
@@ -1082,12 +1082,12 @@
 
     <!--JSON requests handling-->
     <script>
-      const csv_predict = document.getElementById("csv-predict-button")
-      csv_predict.onclick = () => {
-        csv_predict.value = null
+      const predict_button = document.getElementById("predict-button")
+      predict_button.onclick = () => {
+        predict_button.value = null
       }
 
-      csv_predict.addEventListener("input", predictRequest)
+      predict_button.addEventListener("input", predictRequest)
 
       function buildJsonFormData(form) {
         const jsonFormData = {}
@@ -1251,26 +1251,14 @@
       const showBuildNotification = build_status => {
         build_status ? buildSuccessful() : buildUnsuccessful()
       }
-      async function csvUploaded() {
-        if (csv_upload.files.length == 0) return
-        const file = csv_upload.files[0]
-        const text = await file.text()
-        // do whatever with the `text`
-        setModelView("irrelevant")
-        console.log(`Got goods: ${text}`)
-        train_data = text
-        // allow user to press a train button from now on
-        button_wrapper = document.getElementById("train-button")
-        button_wrapper.getElementsByTy
-        train_button = button_wrapper.children[0]
-        button_wrapper.removeAttribute("disabled")
-        train_button.removeAttribute("disabled")
+      const data_upload = document.getElementById("dataset-upload-button")
+      data_upload.onclick = () => {
+        data_upload.value = null
       }
-      const csv_upload = document.getElementById("csv-upload-button")
-      csv_upload.addEventListener("change", csvUploaded)
+      data_upload.addEventListener("change", uploadRequest)
 
       function onTrainShowPredict(training_successful) {
-        const predict_button = document.getElementById("csv-predict-button")
+        const predict_button = document.getElementById("predict-button")
         hideResult() // hide result when new training results arrive
         if (training_successful) {
           predict_button.removeAttribute("disabled")
@@ -1419,7 +1407,7 @@
             matchConnectionsAfterSelection(new_input_order)
           },
         })
-        document.getElementById("layer-id").innerHTML = "ID: " + layer_dbid.toString()
+
         document.getElementById("layer-data").style.display = "block"
         setupLayerParameters(node, correct_id)
       }

@@ -9,7 +9,7 @@ using namespace std;
 
 Allocator* Allocator::instance = NULL;
 
-#define TMP_BUFF_SIZE 2048
+#define TMP_BUFF_SIZE 4096
 
 void Allocator::startVirtualMode() {
     assert(!instance);

@@ -38,17 +38,11 @@ void CheckFullProcess(const std::string& json_path,
     //                     PARSE LAYERS IDS
     // #################################################################
     std::unordered_map<int, crow::json::rvalue> layerDicts;
-    std::unordered_map<int, std::vector<float>> dataDicts;
-    g.OverviewLayers(layersJson, data, layerDicts, dataDicts);
+    g.OverviewLayers(layersJson, layerDicts);
 
     CHECK(layerDicts.size() == layer_ids_expected.size());
     for (auto id : layer_ids_expected) {
         CHECK(layerDicts.find(id) != layerDicts.end());
-    }
-
-    CHECK(dataDicts.size() == data_ids_expected.size());
-    for (auto id : data_ids_expected) {
-        CHECK(dataDicts.find(id) != dataDicts.end());
     }
 
     // #################################################################

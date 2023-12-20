@@ -6,15 +6,14 @@ void CHECK_HAS_FIELD(const crow::json::rvalue& layer, const std::string& field) 
     }
 }
 
-void ParseCsvData(const std::vector<std::vector<float>>& data, std::vector<float>& instances, std::vector<float>& answers) {
-    // Think about optimization via reservation
-    for (auto& instance : data) {
-        answers.push_back(instance.back());
-        for (int i = 0; i < instance.size() - 1; ++i) {
-            instances.push_back(instance[i]);
-        }
-    }
-}
+// void ParseCsvData(const std::vector<std::vector<float>>& data, std::vector<float>& instances, std::vector<float>& answers) {
+//     instances.reserve(data.size());
+//     answers.reserve(data.size());
+//     for (auto& instance : data) {
+//         answers.push_back(instance.back());
+//         instances.emplace_back(instance.begin(), std::prev(instance.end()));
+//     }
+// }
 
 LinearLayerParameters ParseLinear(const crow::json::rvalue& parameters) {
     size_t inFeatures, outFeatures;
@@ -26,18 +25,23 @@ LinearLayerParameters ParseLinear(const crow::json::rvalue& parameters) {
     inFeatures = static_cast<size_t>(parameters["inFeatures"].i());
     outFeatures = static_cast<size_t>(parameters["outFeatures"].i());
 
-    if (parameters.has("bias")) {
-        bias = parameters["bias"].b();
-    }
+    // if (parameters.has("bias")) {
+    //     std::cout << parameters["bias"] << std::endl;
+    //     bias = parameters["bias"].b();
+    //     std::cout << "done" << std::endl;
+    // }
 
     return LinearLayerParameters{inFeatures, outFeatures, bias};
 }
 
-Data2dLayerParameters ParseData2d(const crow::json::rvalue& parameters) {
-    size_t width;
+Shape ParseData(const crow::json::rvalue& parameters) {
+    std::vector<size_t> shape;
+    shape.reserve(3);
 
-    CHECK_HAS_FIELD(parameters, "width");
+    CHECK_HAS_FIELD(parameters, "shape");
 
-    width = static_cast<size_t>(parameters["width"].i());
-    return Data2dLayerParameters{.width = width};
+    for (auto dim : parameters["shape"]) {
+        shape.push_back(dim.i());
+    }
+    return Shape{std::move(shape)};
 }
