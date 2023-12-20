@@ -94,6 +94,13 @@ VarLayer::VarLayer(const AxisParameters& params,
     result = Tensor(meanMinusOne, {pipeline[3]});     
 }
 
+MeanLayer::MeanLayer(const AxisParameters& params,
+                     const std::vector<TensorRef>& args)
+    : mean(params.axis) {
+    TensorRef tensor = args[0];
+    result = Tensor(mean, {tensor});
+}
+
 LayerNorm::LayerNorm(const AxisParameters& params,
                    const std::vector<TensorRef>& args)
     : varLayer(params, args), mean(params.axis) {

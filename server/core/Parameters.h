@@ -14,17 +14,10 @@ struct Conv2DLayerParameters {
     std::size_t outChannels;
 };
 
-struct Data2dLayerParameters {
-    std::size_t width;
-    std::size_t height;
-};
-
-struct AxisParameters
-{
+struct AxisParameters {
     std::vector<short> axis;
 };
 
-struct CrossEntropyLossParameters
-{
+struct CrossEntropyLossParameters {
     std::size_t classCount; 
 };
