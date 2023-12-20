@@ -52,8 +52,11 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     if (extension == FileExtension::Csv) {
         path += "/1.csv";
     }
+
+    std::cerr << "start data processing" << std::endl;
     DataMarker dataMarker = DataMarker(path, extension, 100, 4);
     DataLoader dataLoader = dataMarker.get_train_loader();
+    std::cerr << "stop data processing" << std::endl;
 
     size_t batch_size = 4;  // hard-coded
     *graph = new Graph();
@@ -84,7 +87,9 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     auto& lastPredictNode = (*graph)->getLayers(BaseLayerType::PredictOut)[0]->result.value().output;
     auto& targetsNode = (*graph)->getLayers(BaseLayerType::Targets)[0]->result.value().output;
     for (size_t epoch = 0; epoch < max_epochs; ++epoch) {
+        std::cerr << epoch << std::endl;
         for (size_t batch_index = 0; batch_index < dataLoader.batch_count(); ++batch_index) {
+            std::cerr << "\t" << batch_index << std::endl;
             batch = dataLoader.get_raw(batch_index);
             (*graph)->ChangeLayersData(batch.first, BaseLayerType::Data);
             (*graph)->ChangeLayersData(batch.second, BaseLayerType::Targets);
@@ -162,27 +167,6 @@ void extract_from_zip(std::string path, std::string root) {
     }
 }
 
-// void extract_from_zip(std::string path, std::string root) {
-//     zip_t* z;
-//     int err;
-//     z = zip_open(path.c_str(), 0, &err);
-//     if (z == nullptr) {
-//         throw std::runtime_error("File doesn't exist");
-//     }
-//     zip_stat_t info;
-//     for (int i = 0; i < zip_get_num_files(z); ++i) {
-//         if (zip_stat_index(z, i, 0, &info) == 0) {
-//             ofstream fout(root + "/" + info.name, ios::binary);
-//             zip_file* file = zip_fopen_index(z, i, 0);
-//             std::vector<char> file_data(info.size);
-//             zip_fread(file, file_data.data(), info.size);
-//             fout.write(file_data.data(), info.size);
-//             fout.close();
-//         }
-//     }
-//     std::filesystem::remove(path);
-// }
-
 void invalidArgs() { 
     cout << "Usage: ./server <host: str> <port: int>" << endl;
     exit(1);
@@ -226,7 +210,7 @@ int main(int argc, char *argv[]) {
         return response(status::OK, "done");
     });
 
-    // curl -X POST -F "InputFile=@filename" http://0.0.0.0:2000/upload_data/1/0/0
+    // curl -X POST -F "InputFile=@filename" http://0.0.0.0:2000/upload_data/1/0
     // Second argument is for request type (train or predict), third - for file type (csv or zip)
     CROW_ROUTE(app, "/upload_data/<int>/<int>").methods(HTTPMethod::Post)
     ([&](const request& req, int model_id, int type) -> response {
@@ -247,6 +231,7 @@ int main(int argc, char *argv[]) {
         }
         std::filesystem::create_directory(path);
 
+        std::cerr << content_type << std::endl;
         if (content_type == "text/csv") {
             path += "/1.csv";
             file_types[model_id] = FileExtension::Csv;

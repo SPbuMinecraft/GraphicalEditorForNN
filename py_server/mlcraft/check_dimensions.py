@@ -26,6 +26,20 @@ class LinearChecker:
         return True
 
 
+class Conv2dChecker:
+    def __init__(self, kernel_size: int, in_channels: int, out_channels: int):
+        self.kernel_size = kernel_size
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+
+    def __call__(self, input_shape: list[int]):
+        self.output_shape = input_shape.copy()
+        if not input_shape or len(input_shape) < 4 or input_shape[-3] != self.in_channels:
+            return False
+        self.output_shape[-1] = self.out_channels
+        return True
+
+
 class ReLUChecker:
     def __init__(self):
         pass
@@ -57,6 +71,20 @@ class MSEChecker:
         return True
 
 
+class CrossEntropyChecker:
+    def __init__(self, class_count):
+        self.class_count  = class_count
+
+    def __call__(self, input_shape: list[int], targets_shape: list[int]):
+        if len(input_shape) < 2 or len(targets_shape) < 2:
+            return False
+        if input_shape[-2] != targets_shape[-2]:
+            return False
+        if targets_shape[-1] != self.class_count or input_shape[-1] != 1:
+            return False
+        return True
+
+
 def create_checker(layer: dict):
     match layer["type"]:
         case "Data" | "Target":
@@ -71,6 +99,8 @@ def create_checker(layer: dict):
             return MSEChecker()
         case "Sum":
             return SumChecker()
+        case "Conv2d":
+            return Conv2dChecker()
         case _:
             raise TypeError(f"Unknown layer type: {layer['type']}")
 

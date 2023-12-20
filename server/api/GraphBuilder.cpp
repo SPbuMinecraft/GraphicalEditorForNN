@@ -128,6 +128,30 @@ void Graph::Initialize(crow::json::rvalue modelJson,
         } else if (type == "MSELoss") {
             layers_.emplace(layer_id, new MSELoss{prevLayers});
             lastTrainIds_.push_back(layer_id);
+        } else if (type == "CrossEntropyLoss") {
+            CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
+            auto params = ParseCrossEntropyLoss(layerDicts[layer_id]["parameters"]);
+            layers_.emplace(layer_id, new EntropyLoss{params, prevLayers});
+            lastTrainIds_.push_back(layer_id);
+        } else if (type == "Conv2d") {
+            CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
+            auto params = ParseConv2d(layerDicts[layer_id]["parameters"]);
+            layers_.emplace(layer_id, new Conv2DLayer{params, prevLayers, randomInit});
+            SGD.append(layers_[layer_id]->layerOperationParams);
+        } else if (type == "LayerNorm") {
+            CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
+            auto params = ParseAxes(layerDicts[layer_id]["parameters"]);
+            layers_.emplace(layer_id, new LayerNorm{params, prevLayers});
+        } else if (type == "Mean") {
+            CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
+            auto params = ParseAxes(layerDicts[layer_id]["parameters"]);
+            layers_.emplace(layer_id, new MeanLayer{params, prevLayers});
+        } else if (type == "MaxPool") {
+            layers_.emplace(layer_id, new MaxPool{prevLayers});
+        } else if (type == "SoftMax") {
+            CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
+            auto params = ParseAxes(layerDicts[layer_id]["parameters"]);
+            layers_.emplace(layer_id, new SoftMax{params, prevLayers});
         } else {
             throw std::invalid_argument("Unknown layer type: " + type);
         }

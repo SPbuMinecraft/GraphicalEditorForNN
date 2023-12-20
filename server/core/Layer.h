@@ -68,7 +68,7 @@ class MeanLayer: public Layer {
 public:
     Mean mean;
     MeanLayer(const AxisParameters& params,
-        const std::vector<TensorRef>& args);
+              const std::vector<TensorRef>& args);
 };
 
 class VarLayer: public Layer {
@@ -80,7 +80,7 @@ public:
     Square sqr;
     SumAxis sum;
     VarLayer(const AxisParameters& params,
-        const std::vector<TensorRef>& args);
+             const std::vector<TensorRef>& args);
 };
 
 class LayerNorm: public Layer {
@@ -93,7 +93,7 @@ public:
     Root root;
     Divide div;
     LayerNorm(const AxisParameters& params,
-        const std::vector<TensorRef>& args);
+              const std::vector<TensorRef>& args);
 };
 
 class SoftMax: public Layer {
@@ -103,7 +103,7 @@ public:
     Fill fill;
     Divide div;
     SoftMax(const AxisParameters& params,
-        const std::vector<TensorRef>& args);
+            const std::vector<TensorRef>& args);
 };
 
 class EntropyLoss: public Layer {
@@ -112,7 +112,7 @@ public:
     Mean mean;
     Entropy entropy;
     EntropyLoss(const CrossEntropyLossParameters& params, 
-        const std::vector<TensorRef>& args);
+                const std::vector<TensorRef>& args);
 };
 
 class MaxPool: public Layer {
