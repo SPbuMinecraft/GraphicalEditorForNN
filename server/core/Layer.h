@@ -64,6 +64,13 @@ public:
         const std::vector<TensorRef>& args, RandomObject* randomInit = nullptr);
 };
 
+class MeanLayer: public Layer {
+public:
+    Mean mean;
+    MeanLayer(const AxisParameters& params,
+        const std::vector<TensorRef>& args);
+};
+
 class VarLayer: public Layer {
 public:
     Mean mean;

@@ -74,8 +74,6 @@ Conv2DLayer::Conv2DLayer(const Conv2DLayerParameters& params,
     result = Tensor(conv, {args[0], kernel});
 }
 
-
-
 VarLayer::VarLayer(const AxisParameters& params,
                    const std::vector<TensorRef>& args)
     : mean(params.axis), meanMinusOne(params.axis, true), sum(params.axis) {
@@ -157,4 +155,11 @@ EntropyLoss::EntropyLoss(const CrossEntropyLossParameters& params,
 MaxPool::MaxPool(const std::vector<TensorRef>& args) {
     assert(args.size() == 1);
     result = Tensor(maxPool, {args[0]});
+}
+
+MeanLayer::MeanLayer(const AxisParameters& params,
+                   const std::vector<TensorRef>& args)
+    : mean(params.axis) {
+    assert(args.size() == 1);
+    result = Tensor(mean, {args[0]});     
 }

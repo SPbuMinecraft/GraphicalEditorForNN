@@ -162,26 +162,26 @@ void extract_from_zip(std::string path, std::string root) {
     }
 }
 
-void extract_from_zip(std::string path, std::string root) {
-    zip_t* z;
-    int err;
-    z = zip_open(path.c_str(), 0, &err);
-    if (z == nullptr) {
-        throw std::runtime_error("File doesn't exist");
-    }
-    zip_stat_t info;
-    for (int i = 0; i < zip_get_num_files(z); ++i) {
-        if (zip_stat_index(z, i, 0, &info) == 0) {
-            ofstream fout(root + "/" + info.name, ios::binary);
-            zip_file* file = zip_fopen_index(z, i, 0);
-            std::vector<char> file_data(info.size);
-            zip_fread(file, file_data.data(), info.size);
-            fout.write(file_data.data(), info.size);
-            fout.close();
-        }
-    }
-    std::filesystem::remove(path);
-}
+// void extract_from_zip(std::string path, std::string root) {
+//     zip_t* z;
+//     int err;
+//     z = zip_open(path.c_str(), 0, &err);
+//     if (z == nullptr) {
+//         throw std::runtime_error("File doesn't exist");
+//     }
+//     zip_stat_t info;
+//     for (int i = 0; i < zip_get_num_files(z); ++i) {
+//         if (zip_stat_index(z, i, 0, &info) == 0) {
+//             ofstream fout(root + "/" + info.name, ios::binary);
+//             zip_file* file = zip_fopen_index(z, i, 0);
+//             std::vector<char> file_data(info.size);
+//             zip_fread(file, file_data.data(), info.size);
+//             fout.write(file_data.data(), info.size);
+//             fout.close();
+//         }
+//     }
+//     std::filesystem::remove(path);
+// }
 
 void invalidArgs() { 
     cout << "Usage: ./server <host: str> <port: int>" << endl;
