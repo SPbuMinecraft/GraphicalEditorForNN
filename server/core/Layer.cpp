@@ -96,9 +96,10 @@ VarLayer::VarLayer(const AxisParameters& params,
 
 MeanLayer::MeanLayer(const AxisParameters& params,
                      const std::vector<TensorRef>& args)
-    : mean(params.axis) {
-    TensorRef tensor = args[0];
-    result = Tensor(mean, {tensor});
+    // : mean(params.axis) {
+    : mean({2}) {
+    assert(args.size() == 1);
+    result = Tensor(mean, {args[0]});     
 }
 
 LayerNorm::LayerNorm(const AxisParameters& params,
@@ -162,11 +163,4 @@ EntropyLoss::EntropyLoss(const CrossEntropyLossParameters& params,
 MaxPool::MaxPool(const std::vector<TensorRef>& args) {
     assert(args.size() == 1);
     result = Tensor(maxPool, {args[0]});
-}
-
-MeanLayer::MeanLayer(const AxisParameters& params,
-                   const std::vector<TensorRef>& args)
-    : mean(params.axis) {
-    assert(args.size() == 1);
-    result = Tensor(mean, {args[0]});     
 }
