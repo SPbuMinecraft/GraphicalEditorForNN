@@ -273,3 +273,49 @@ Shape EPS::computeDim(const vector<LazyBlobRef>& args) const {
     args1(a);
     return a.shape();
 }
+
+Blob Exp::compute(const vector<LazyBlobRef>& args) const {
+    args1(a);
+    return a.applying([](float x) { return std::exp(x); });
+}
+
+vector<LazyBlobRef> Exp::grad(const Blob& grad, const vector<LazyBlobRef>& args) const {
+    args1(a);
+    return {grad * a.applying([](float x) { return std::exp(x); })};
+}
+
+Shape Exp::computeDim(const vector<LazyBlobRef>& args) const {
+    args1(a);
+    return a.shape();
+}
+
+Blob Entropy::compute(const vector<LazyBlobRef>& args) const {
+    args2(a, b);
+    return -a.entropy(b, classCount);
+}
+
+vector<LazyBlobRef> Entropy::grad(const Blob& grad, const vector<LazyBlobRef>& args) const {
+    args2(a, b);
+    return {grad.lazy().fill(a.shape()) * a.entropyDerivative(b, classCount), zeroBlob(b.shape())};
+}
+
+Shape Entropy::computeDim(const vector<LazyBlobRef>& args) const {
+    args2(a, b);
+    (void)a;
+    return b.shape();
+}
+
+Blob MaxPoolOp::compute(const vector<LazyBlobRef>& args) const {
+    args1(a);
+    return a.maxPool();
+}
+
+vector<LazyBlobRef> MaxPoolOp::grad(const Blob& grad, const vector<LazyBlobRef>& args) const {
+    args1(a);
+    return {a.maxPoolDerivative(grad.lazy())};
+}
+
+Shape MaxPoolOp::computeDim(const vector<LazyBlobRef>& args) const {
+    args1(a);
+    return {{a.shape().dim4(), a.shape().dim3(), a.shape().rows() / 2, a.shape().cols() / 2}, a.shape().dimsCount};
+}

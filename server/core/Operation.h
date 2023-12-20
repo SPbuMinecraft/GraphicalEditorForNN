@@ -131,3 +131,24 @@ struct EPS: Operation {
     std::vector<LazyBlobRef> grad(const Blob& gradient, const std::vector<LazyBlobRef>& args) const override;
     Shape computeDim(const std::vector<LazyBlobRef>& args) const override;
 };
+
+struct Exp: Operation {
+    std::string name = "Exp";
+    Blob compute(const std::vector<LazyBlobRef>& args) const override;
+    std::vector<LazyBlobRef> grad(const Blob& gradient, const std::vector<LazyBlobRef>& args) const override;
+    Shape computeDim(const std::vector<LazyBlobRef>& args) const override;
+};
+
+struct Entropy: Operation {
+    int classCount;
+    Entropy(int classCouont): classCount(classCouont) {};
+    Blob compute(const std::vector<LazyBlobRef>& args) const override;
+    std::vector<LazyBlobRef> grad(const Blob& gradient, const std::vector<LazyBlobRef>& args) const override;
+    Shape computeDim(const std::vector<LazyBlobRef>& args) const override;
+};
+
+struct MaxPoolOp: Operation {
+    Blob compute(const std::vector<LazyBlobRef>& args) const override;
+    std::vector<LazyBlobRef> grad(const Blob& gradient, const std::vector<LazyBlobRef>& args) const override;
+    Shape computeDim(const std::vector<LazyBlobRef>& args) const override;
+};

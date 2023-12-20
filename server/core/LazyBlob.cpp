@@ -1,6 +1,9 @@
 #include <cassert>
 #include <vector>
 #include <optional>
+#include <algorithm>
+#include <cmath>
+
 
 #include "LazyBlob.h"
 #include "Iterations.h"
@@ -8,6 +11,7 @@
 #include "Blob.h"
 
 #define MAX_DIMS_COUNT 4
+#define EPS 1e-9
 
 const Shape& LazyBlob::shape() const {
     if (shape_.has_value()) {
@@ -567,4 +571,146 @@ std::ostream& operator<<(std::ostream& os, const LazyBlob &b) {
         os << std::endl;
     }
     return os;
+}
+
+class LazyBlobEntropy: public LazyBlob {
+public:
+    const LazyBlob &a, &b;
+    const int classCount;
+    LazyBlobEntropy(const LazyBlob &a, const LazyBlob &b, int classCount): 
+        a(a), b(b), classCount(classCount) {};
+
+    void initShape() const final override {
+        shape_ = b.shape();
+    }
+
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        assert(b(k, l, i, j) < classCount);
+        // WARNING: если проблемы, меняем на случай с EPS
+        return std::log(a(k, l, i, (int) b(k, l, i, j)));
+        // return std::log(a(k, l, i, (int) b(k, l, i, j)) + EPS);
+    }
+};
+
+class LazyBlobEntropyDerivative: public LazyBlob {
+public:
+    const LazyBlob &a, &b;
+    const int classCount;
+    LazyBlobEntropyDerivative(const LazyBlob &a, const LazyBlob &b, int classCount): 
+        a(a), b(b), classCount(classCount) {};
+
+    void initShape() const final override {
+        shape_ = a.shape();
+    }
+
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        assert(b(k, l, i, j) < classCount);
+        if (j != (int) b(k, 0, 0, 0)) {
+            return 0;
+        }
+        // WARNING: если проблемы, меняем на случай с EPS
+        return  - 1.0f / (a(k, l, i, j));
+        // return  - 1.0f / (a(k, l, i, j) + EPS);
+    }
+};
+
+const LazyBlob& LazyBlob::entropy(const LazyBlob& a, int classCount) const {
+    assert(shape().cols() == classCount);
+    assert(shape().dim4() == a.shape().dim4());
+    assert(shape().dim3() == 1);
+    assert(shape().rows() == 1);
+    assert(a.shape().dim3() == 1);
+    assert(a.shape().rows() == 1);
+    assert(a.shape().cols() == 1);
+
+    void* location = Allocator::allocateBytes(sizeof(LazyBlobEntropy));
+    return *(new(location) LazyBlobEntropy(*this, a, classCount));
+}
+
+const LazyBlob& LazyBlob::entropyDerivative(const LazyBlob& a, int classCount) const {
+    assert(shape().cols() == classCount);
+    assert(shape().dim4() == a.shape().dim4());
+    assert(shape().dim3() == 1);
+    assert(shape().rows() == 1);
+    assert(a.shape().dim3() == 1);
+    assert(a.shape().rows() == 1);
+    assert(a.shape().cols() == 1);
+    void* location = Allocator::allocateBytes(sizeof(LazyBlobEntropyDerivative));
+    return *(new(location) LazyBlobEntropyDerivative(*this, a, classCount));
+}
+
+class LazyBlobMaxPool: public LazyBlob {
+public:
+    const LazyBlob &a;
+    LazyBlobMaxPool(const LazyBlob &a): a(a) {};
+
+    void initShape() const final override {
+        shape_ = {
+            {
+                a.shape().dim4(), a.shape().dim3(), a.shape().rows() / 2, a.shape().cols() / 2
+            }, 
+            a.shape().dimsCount
+        };
+    }
+
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        return std::max(
+            std::max(a(k, l, i * 2, j * 2), a(k, l, i * 2 + 1, j * 2)),
+            std::max(a(k, l, i * 2, j * 2 + 1), a(k, l, i * 2 + 1, j * 2 + 1))
+        );
+    }
+};
+
+class LazyBlobMaxPoolDerivative: public LazyBlob {
+public:
+    const LazyBlob &a, &b;
+    LazyBlobMaxPoolDerivative(const LazyBlob &a, const LazyBlob& b): a(a), b(b) {};
+
+    void initShape() const final override {
+        shape_ = a.shape();
+    }
+
+    float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
+        size_t start_i = (i / 2) * 2;
+        size_t start_j = (j / 2) * 2;
+        size_t indexOfMax_i = start_i;
+        size_t indexOfMax_j = start_j;
+        float max = a(k, l, indexOfMax_i, indexOfMax_j);
+        if (max < a(k, l, start_i, start_j + 1)) {
+            indexOfMax_i = start_i;
+            indexOfMax_j = start_j + 1;
+            max =  a(k, l, indexOfMax_i, indexOfMax_j);
+        }
+
+        if (max < a(k, l, start_i + 1, start_j)) {
+            indexOfMax_i = start_i + 1;
+            indexOfMax_j = start_j;
+            max =  a(k, l, indexOfMax_i, indexOfMax_j);
+        }
+
+        if (max < a(k, l, start_i + 1, start_j + 1)) {
+            indexOfMax_i = start_i + 1;
+            indexOfMax_j = start_j + 1;
+            max =  a(k, l, indexOfMax_i, indexOfMax_j);
+        }
+        
+        if (indexOfMax_i == i && indexOfMax_j == j)
+            return b(k, l, i / 2, j / 2);
+
+        return 0.0f;
+    }
+};
+
+const LazyBlob& LazyBlob::maxPool() const {
+    assert(shape().cols() % 2 == 0);
+    assert(shape().rows() % 2 == 0);
+    void* location = Allocator::allocateBytes(sizeof(LazyBlobEntropyDerivative));
+    return *(new(location) LazyBlobMaxPool(*this));
+}
+
+const LazyBlob& LazyBlob::maxPoolDerivative(const LazyBlob& b) const {
+    assert(shape().cols() % 2 == 0);
+    assert(shape().rows() % 2 == 0);
+    void* location = Allocator::allocateBytes(sizeof(LazyBlobMaxPoolDerivative));
+    return *(new(location) LazyBlobMaxPoolDerivative(*this, b));
 }

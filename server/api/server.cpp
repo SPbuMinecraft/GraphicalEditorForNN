@@ -36,7 +36,8 @@ void train(json::rvalue& json, Graph** graph, int model_id) {
     Allocator::endVirtualMode();
 
     for (int j = 0; j < 1000; ++j) {
-        auto& result = lastNode.forward();
+        lastNode.forward();
+        auto& result = lastNode.output.value();
         printf("%d: %f\n", j, result(0, 0, 0, 0));
         // lastNode.gradient = result;
         lastNode.gradient = Blob::ones({{1}});
@@ -52,7 +53,8 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer) {
 
     auto& lastNode = graph->getLastPredictLayers()[0]->result.value();  // Пока не думаем о нескольких выходах (!) Hard-coded
     lastNode.clear();
-    const Blob& result = lastNode.forward();
+    lastNode.forward();
+    const Blob& result = lastNode.output.value();
 
     answer.reserve(result.shape.rows() * result.shape.cols());
     for (size_t j = 0; j < result.shape.rows(); ++j) {
