@@ -5,6 +5,7 @@
 
 #include "RandomInit.h"
 #include "Tensor.h"
+#include "Shape.h"
 #include "Parameters.h"
 
 
@@ -16,10 +17,10 @@ public:
     std::vector<TensorRef> layerOperationParams;
 };
 
-class Data2dLayer: public Layer {
+class DataLayer: public Layer {
 public:
-    size_t width;
-    Data2dLayer(const Data2dLayerParameters& params, const std::vector<float>& values);
+    DataLayer(const Shape& params, const std::vector<float>& values);
+    DataLayer(const Shape& params, size_t batch_size);
 };
 
 class LinearLayer: public Layer {

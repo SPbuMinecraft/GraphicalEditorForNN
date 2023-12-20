@@ -6,8 +6,8 @@ from .errors import Error
 
 
 class Data2dChecker:
-    def __init__(self, width):
-        self.output_shape = [-1, width]
+    def __init__(self, shape: list[int]):
+        self.output_shape = [-1] + shape
 
     def __call__(self):
         return True
@@ -60,7 +60,7 @@ class MSEChecker:
 def create_checker(layer: dict):
     match layer["type"]:
         case "Data" | "Target":
-            return Data2dChecker(layer["parameters"]["width"])
+            return Data2dChecker(layer["parameters"]["shape"])
         case "Linear":
             return LinearChecker(
                 layer["parameters"]["inFeatures"], layer["parameters"]["outFeatures"]

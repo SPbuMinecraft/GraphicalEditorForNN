@@ -63,7 +63,7 @@ header {
 .menu {
     position: absolute;
     top: 0;
-    right: 100px;
+    right: 50px;
     width: 500px;
     height: var(--header-height);
     display: block;
@@ -196,13 +196,6 @@ header .button-wrapper {
     background-color: var(--background0);
 }
 
-/*Terminal screen*/
-.terminal {
-    width: 100%;
-    height: calc(100vh - var(--header-height));
-    display: none;
-}
-
 /*Metrics screen*/
 .metrics {
     width: 100%;
@@ -232,6 +225,7 @@ header .button-wrapper {
     border-bottom: var(--border-width) solid var(--background3);
     border-bottom-left-radius: 30px;
     & h2 {
+        text-align: center;
         margin-top: 0px;
         font-size: 20px;
         padding: 10px 20px;
@@ -242,20 +236,31 @@ header .button-wrapper {
             inset 0px -3px 3px var(--background0);
     }
     & h3 {
-        margin-bottom: 3px;
+        margin-bottom: 8px;
         margin-top: 3px;
     }
     .layer-parameters {
         padding-left: 20px;
+        margin-bottom: 8px;
     }
     #layer-id {
         padding-left: 20px;
+        margin-bottom: 8px;
     }
     .layer-input-list {
-        margin-bottom: -15px;
+        margin-bottom: -7px;
     }
     & LI {
+        list-style-type: decimal;
         margin-left: -15px;
+        margin-top: 8px;
+        width: 60px;
+        text-align: center;
+        font-weight: bold;
+    }
+    .button-wrapper {
+        font-weight: bolder;
+        cursor: move;
     }
 }
 

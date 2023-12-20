@@ -1,7 +1,10 @@
 import re
+import os
+import datetime
 import typing as tp
 from enum import Enum
 from collections import deque, defaultdict
+import matplotlib.pyplot as plt
 
 
 def get_edges_from_model(model_dict):
@@ -123,3 +126,17 @@ def convert_model(model):
             model["layers"],
         )
     )
+
+
+def plot_metrics(values: list[float], user_id: int, model_id: int, label: str) -> str:
+    dt = datetime.datetime.now()
+    plt.plot(list(range(1, len(values) + 1)), values)
+    isoformat_dt = re.sub(r"[:\.\-]", "_", dt.isoformat())
+    path = f"{user_id}_{model_id}_{label}_{isoformat_dt}.png"
+    plt.savefig(os.path.join("images", path))
+    return path
+
+
+def delete_file(path: str):
+    if os.path.exists(path):
+        os.remove(path)

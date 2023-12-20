@@ -63,6 +63,7 @@ def make_app(config=None):
     app.register_error_handler(KeyError, key_error)  # no json field
     app.register_error_handler(ValueError, value_error)  # json wrong type
     app.register_error_handler(HTTPException, http_error)
+    app.register_error_handler(TimeoutError, timeout_error)
     app.register_error_handler(ConnectTimeout, timeout_error)
     app.register_error_handler(ConnectionError, connection_error)
 

@@ -1,17 +1,27 @@
 import requests
 from http import HTTPStatus
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request, current_app, send_file
+import numpy as np
+import os
 
-from .utils import convert_model_parameters, is_valid_model, convert_model
+from .utils import (
+    convert_model_parameters,
+    is_valid_model,
+    convert_model,
+    plot_metrics,
+)
 from .check_dimensions import assert_dimensions_match
 
 from .errors import Error
 
 from .db import sql_worker
-from .dataset import extract_predict_data, extract_train_data
 
 
 app = Blueprint("make a better name", __name__)
+
+
+def cpp_url(method: str):
+    return current_app.config["CPP_SERVER"] + "/" + method
 
 
 @app.route("/user", methods=["POST"])
@@ -41,7 +51,7 @@ def add_model(user_id: int):
     return {"model_id": inserted_id}, HTTPStatus.CREATED
 
 
-@app.route("/<int:user_id>/<int:model_id>", methods=["GET", "PUT", "DELETE"])
+@app.route("/<int:user_id>/<int:model_id>", methods=["GET", "PUT", "PATCH", "DELETE"])
 def model(user_id: int, model_id: int):
     sql_worker.verify_access(user_id, model_id)
     match request.method:
@@ -52,6 +62,14 @@ def model(user_id: int, model_id: int):
             d: dict[str, str | None] = defaultdict(lambda: None, **request.json)  # type: ignore
             sql_worker.update_model(model_id, d["name"], d["raw"])
             return "", HTTPStatus.OK
+        case "PATCH":
+            response = requests.post(
+                cpp_url(f"upload_data/{model_id}/0"),
+                data=request.data,
+                headers={"Content-Type": request.content_type},
+                timeout=10,
+            )
+            return "", response.status_code
         case "DELETE":
             sql_worker.delete_model(model_id)
             return "", HTTPStatus.OK
@@ -142,8 +160,6 @@ def train_model(
 ):  # Unfortunately, flask don't have convertor for bool
     # checks belonging of the model to user
     sql_worker.verify_access(user_id, model_id)
-    if not request.data:
-        raise Error("No csv data provided")
     if sql_worker.is_model_trained(model_id) and safe:
         raise Error("Already trained", HTTPStatus.PRECONDITION_FAILED)
 
@@ -153,13 +169,11 @@ def train_model(
         raise Error("Invalid model found", HTTPStatus.NOT_ACCEPTABLE)
     assert_dimensions_match(model["layers"])
 
-    dataset = extract_train_data(request.data, model)
-
     convert_model(model)
-    model = {"graph": model, "dataset": dataset}
+    model = {"graph": model}
 
     response = requests.post(
-        current_app.config["CPP_SERVER"] + f"/train/{model_id}",
+        cpp_url(f"train/{user_id}/{model_id}"),
         json=model,
         timeout=3,
     )
@@ -168,24 +182,91 @@ def train_model(
     return response.text, response.status_code
 
 
-@app.route("/predict/<int:user_id>/<int:model_id>", methods=["PUT"])
+@app.route("/predict/<int:user_id>/<int:model_id>", methods=["GET", "PUT"])
 def predict(user_id: int, model_id: int):
+    """PUT method is for uploading the png, GET method is for receiving the result"""
     sql_worker.verify_access(user_id, model_id)
-
-    if not request.data:
-        raise Error("No csv data provided")
-
-    model = sql_worker.get_graph_elements(model_id)
-    convert_model_parameters(model)
-    json_data = extract_predict_data(request.data, model)
 
     if not sql_worker.is_model_trained(model_id):
         raise Error("Not trained", HTTPStatus.PRECONDITION_FAILED)
 
-    response = requests.post(
-        current_app.config["CPP_SERVER"] + f"/predict/{model_id}",
-        json=json_data,
-        timeout=3,
-    )
+    match request.method:
+        case "GET":
+            response = requests.put(
+                cpp_url(f"predict/{model_id}"),
+            )
+        case "PUT":
+            response = requests.post(
+                cpp_url(f"upload_data/{model_id}/1"),
+                data=request.data,
+                headers={"Content-Type": "image/png"},
+            )
 
     return response.text, response.status_code
+
+
+@app.route("/update_metrics/<int:user_id>/<int:model_id>", methods=["PUT"])
+def update_metrics(user_id: int, model_id: int):
+    sql_worker.verify_access(user_id, model_id)
+
+    json = request.json or {}
+    targets = np.array(json["targets"])
+    n_epochs, n_samples = targets.shape
+    outputs = np.array(json["outputs"])
+    if targets.shape != outputs.shape:
+        outputs = outputs.reshape(n_epochs, n_samples, -1)
+
+    assert targets.shape == outputs.shape  # Это временное
+    metrics = np.mean((targets - outputs) ** 2, axis=1)
+    sql_worker.update_metrics(
+        model_id,
+        list(metrics),
+        json.get("label", "default"),
+        json.get("rewrite", False),
+    )
+    return "", HTTPStatus.OK
+
+
+@app.route("/protect_metrics/<int:user_id>/<int:model_id>", methods=["PUT"])
+def protect_metrics(user_id: int, model_id: int):
+    sql_worker.verify_access(user_id, model_id)
+
+    json = request.json or {}
+    sql_worker.protect_metrics(
+        model_id,
+        json.get("label", "default"),
+        json.get("protected", True),
+    )
+    return "", HTTPStatus.OK
+
+
+@app.route("/get_metrics/<int:user_id>/<int:model_id>", methods=["PUT"])
+def get_metircs(user_id: int, model_id: int):
+    sql_worker.verify_access(user_id, model_id)
+
+    json = request.json or {}
+    values = sql_worker.get_metrics(
+        model_id,
+        json.get("label", "default"),
+    )
+    return {"values": list(map(float, values.split()))}, HTTPStatus.OK
+
+
+# Add swagger description
+@app.route("/get_plots/<int:user_id>/<int:model_id>", methods=["PUT"])
+def get_plots(user_id: int, model_id: int):
+    sql_worker.verify_access(user_id, model_id)
+
+    json = request.json or {}
+    label = json.get("label", "default")
+    values = sql_worker.get_metrics(
+        model_id,
+        label,
+    )
+
+    plot_path = plot_metrics(list(map(float, values.split())), user_id, model_id, label)
+    current_dir = os.getcwd()
+    print(current_dir)
+    response = send_file(os.path.join(current_dir, "images", plot_path))
+    # delete_file(os.path.join(current_dir, "images", plot_path))
+    return response

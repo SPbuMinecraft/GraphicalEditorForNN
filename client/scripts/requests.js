@@ -124,46 +124,100 @@ async function deleteConnection(sending_object) {
     return response
 }
 
-function trainRequest() {
-    if (!train_data) {
-        errorNotification("No training data was set.")
-    } else {
-        fetch(`http://${py_server_address}/train/${user_id}/${model_id}/0`, {
-            method: "PUT",
-            mode: "cors",
-            headers: {"Content-Type": "text/csv"},
-            body: train_data,
-        }).then(response => {
-            showBuildNotification(response.ok)
-            onTrainShowPredict(response.ok)
+function uploadRequest() {
+    if (data_upload.files.length == 0) return
+    const file = data_upload.files[0]
+
+    fetch(`http://${py_server_address}/${user_id}/${model_id}`, {
+        method: "PATCH",
+        mode: "cors",
+        body: file,
+    }).then(response => {
+        if (!response.ok) {
+            Swal.fire({
+                position: "top-end",
+                icon: "error",
+                title: "Failed to upload data",
+                showConfirmButton: false,
+                timer: 1500,
+            })
+            console.error(`Failed to upload data for ${file.name}`)
+            return
+        }
+        Swal.fire({
+            position: "top-end",
+            icon: "success",
+            title: "Successfully uploaded",
+            showConfirmButton: false,
+            timer: 1500,
         })
-    }
+    })
+    setModelView("irrelevant")
+    // allow user to press a train button from now on
+    button_wrapper = document.getElementById("train-button")
+    button_wrapper.getElementsByTy
+    train_button = button_wrapper.children[0]
+    button_wrapper.removeAttribute("disabled")
+    train_button.removeAttribute("disabled")
+}
+
+function trainRequest() {
+    fetch(`http://${py_server_address}/train/${user_id}/${model_id}/0`, {
+        method: "PUT",
+        mode: "cors",
+    }).then(response => {
+        showBuildNotification(response.ok)
+        onTrainShowPredict(response.ok)
+        if (response.ok) {
+            setModelView("success")
+        } else {
+            setModelView("error")
+        }
+    })
 }
 
 async function predictRequest() {
-    if (csv_predict.files.length == 0) {
+    if (predict_button.files.length == 0) {
         errorNotification("Empty predict file.")
         return
     }
-    const file = csv_predict.files[0]
-    const text = await file.text()
-    const response = await fetch(
+    if (!(modelIsUpToDate == "success")) {
+        await Swal.fire({
+            position: "center",
+            icon: "warning",
+            title: "Outdated!",
+            text: "Neural network input and/or model is outdated",
+            showConfirmButton: true,
+        })
+    }
+    const file = predict_button.files[0]
+    let response = await fetch(
         `http://${py_server_address}/predict/${user_id}/${model_id}`,
         {
             method: "PUT",
             mode: "cors",
-            headers: {"Content-Type": "text/csv"},
-            body: text,
+            body: file,
         },
     )
-    const responseJson = await response.json()
-    hideResult() // hide previous predict result
-    if (response.ok) onPredictShowResult(responseJson)
-    else {
-        Swal.fire("Error!", "Server is not responding now.", "error")
-        errorNotification("Failed to predict.\n" + responseJson.error)
-        console.log(
-            `Predict failed with ${response.statusText}: ${responseJson.error}`,
+    if (!response.ok) {
+        Swal.fire("Error!", "Failed to upload the png image", "error")
+        console.error(
+            `Failed to upload the png with ${response.statusText}: ${responseJson.error}`,
         )
+        return
     }
+    response = await fetch(
+        `http://${py_server_address}/predict/${user_id}/${model_id}`,
+        {method: "GET", mode: "cors"},
+    )
+    const responseJson = await response.json()
+    if (!response.ok) {
+        Swal.fire("Error!", "Failed to predict", "error")
+        console.error(
+            `Failed to predict with with ${response.statusText}: ${responseJson.error}`,
+        )
+        return
+    }
+    hideResult() // hide previous predict result
+    onPredictShowResult(responseJson)
 }

@@ -33,9 +33,16 @@ ReLULayer::ReLULayer(const std::vector<TensorRef>& args) {
     result = Tensor(relu, {args[0]});
 }
 
-Data2dLayer::Data2dLayer(const Data2dLayerParameters& params, const std::vector<float>& values)
-    : width(params.width) {
-    result = Tensor(Blob::constBlob({{params.height, width}}, values.data()));
+DataLayer::DataLayer(const Shape& shape, const std::vector<float>& values) {
+    result = Tensor(Blob::constBlob(shape, values.data()));
+}
+
+DataLayer::DataLayer(const Shape& shape, size_t batch_size) {
+    std::vector<size_t> dims = shape.getDims();
+    std::vector<size_t> new_dims(dims.end() - shape.dimsCount, dims.end());
+    new_dims.insert(new_dims.begin(), batch_size);
+    Shape batch_shape(new_dims);
+    result = Tensor(Blob::constRandomBlob(batch_shape, nullptr));
 }
 
 MSELoss::MSELoss(const std::vector<TensorRef>& args) : mean({0, 1, 2, 3}) {
