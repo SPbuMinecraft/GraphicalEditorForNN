@@ -38,6 +38,7 @@ std::pair<Blob, std::vector<float>> DataLoader::operator[](std::size_t index) co
 }
 
 std::size_t DataLoader::size() const {
+
     return loader->size();
 }
 
