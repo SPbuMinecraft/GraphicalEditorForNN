@@ -138,7 +138,7 @@ void Allocator::endSession() {
 }
 
 void Allocator::end() {
-    assert(instance);
+    if (!instance) return;
     if (instance->virtualMode)
         Allocator::endVirtualMode();
     delete [] instance->buf.base;

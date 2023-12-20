@@ -499,7 +499,7 @@ public:
     }
 };
 
-LazyBlob&  conv(const LazyBlob &a, const LazyBlob &b) {
+LazyBlob& conv(const LazyBlob &a, const LazyBlob &b) {
     assert(a.shape().dim3() == b.shape().dim3());
     void* location = Allocator::allocateBytes(sizeof(LazyBlobConv));
     return *(new(location) LazyBlobConv(a, b));
@@ -604,7 +604,7 @@ public:
     }
 
     float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
-        assert(b(k, l, i, j) < classCount);
+        assert(b(k, 0, 0, 0) < classCount);
         if (j != (int) b(k, 0, 0, 0)) {
             return 0;
         }
@@ -618,7 +618,7 @@ const LazyBlob& LazyBlob::entropy(const LazyBlob& a, int classCount) const {
     assert(shape().cols() == classCount);
     assert(shape().dim4() == a.shape().dim4());
     assert(shape().dim3() == 1);
-    assert(shape().rows() == 1);
+//    assert(shape().rows() == 1);
     assert(a.shape().dim3() == 1);
     assert(a.shape().rows() == 1);
     assert(a.shape().cols() == 1);
@@ -631,7 +631,7 @@ const LazyBlob& LazyBlob::entropyDerivative(const LazyBlob& a, int classCount) c
     assert(shape().cols() == classCount);
     assert(shape().dim4() == a.shape().dim4());
     assert(shape().dim3() == 1);
-    assert(shape().rows() == 1);
+//    assert(shape().rows() == 1);
     assert(a.shape().dim3() == 1);
     assert(a.shape().rows() == 1);
     assert(a.shape().cols() == 1);

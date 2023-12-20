@@ -178,7 +178,7 @@ def train_model(
     response = requests.post(
         cpp_url(f"train/{user_id}/{model_id}"),
         json=model,
-        timeout=3,
+        # timeout=3,
     )
     sql_worker.train_model(model_id)
 

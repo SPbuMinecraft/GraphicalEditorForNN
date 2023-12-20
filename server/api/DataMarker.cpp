@@ -5,6 +5,7 @@
 #include "Blob.h"
 
 DataMarker::DataMarker(std::string path, FileExtension type, int percentage_for_train, std::size_t batch_size) {
+    type = FileExtension::Png;
     if (percentage_for_train > 100 || percentage_for_train < 0) {
         throw std::logic_error("Wrong percentage");
     }

@@ -39,9 +39,8 @@ DataLayer::DataLayer(const Shape& shape, const std::vector<float>& values) {
 
 DataLayer::DataLayer(const Shape& shape, size_t batch_size) {
     std::vector<size_t> dims = shape.getDims();
-    std::vector<size_t> new_dims(dims.end() - shape.dimsCount, dims.end());
-    new_dims.insert(new_dims.begin(), batch_size);
-    Shape batch_shape(new_dims);
+    dims[0] = batch_size;
+    Shape batch_shape(dims);
     result = Tensor(Blob::constRandomBlob(batch_shape, nullptr));
 }
 

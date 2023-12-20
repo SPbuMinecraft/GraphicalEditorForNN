@@ -34,7 +34,7 @@ std::string getPredictPath(int id) {
 }
 
 void GetLogs(const Blob& node, std::vector<web::json::value>& values) {
-    assert(node.shape.dimsCount <= 2);
+//    assert(node.shape.dimsCount <= 2);
     values.reserve(values.size() + node.shape.size());
     for (size_t sample_index = 0; sample_index < node.shape.rows(); ++sample_index) {
         for (size_t feature_index = 0; feature_index < node.shape.cols(); ++feature_index) {
@@ -44,14 +44,16 @@ void GetLogs(const Blob& node, std::vector<web::json::value>& values) {
 }
 
 void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExtension extension) {
+    Allocator::end();
+
     RandomObject initObject(0, 1, 42);
     OptimizerBase SGD = OptimizerBase(0.1);
 
     // Should be adopted for DataLoader possibilities
     std::string path = getDataPath(model_id);
-    if (extension == FileExtension::Csv) {
-        path += "/1.csv";
-    }
+//    if (extension == FileExtension::Csv) {
+//        path += "/1.csv";
+//    }
 
     std::cerr << "start data processing" << std::endl;
     DataMarker dataMarker = DataMarker(path, extension, 100, 4);

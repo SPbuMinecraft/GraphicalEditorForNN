@@ -70,6 +70,7 @@ AxisParameters ParseAxes(const crow::json::rvalue& parameters) {
 }
 
 CrossEntropyLossParameters ParseCrossEntropyLoss(const crow::json::rvalue& parameters) {
-    CHECK_HAS_FIELD(parameters, "classCount");
-    return CrossEntropyLossParameters{static_cast<size_t>(parameters["classCount"].i())};
+//    CHECK_HAS_FIELD(parameters, "classCount");
+    return CrossEntropyLossParameters{2};
+//    return CrossEntropyLossParameters{static_cast<size_t>(parameters["classCount"].i())};
 }

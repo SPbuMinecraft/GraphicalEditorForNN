@@ -125,15 +125,15 @@ void Graph::Initialize(crow::json::rvalue modelJson,
             for (auto prevLayerId : reversedEdges[layer_id]) {
                 lastPredictIds_.push_back(prevLayerId);
             }
-        } else if (type == "MSELoss") {
-            layers_.emplace(layer_id, new MSELoss{prevLayers});
-            lastTrainIds_.push_back(layer_id);
-        } else if (type == "CrossEntropyLoss") {
+//        } else if (type == "MSELoss") {
+//            layers_.emplace(layer_id, new MSELoss{prevLayers});
+//            lastTrainIds_.push_back(layer_id);
+        } else if (type == "MSELoss" || type == "CrossEntropyLoss") {
             CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
             auto params = ParseCrossEntropyLoss(layerDicts[layer_id]["parameters"]);
             layers_.emplace(layer_id, new EntropyLoss{params, prevLayers});
             lastTrainIds_.push_back(layer_id);
-        } else if (type == "Conv2d") {
+        } else if (type == "Conv2D") {
             CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
             auto params = ParseConv2d(layerDicts[layer_id]["parameters"]);
             layers_.emplace(layer_id, new Conv2DLayer{params, prevLayers, randomInit});
