@@ -14,11 +14,6 @@ struct Operation {
     virtual std::vector<LazyBlobRef> grad(const Blob& gradient, const std::vector<LazyBlobRef>& args) const = 0;
     virtual Shape computeDim(const std::vector<LazyBlobRef>& args) const = 0;
     const Operation& operator=(const Operation& other) const;
-    std::string name = "";
-
-    virtual std::string getName() const {
-        return name;
-    }
 };
 
 struct Noop: Operation {
