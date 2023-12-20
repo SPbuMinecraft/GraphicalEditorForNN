@@ -103,7 +103,7 @@ MeanLayer::MeanLayer(const AxisParameters& params,
 }
 
 LayerNorm::LayerNorm(const AxisParameters& params,
-                   const std::vector<TensorRef>& args)
+                     const std::vector<TensorRef>& args)
     : varLayer(params, args), mean(params.axis) {
     pipeline.reserve(6);
     TensorRef tensor = args[0];
