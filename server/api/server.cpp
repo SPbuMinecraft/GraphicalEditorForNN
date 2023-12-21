@@ -79,7 +79,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     request[U("rewrite")] = web::json::value::boolean(true);
     std::vector<web::json::value> targets, outputs;
 
-    size_t max_epochs = 5;
+    size_t max_epochs = 1;
     std::pair<std::vector<float>, std::vector<float>> batch;
 
     web::http::client::http_client client(U("http://localhost:3000"));
@@ -191,7 +191,7 @@ int main(int argc, char *argv[]) {
             std::cout << err.what() << std::endl;
             return response(status::BAD_REQUEST, "Invalid body");
         }
-        json::wvalue response = answer[0];
+        json::wvalue response = (int)(answer[1] > answer[0]);
         return crow::response(status::OK, response);
     });
 
