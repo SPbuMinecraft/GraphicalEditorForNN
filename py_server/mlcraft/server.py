@@ -51,7 +51,7 @@ def add_model(user_id: int):
     return {"model_id": inserted_id}, HTTPStatus.CREATED
 
 
-@app.route("/<int:user_id>/<int:model_id>", methods=["GET", "PUT", "PATCH", "DELETE"])
+@app.route("/<int:user_id>/<int:model_id>", methods=["GET", "PUT", "DELETE"])
 def model(user_id: int, model_id: int):
     sql_worker.verify_access(user_id, model_id)
     match request.method:
@@ -160,6 +160,8 @@ def train_model(
 ):  # Unfortunately, flask don't have convertor for bool
     # checks belonging of the model to user
     sql_worker.verify_access(user_id, model_id)
+    if not request.data:
+        raise Error("No csv data provided")
     if sql_worker.is_model_trained(model_id) and safe:
         raise Error("Already trained", HTTPStatus.PRECONDITION_FAILED)
 

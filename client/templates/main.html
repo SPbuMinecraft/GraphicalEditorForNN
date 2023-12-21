@@ -329,6 +329,7 @@
           deleteLayer(layer_to_delete).then(response => {
             if (response.ok) {
               super.removeNodeId(id)
+              updateConnectionsInLayers(id.split("-")[1])
             } else {
               errorNotification("Failed to delete layer.\n Server is not responding now.")
             }
@@ -569,7 +570,7 @@
           if (response.ok) {
             editor.updateNodeDataFromId(connection.input_id, {
               DBID: data2.DBID,
-              Connections: [].concat(`${data1.DBID};${connection.output_id}`, data2.Connections), // "db_id;drawflow_id"
+              Connections: data2.Connections.concat(`${data1.DBID};${connection.output_id}`), // "db_id;drawflow_id"
               Parameters: data2.Parameters,
             })
           } else {
@@ -1369,6 +1370,7 @@
 
         // Input selection
         writeIdOnConnections(input_selection_layer_id)
+
         let sortable_list = getSortableInputList(node)
         let child = sortable_list.lastElementChild
 
@@ -1397,8 +1399,9 @@
             new_input_order = []
             for (let i in sortable_list.childNodes) {
               try {
-                if (sortable_list.childNodes[i].textContent.includes("input")) {
-                  new_input_order.push(Number(sortable_list.childNodes[i].textContent.split(" ")[3]))
+                if (sortable_list.childNodes[i].textContent.length > 0) {
+                  console.log(sortable_list.childNodes[i].textContent)
+                  new_input_order.push(Number(sortable_list.childNodes[i].textContent))
                 }
               } catch (e) {
                 continue
@@ -1606,6 +1609,25 @@
             if (connection.classList.contains("connection-predict-success"))
               connection.classList.remove("connection-predict-success")
           }
+        }
+      }
+
+      function updateConnectionsInLayers(deleted_id) {
+        let nodes = document.getElementsByClassName("drawflow-node")
+        for (let i of nodes) {
+          const data1 = editor.getNodeFromId(i.id.split("-")[1]).data
+          let updatedConnections = []
+          for (let connection of data1.Connections) {
+            if (connection.split(";")[1] == deleted_id) {
+              continue
+            }
+            updatedConnections.unshift(connection)
+          }
+          editor.updateNodeDataFromId(i.id.split("-")[1], {
+            DBID: data1.DBID,
+            Connections: updatedConnections,
+            Parameters: data1.Parameters,
+          })
         }
       }
     </script>
