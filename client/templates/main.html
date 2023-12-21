@@ -570,7 +570,7 @@
           if (response.ok) {
             editor.updateNodeDataFromId(connection.input_id, {
               DBID: data2.DBID,
-              Connections: [].concat(`${data1.DBID};${connection.output_id}`, data2.Connections), // "db_id;drawflow_id"
+              Connections: data2.Connections.concat(`${data1.DBID};${connection.output_id}`), // "db_id;drawflow_id"
               Parameters: data2.Parameters,
             })
           } else {
