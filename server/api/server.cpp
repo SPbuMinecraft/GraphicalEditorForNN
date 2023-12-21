@@ -35,11 +35,10 @@ std::string getPredictPath(int id) {
 }
 
 void GetLogs(const Blob& node, std::vector<web::json::value>& values) {
-//    assert(node.shape.dimsCount <= 2);
     values.reserve(values.size() + node.shape.size());
-    for (size_t sample_index = 0; sample_index < node.shape.rows(); ++sample_index) {
+    for (size_t sample_index = 0; sample_index < node.shape.dim4(); ++sample_index) {
         for (size_t feature_index = 0; feature_index < node.shape.cols(); ++feature_index) {
-            values.push_back(web::json::value::number(node(0, 0, sample_index, feature_index)));
+            values.push_back(web::json::value::number(node(sample_index, 0, 0, feature_index)));
         }
     }
 }
@@ -141,12 +140,11 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtensi
     lastNode.forward();
 
     auto& result = lastNode.output.value();
-    assert(result.shape.dimsCount == 2);
 
     answer.reserve(result.shape.cols());
     for (size_t i = 0; i < result.shape.cols(); ++i) {
-        answer.push_back(result(0, i));
-        std::cout << result(0, i) << std::endl;
+        answer.push_back(result(0, 0, 0, i));
+        std::cout << result(0, 0, 0, i) << std::endl;
     }
 }
 
@@ -235,14 +233,14 @@ int main(int argc, char *argv[]) {
         std::filesystem::create_directory(path);
 
         std::cerr << content_type << std::endl;
-        if (content_type.substr(0, strlen("text/csv")) == "text/csv") {
+        if (content_type == "text/csv") {
             path += "/1.csv";
             file_types[model_id] = FileExtension::Csv;
         }
-        else if (content_type.substr(0, strlen("application/zip")) == "application/zip") {
+        else if (content_type == "application/zip") {
             path += "/1.zip";
             file_types[model_id] = FileExtension::Png;
-        } else if (content_type.substr(0, strlen("image/png")) == "image/png") {
+        } else if (content_type == "image/png") {
             path += "/1.png";
             file_types[model_id] = FileExtension::Png;
         } else {
@@ -253,7 +251,7 @@ int main(int argc, char *argv[]) {
         out_file << req.body;
         out_file.close();
 
-        if (content_type.substr(0, strlen("application/zip")) == "application/zip" && type == 0) {
+        if (content_type == "application/zip" && type == 0) {
             try {
                 extract_from_zip(path, root);
             }

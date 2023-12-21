@@ -170,7 +170,7 @@ def train_model(
     convert_model_parameters(model)
     if not is_valid_model(model):
         raise Error("Invalid model found", HTTPStatus.NOT_ACCEPTABLE)
-    assert_dimensions_match(model["layers"])
+    # assert_dimensions_match(model["layers"])
 
     convert_model(model)
     model = {"graph": model}
@@ -219,8 +219,15 @@ def update_metrics(user_id: int, model_id: int):
     if targets.shape != outputs.shape:
         outputs = outputs.reshape(n_epochs, n_samples, -1)
 
-    assert targets.shape == outputs.shape  # Это временное
-    metrics = np.mean((targets - outputs) ** 2, axis=1)
+    # assert targets.shape == outputs.shape  # Это временное
+    # metrics = np.mean((targets - outputs) ** 2, axis=1)
+
+    # count probs
+    probs = np.exp(outputs)
+    probs /= probs.sum(axis=2)
+    values = probs.argmax(axis=2)
+    metrics = np.mean(targets == values, axis=1)
+
     sql_worker.update_metrics(
         model_id,
         list(metrics),
