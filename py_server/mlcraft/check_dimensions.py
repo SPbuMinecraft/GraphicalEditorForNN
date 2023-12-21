@@ -27,8 +27,7 @@ class LinearChecker:
 
 
 class Conv2dChecker:
-    def __init__(self, kernel_size: int, in_channels: int, out_channels: int):
-        self.kernel_size = kernel_size
+    def __init__(self, in_channels: int, out_channels: int):
         self.in_channels = in_channels
         self.out_channels = out_channels
 
@@ -128,14 +127,15 @@ def create_checker(layer: dict):
         case "ReLU":
             return ReLUChecker()
         case "LayerNorm":
-            return LayerNorm()
+            return LayerNormChecker()
         case "MSELoss":
             return MSEChecker()
         case "Sum":
             return SumChecker()
         case "Conv2d":
             return Conv2dChecker(
-                layer["parameters"]["inChannels"], layer["parameters"]["outChannels"])
+                layer["parameters"]["inChannels"], layer["parameters"]["outChannels"]
+            )
         case "Mean" | "SoftMax":
             return DimReduceChecker(layer["parameters"]["axes"])
         case "MaxPool":
