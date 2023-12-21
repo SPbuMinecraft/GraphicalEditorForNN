@@ -1,7 +1,7 @@
 #pragma once
 
 #define cimg_use_png 1
-#include "CImg.h" // required "sudo apt install libx11-dev"
+#include <CImg.h> // required "sudo apt install libx11-dev"
 #include <string>
 #include <vector>
 

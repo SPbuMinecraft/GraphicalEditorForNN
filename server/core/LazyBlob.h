@@ -82,3 +82,6 @@ const LazyBlob& operator * (const LazyBlob &a, float b);
 const LazyBlob& operator / (const LazyBlob &a, float b);
 
 const LazyBlob& combine(const LazyBlob &a, const LazyBlob &b, const BinaryTransform how);
+
+// need for debug
+void printBlob(const LazyBlob& a);

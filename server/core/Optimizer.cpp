@@ -15,9 +15,7 @@ void OptimizerBase::append(std::vector<TensorRef>& newParams) {
 
 void OptimizerBase::step() {
     for (int i = 0; i < params.size(); i++) {
-        if (params[i].get().gradient.has_value() && params[i].get().output.has_value()) {
-            params[i].get().output.value() -= lr * params[i].get().gradient.value();
-            Allocator::endSession();
-        }
+        params[i].get().output.value() -= lr * params[i].get().gradient.value();
+        Allocator::endSession();
     }
 }

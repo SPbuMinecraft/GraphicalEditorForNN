@@ -248,7 +248,7 @@ int main(int argc, char *argv[]) {
             return response(status::BAD_REQUEST, "Invalid content type: " + content_type);
         }
 
-        std::ofstream out_file(path);
+        std::ofstream out_file(path, ios::binary);
         out_file << req.body;
         out_file.close();
 

@@ -48,7 +48,7 @@ Blob Multiply::compute(const vector<LazyBlobRef>& args) const {
 }
 vector<LazyBlobRef> Multiply::grad(const Blob& grad, const vector<LazyBlobRef>& args) const {
     args2(a, b);
-    return {grad & b.transposed(), a.transposed() & grad};
+    return {grad & b.transposed(), (a.transposed() & grad).sum({0})};
 }
 Shape Multiply::computeDim(const vector<LazyBlobRef>& args) const {
     args2(a, b);

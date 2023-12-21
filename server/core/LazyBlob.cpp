@@ -714,3 +714,7 @@ const LazyBlob& LazyBlob::maxPoolDerivative(const LazyBlob& b) const {
     void* location = Allocator::allocateBytes(sizeof(LazyBlobMaxPoolDerivative));
     return *(new(location) LazyBlobMaxPoolDerivative(*this, b));
 }
+
+void printBlob(const LazyBlob& a) {
+    std::cout << a << std::endl;
+};
