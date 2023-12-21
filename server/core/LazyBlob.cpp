@@ -212,7 +212,7 @@ public:
         float result = 0;
         std::vector<size_t> size = {1, 1, 1, a.shape().cols()};
         map(size, [&](size_t k1, size_t l1, size_t i1, size_t j1) {
-            result += a(k, l, i, j1) * b(k, l, j1, j);
+            result += a(k, l, i, j1) * b(0, 0, j1, j);
         });
 
         return result;

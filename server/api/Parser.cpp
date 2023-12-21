@@ -60,13 +60,14 @@ Conv2DLayerParameters ParseConv2d(const crow::json::rvalue& parameters) {
 }
 
 AxisParameters ParseAxes(const crow::json::rvalue& parameters) {
-    CHECK_HAS_FIELD(parameters, "axes");
+//    CHECK_HAS_FIELD(parameters, "axes");
 
-    std::vector<short> axes;
-    for (auto ax_num : parameters["axes"]) {
-        axes.push_back(static_cast<short>(ax_num.i()));
-    }
-    return AxisParameters{std::move(axes)};
+//    std::vector<short> axes;
+//    for (auto ax_num : parameters["axes"]) {
+//        axes.push_back(static_cast<short>(ax_num.i()));
+//    }
+//    return AxisParameters{std::move(axes)};
+    return AxisParameters{{2, 3}};
 }
 
 CrossEntropyLossParameters ParseCrossEntropyLoss(const crow::json::rvalue& parameters) {

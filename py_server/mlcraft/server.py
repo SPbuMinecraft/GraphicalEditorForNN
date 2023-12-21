@@ -70,7 +70,7 @@ def model(user_id: int, model_id: int):
                 cpp_url(f"upload_data/{model_id}/0"),
                 data=request.data,
                 headers={"Content-Type": request.content_type},
-                timeout=10,
+                # timeout=10,
             )
             return "", response.status_code
         case "DELETE":
@@ -195,7 +195,7 @@ def predict(user_id: int, model_id: int):
 
     match request.method:
         case "GET":
-            response = requests.put(
+            response = requests.get(
                 cpp_url(f"predict/{model_id}"),
             )
         case "PUT":
@@ -224,7 +224,7 @@ def update_metrics(user_id: int, model_id: int):
 
     # count probs
     probs = np.exp(outputs)
-    probs /= probs.sum(axis=2)
+    probs /= probs.sum(axis=2)[:, :, np.newaxis]
     values = probs.argmax(axis=2)
     metrics = np.mean(targets == values, axis=1)
 

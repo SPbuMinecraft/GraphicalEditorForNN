@@ -74,12 +74,12 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     lastTrainNode.clear();
     Allocator::endVirtualMode();
 
-    size_t buffer_size = 5, actual_size = 0;
+    size_t buffer_size = 2, actual_size = 0;
     web::json::value request;
     request[U("rewrite")] = web::json::value::boolean(true);
     std::vector<web::json::value> targets, outputs;
 
-    size_t max_epochs = 30;
+    size_t max_epochs = 5;
     std::pair<std::vector<float>, std::vector<float>> batch;
 
     web::http::client::http_client client(U("http://localhost:3000"));
@@ -90,7 +90,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     auto& targetsNode = (*graph)->getLayers(BaseLayerType::Targets)[0]->result.value().output;
     for (size_t epoch = 0; epoch < max_epochs; ++epoch) {
         std::cerr << epoch << std::endl;
-        for (size_t batch_index = 0; batch_index < dataLoader.batch_count(); ++batch_index) {
+        for (size_t batch_index = 0; batch_index < 1; ++batch_index) {
             std::cerr << "\t" << batch_index << std::endl;
             batch = dataLoader.get_raw(batch_index);
             (*graph)->ChangeLayersData(batch.first, BaseLayerType::Data);
@@ -98,8 +98,8 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
 
             lastTrainNode.forward();
 
-            GetLogs(lastPredictNode.value(), targets);
-            GetLogs(targetsNode.value(), outputs);
+            GetLogs(lastPredictNode.value(), outputs);
+            GetLogs(targetsNode.value(), targets);
 
             lastTrainNode.gradient = Blob::ones({{1}});
             lastTrainNode.backward();

@@ -5,6 +5,7 @@ import typing as tp
 from enum import Enum
 from collections import deque, defaultdict
 import matplotlib.pyplot as plt
+plt.switch_backend("Agg")
 
 
 def get_edges_from_model(model_dict):

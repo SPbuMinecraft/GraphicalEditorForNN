@@ -58,11 +58,11 @@ Shape Multiply::computeDim(const vector<LazyBlobRef>& args) const {
 Blob Divide::compute(const vector<LazyBlobRef>& args) const {
     args2(a, b);
     assert(a.shape() == b.shape());
-    return a / b;
+    return a / (b + 1e-6);
 }
 vector<LazyBlobRef> Divide::grad(const Blob& grad, const vector<LazyBlobRef>& args) const {
     args2(a, b);
-    return {grad / b, grad * (-a / (b * b))};
+    return {grad / (b + 1e-6), grad * (-a / (b * b + 1e-6))};
 }
 Shape Divide::computeDim(const vector<LazyBlobRef>& args) const {
     args2(a, b);

@@ -56,9 +56,6 @@ jobs:
       - name: install-cpprest
         run: sudo apt install libcpprest-dev
 
-      - name: install-cpprest
-        run: sudo apt install libcpprest-dev
-
       - name: install-boost
         uses: MarkusJx/install-boost@v2.4.4
         id: install-boost
