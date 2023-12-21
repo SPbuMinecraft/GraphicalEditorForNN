@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <cstring>
 #include <sstream>
 
 #include <zip.h>
@@ -234,14 +235,14 @@ int main(int argc, char *argv[]) {
         std::filesystem::create_directory(path);
 
         std::cerr << content_type << std::endl;
-        if (content_type == "text/csv") {
+        if (content_type.substr(0, strlen("text/csv")) == "text/csv") {
             path += "/1.csv";
             file_types[model_id] = FileExtension::Csv;
         }
-        else if (content_type == "application/zip") {
+        else if (content_type.substr(0, strlen("application/zip")) == "application/zip") {
             path += "/1.zip";
             file_types[model_id] = FileExtension::Png;
-        } else if (content_type == "image/png") {
+        } else if (content_type.substr(0, strlen("image/png")) == "image/png") {
             path += "/1.png";
             file_types[model_id] = FileExtension::Png;
         } else {
@@ -252,7 +253,7 @@ int main(int argc, char *argv[]) {
         out_file << req.body;
         out_file.close();
 
-        if (content_type == "application/zip" && type == 0) {
+        if (content_type.substr(0, strlen("application/zip")) == "application/zip" && type == 0) {
             try {
                 extract_from_zip(path, root);
             }
