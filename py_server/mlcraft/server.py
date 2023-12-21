@@ -15,7 +15,6 @@ from .check_dimensions import assert_dimensions_match
 from .errors import Error
 
 from .db import sql_worker
-from .dataset import extract_predict_data, extract_train_data
 
 
 app = Blueprint("make a better name", __name__)
