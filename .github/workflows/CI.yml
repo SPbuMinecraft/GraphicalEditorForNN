@@ -51,6 +51,10 @@ jobs:
           sudo apt install -y g++-11
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 90
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 90
+          sudo apt install libzip-dev
+
+      - name: install-cpprest
+        run: sudo apt install libcpprest-dev
 
       - name: install-cpprest
         run: sudo apt install libcpprest-dev

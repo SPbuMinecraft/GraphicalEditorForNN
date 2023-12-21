@@ -44,7 +44,7 @@ def http_error(e: HTTPException):
     return {"error": str(e)}, HTTPStatus.BAD_REQUEST
 
 
-def timeout_error(e: ConnectTimeout):
+def timeout_error(e: TimeoutError | ConnectTimeout):
     return {"error": "Request to c++ server timeout"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
