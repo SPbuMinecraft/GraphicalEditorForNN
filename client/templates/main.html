@@ -1182,6 +1182,30 @@
 
     <!--Домашний экран-->
     <script>
+      async function exportNN(nn_id) {
+        console.log(nn_id)
+        const response = await fetch(`http://${py_server_address}/${user_id}/${nn_id}`, {mode: "cors"})
+        if (!response.ok) {
+          console.error(`Failed to fetch model data for id = ${nn_id}`)
+          return
+        }
+        const raw = await response.json()
+        if (!raw) {
+          console.error(`Model ${nn_id} was loaded from db, but doesn't have any data in it`)
+          return
+        }
+        const jsonString = JSON.stringify(raw)
+        const blob = new Blob([jsonString], {type: "application/json"})
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `model_${nn_id}.json`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }
+
       function addModelBlock(name, nn_id) {
         if (name == "") name = "New Neural Network"
         let container = document.getElementById("nn-container")
@@ -1194,7 +1218,7 @@
                 </label>
                 <label class="button-wrapper">
                     Export
-                    <input type="button" onclick="exportNN()">
+                    <input type="button" onclick="exportNN(this.parentElement.parentElement.children[0].value)">
                 </label>
                 <label class="button-wrapper">
                     Delete
