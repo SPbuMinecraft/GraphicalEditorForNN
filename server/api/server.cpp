@@ -79,7 +79,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     request[U("rewrite")] = web::json::value::boolean(true);
     std::vector<web::json::value> targets, outputs;
 
-    size_t max_epochs = 1;
+    size_t max_epochs = 5;
     std::pair<std::vector<float>, std::vector<float>> batch;
 
     web::http::client::http_client client(U("http://localhost:3000"));
@@ -90,7 +90,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     auto& targetsNode = (*graph)->getLayers(BaseLayerType::Targets)[0]->result.value().output;
     for (size_t epoch = 0; epoch < max_epochs; ++epoch) {
         std::cerr << epoch << std::endl;
-        for (size_t batch_index = 0; batch_index < 1; ++batch_index) {
+        for (size_t batch_index = 0; batch_index < dataLoader.batch_count(); ++batch_index) {
             std::cerr << "\t" << batch_index << std::endl;
             batch = dataLoader.get_raw(batch_index);
             (*graph)->ChangeLayersData(batch.first, BaseLayerType::Data);

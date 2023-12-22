@@ -98,7 +98,8 @@ public:
         float result = 0;
         
         std::vector<bool> axis = fillAxis(this->axis);
-        std::vector<size_t> size = fillSize(axis, a.shape());
+        size_t size[4];
+        fillSize(axis, a.shape(), size);
 
         map(size, [&](size_t k1, size_t l1, size_t i1, size_t j1) {
             result += a(
@@ -126,7 +127,8 @@ public:
         std::vector<size_t> axisIndex;
         
         std::vector<bool> axis = fillAxis(this->axis);
-        std::vector<size_t> size = fillSize(axis, a.shape());
+        size_t size[4];
+        fillSize(axis, a.shape(), size);
 
         map(size, [&](size_t k1, size_t l1, size_t i1, size_t j1) {
             result += a(
@@ -210,7 +212,7 @@ public:
 
     float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
         float result = 0;
-        std::vector<size_t> size = {1, 1, 1, a.shape().cols()};
+        size_t size[] = {1, 1, 1, a.shape().cols()};
         map(size, [&](size_t k1, size_t l1, size_t i1, size_t j1) {
             result += a(k, l, i, j1) * b(0, 0, j1, j);
         });
@@ -437,17 +439,26 @@ const LazyBlob& operator / (const LazyBlob &a, float b) {
 Blob& operator += (Blob& a, const LazyBlob& b) {
     assert(a.shape == b.shape());
 
-    std::vector<size_t> size = a.shape.getDims();
-    map(size, [&](size_t k, size_t l, size_t i, size_t j) {
-       a(k, l, i, j) += b(k, l, i, j);
-    });
+    size_t dims[] = {a.shape.dim4(), a.shape.dim3(), a.shape.rows(), a.shape.cols()};
+    for (int k = 0; k < dims[0]; ++k)
+        for (int l = 0; l < dims[1]; ++l)
+            for (int i = 0; i < dims[2]; ++i)
+                for (int j = 0; j < dims[3]; ++j)
+                    a(k, l, i, j) += b(k, l, i, j);
+
+//    std::vector<size_t> sizev = a.shape.getDims();
+//    size_t size[] = {sizev[0], sizev[1], sizev[2], sizev[3]};
+//    map(size, [&](size_t k, size_t l, size_t i, size_t j) {
+//       a(k, l, i, j) += b(k, l, i, j);
+//    });
     return a;
 }
 
 Blob& operator -= (Blob& a, const LazyBlob& b) {
     assert(a.shape == b.shape());
 
-    std::vector<size_t> size = a.shape.getDims();
+    std::vector<size_t> sizev = a.shape.getDims();
+    size_t size[] = {sizev[0], sizev[1], sizev[2], sizev[3]};
     map(size, [&](size_t k, size_t l, size_t i, size_t j) {
        a(k, l, i, j) -= b(k, l, i, j);
     });
@@ -457,7 +468,8 @@ Blob& operator -= (Blob& a, const LazyBlob& b) {
 Blob& operator *= (Blob& a, const LazyBlob& b) {
     assert(a.shape == b.shape());
 
-    std::vector<size_t> size = a.shape.getDims();
+    std::vector<size_t> sizev = a.shape.getDims();
+    size_t size[] = {sizev[0], sizev[1], sizev[2], sizev[3]};
     map(size, [&](size_t k, size_t l, size_t i, size_t j) {
        a(k, l, i, j) *= b(k, l, i, j);
     });

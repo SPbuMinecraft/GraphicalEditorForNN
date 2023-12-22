@@ -86,12 +86,16 @@ float& Blob::operator() (size_t j) {
 }
 
 float* Blob::getAddress(size_t k, size_t l, size_t i, size_t j) const {
-    size_t indices[] = {k, l, i, j};
-    
-    size_t res = 0;
-    for (short int i = 0; i < 4; ++i)
-        res += shape.stride(i) * indices[i];
-    return data + res;
+    const size_t colStride = shape.cols();
+    const size_t rowStride = shape.rows() * colStride;
+    const size_t dim3Stride = shape.dim3() * rowStride;
+    return data + k * dim3Stride + l * rowStride + i * colStride + j;
+//    size_t indices[] = {k, l, i, j};
+//    
+//    size_t res = 0;
+//    for (short int i = 0; i < 4; ++i)
+//        res += shape.stride(i) * indices[i];
+//    return data + res;
 }
 
 void Blob::clear() {

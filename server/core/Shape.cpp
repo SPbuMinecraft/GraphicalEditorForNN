@@ -64,9 +64,13 @@ size_t Shape::operator [] (int i) const {
 
 size_t Shape::stride(int i) const {
     assert(i >= 0 && i < 4);
-    if (i == 3)
-        return 1;
-    return (*this)[i + 1] * stride(i + 1);
+    size_t result = 1;
+    switch (i) {
+        case 0: return dims[1] * dims[2] * dims[3];
+        case 1: return dims[2] * dims[3];
+        case 2: return dims[3];
+        default: return 1;
+    }
 }
 
 size_t Shape::cols() const {
