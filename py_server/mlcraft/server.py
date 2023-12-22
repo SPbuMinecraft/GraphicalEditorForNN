@@ -6,6 +6,7 @@ from http import HTTPStatus
 from flask import Blueprint, request, current_app, send_file
 import numpy as np
 import os
+from collections import defaultdict
 
 from .utils import (
     convert_model_parameters,
