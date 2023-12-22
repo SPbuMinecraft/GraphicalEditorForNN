@@ -1566,6 +1566,9 @@
           textElemPath.setAttribute("text-anchor", "middle")
           textElemPath.setAttribute("startOffset", "50%")
           textElemPath.setAttribute("style", "font-size:30px")
+          if (is_dark_theme) {
+            textElemPath.setAttribute("fill", "white")
+          }
           textElemPath.textContent = labelText
           textElemPath.classList.add("label-text")
           textElem.appendChild(textElemPath)

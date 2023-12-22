@@ -18,3 +18,5 @@ let layer_drag_offset_Y = 0
 let is_id_on_paths = false // Is there written id's on connections
 let input_selection_layer_id
 let input_selection_layer_dbid
+
+let is_dark_theme = false
