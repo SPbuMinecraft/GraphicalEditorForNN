@@ -1,6 +1,4 @@
-from json import dumps
-from sqlite3 import IntegrityError
-import datetime
+from collections import defaultdict
 import requests
 from http import HTTPStatus
 from flask import Blueprint, request, current_app, send_file
@@ -14,8 +12,6 @@ from .utils import (
     convert_model,
     plot_metrics,
 )
-from .check_dimensions import assert_dimensions_match
-
 from .errors import Error
 
 from .db import sql_worker
