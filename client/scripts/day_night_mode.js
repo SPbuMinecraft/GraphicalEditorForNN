@@ -1,4 +1,5 @@
 function changeTheme() {
+    is_dark_theme = !is_dark_theme
     const checkbox = document.getElementById("day-night-checkbox-id")
     let root = document.documentElement.style
     if (checkbox.checked) {
