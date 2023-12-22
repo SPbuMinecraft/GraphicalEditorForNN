@@ -3,7 +3,6 @@
 #include <vector>
 #include <string>
 #include <sstream>
-
 #include <zip.h>
 #include <filesystem>
 #include <crow_all.h>
@@ -74,7 +73,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     request[U("rewrite")] = web::json::value::boolean(true);
     std::vector<web::json::value> targets, outputs;
 
-    size_t max_epochs = 30;
+    size_t max_epochs = 5;
     std::pair<std::vector<float>, std::vector<float>> batch;
 
     web::http::client::http_client client(U("http://localhost:3000"));

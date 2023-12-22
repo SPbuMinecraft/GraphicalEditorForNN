@@ -155,6 +155,14 @@ async function registerUser() {
         return
     }
 
+    // Проверка валидности email-адреса
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{1,4}$/
+    if (!emailRegex.test(EmailInputElement.value)) {
+        errorArea.innerHTML = "Invalid email address"
+        EmailInputElement.classList.add("error-alert")
+        return
+    }
+
     const userRegistrationData = buildJsonFormData(signupForm)
     try {
         userRegistrationData.password = await getSHA256Hash(
