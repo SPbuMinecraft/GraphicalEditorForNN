@@ -2,12 +2,7 @@
 #include "Allocator.h"
 
 void Graph::OverviewLayers(const crow::json::rvalue& layers, 
-                           const std::vector<std::vector<float>>& data,
-                           std::unordered_map<int, crow::json::rvalue>& layer_dicts,
-                           std::unordered_map<int, std::vector<float>>& data_dicts) {
-    std::vector<float> instances;
-    std::vector<float> answers;
-    ParseCsvData(data, instances, answers);
+                           std::unordered_map<int, crow::json::rvalue>& layer_dicts) {
     for (auto& layer : layers) {
         CHECK_HAS_FIELD(layer, "id");
         CHECK_HAS_FIELD(layer, "type");
@@ -16,14 +11,6 @@ void Graph::OverviewLayers(const crow::json::rvalue& layers,
 
         layerTypes_[id] = type;
         layer_dicts[id] = layer;
-
-        if (type == "Data") {
-            data_dicts[id] = instances; // All data goes for all data layers. May be should be splitted by them
-            dataIds_.push_back(id);
-        }
-        if (type == "Target") {
-            data_dicts[id] = answers;
-        }
     }
 }
 
@@ -88,9 +75,9 @@ void Graph::TopologySort(std::unordered_map<int, std::vector<int>>& edges,
 }
 
 void Graph::Initialize(crow::json::rvalue modelJson,
-             const std::vector<std::vector<float>>& data,
-             RandomObject* randomInit,
-             OptimizerBase& SGD) {
+                       RandomObject* randomInit,
+                       OptimizerBase& SGD,
+                       size_t batch_size) {
     Allocator::startVirtualMode();
     CHECK_HAS_FIELD(modelJson, "graph");
     CHECK_HAS_FIELD(modelJson["graph"], "layers");
@@ -101,8 +88,7 @@ void Graph::Initialize(crow::json::rvalue modelJson,
 
     // Parse Jsons into dicts of Jsons
     std::unordered_map<int, crow::json::rvalue> layerDicts;
-    std::unordered_map<int, std::vector<float>> dataDicts;
-    OverviewLayers(layersJson, data, layerDicts, dataDicts);
+    OverviewLayers(layersJson, layerDicts);
 
     std::unordered_map<int, std::vector<int>> straightEdges, reversedEdges;
     std::unordered_set<int> entryNodes;
@@ -133,12 +119,8 @@ void Graph::Initialize(crow::json::rvalue modelJson,
                 targetsIds_.push_back(layer_id);
             }
             CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
-            auto params = ParseData2d(layerDicts[layer_id]["parameters"]);
-            if (dataDicts[layer_id].size() % params.width != 0) {
-                throw std::invalid_argument("Sizes mismatch!");
-            }
-            params.height = dataDicts[layer_id].size() / params.width;
-            layers_.emplace(layer_id, new Data2dLayer{params, dataDicts[layer_id]});
+            Shape shape = ParseData(layerDicts[layer_id]["parameters"]);
+            layers_.emplace(layer_id, new DataLayer{shape, batch_size});
         } else if (type == "Output") {
             for (auto prevLayerId : reversedEdges[layer_id]) {
                 lastPredictIds_.push_back(prevLayerId);
@@ -152,18 +134,28 @@ void Graph::Initialize(crow::json::rvalue modelJson,
     }
 }
 
-void Graph::ChangeInputData(std::vector<float> data) {
+void Graph::ChangeLayersData(std::vector<float> data, BaseLayerType type) {
     // All data goes to every data layer. Should be changed?
-    for (int id : dataIds_) {
-        Data2dLayer* layer = reinterpret_cast<Data2dLayer*>(layers_[id]);
+    std::vector<int>* layers = nullptr;
+    if (type == BaseLayerType::Data) {
+        layers = &dataIds_;
+    } else if (type == BaseLayerType::Targets) {
+        layers = &targetsIds_;
+    } else {
+        throw std::invalid_argument("Can change data only in 'Data' or 'Target' layers");
+    }
+    for (int id : *layers) {
+        DataLayer* layer = reinterpret_cast<DataLayer*>(layers_[id]);
 
-        size_t width = layer->result->output->shape.cols();
-        if (data.size() % width != 0) {
+        Shape expected_shape = layer->result->output->shape;
+        size_t sample_size = expected_shape.stride(4 - expected_shape.dimsCount);
+
+        if (data.size() % sample_size != 0 || data.size() > expected_shape.size()) {
+            std::cerr << data.size() << " " << sample_size << " " << expected_shape.size() << std::endl;
             throw std::invalid_argument("Sizes mismatch!");
         }
-        Shape expectedShape = layer->result->output->shape;
-        data.resize(expectedShape.size(), 0);
-        layer->result->output.emplace(Blob::constBlob(expectedShape, data.data()));
+        data.resize(expected_shape.size(), 0);
+        layer->result->output.emplace(Blob::constBlob(expected_shape, data.data()));
     }
 }
 

@@ -126,7 +126,7 @@ serve: $(server) | $(dirTrain) $(dirPredict)
 	$< $(host) $(port)
 
 $(server): $(serverMain) $(serverObjects) $(coreArchive) | checkboost $(dirBin)
-	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11 -lpng -lcpprest -lssl -lcrypto
+	$(LINK.cpp) -L $(boost)/lib $^ -o $@ -lX11 -lpng -lcpprest -lssl -lcrypto -lzip
 
 
 ### TESTS ###

@@ -479,18 +479,11 @@ paths:
         - $ref: '#/components/parameters/ModelId'
         - name: safe
           in: path
-          description: flag, if 1, then the training process will be started even if the model is already trained
+          description: flag, if 0, then the training process will be started even if the model is already trained
           required: true
           schema:
             type: integer
             format: int64
-      requestBody:
-        description: "Data for training"
-        required: true
-        content:
-          text/csv:
-            schema:
-              $ref: '#/components/schemas/TrainData'
       responses:
         '200':
           description: "Model is trained"
@@ -532,13 +525,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserId'
         - $ref: '#/components/parameters/ModelId'
-      requestBody:
-        description: "Data for predictions"
-        required: true
-        content:
-          text/csv:
-            schema:
-              $ref: '#/components/schemas/PredictData'
       responses:
         '200':
           description: "Prediction was successful"
@@ -886,21 +872,6 @@ components:
           items:
             type: number
             example: [0.0, 0.0, 0.0, 1.0]
-    TrainData:
-      type: string
-      description: |-
-        Last column is for the target value 
-        and all other columns are features values
-      example: |-
-        0,0,0
-        0,1,1
-        1,0,1
-        1,1,1
-    PredictData:
-      type: string
-      description: Only ONE row for now, a column for every feature
-      example: |-
-        1,1
     PredictResult:
       type: array
       items:

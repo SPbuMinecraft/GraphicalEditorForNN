@@ -12,17 +12,19 @@ from .utils import (
     is_valid_model,
     convert_model,
     plot_metrics,
-    delete_file,
 )
 from .check_dimensions import assert_dimensions_match
 
 from .errors import Error
 
 from .db import sql_worker
-from .dataset import extract_predict_data, extract_train_data
 
 
 app = Blueprint("make a better name", __name__)
+
+
+def cpp_url(method: str):
+    return current_app.config["CPP_SERVER"] + "/" + method
 
 
 @app.route("/user", methods=["POST"])
@@ -63,6 +65,14 @@ def model(user_id: int, model_id: int):
             d: dict[str, str | None] = defaultdict(lambda: None, **request.json)  # type: ignore
             sql_worker.update_model(model_id, d["name"], d["raw"])
             return "", HTTPStatus.OK
+        case "PATCH":
+            response = requests.post(
+                cpp_url(f"upload_data/{model_id}/0"),
+                data=request.data,
+                headers={"Content-Type": request.content_type},
+                timeout=10,
+            )
+            return "", response.status_code
         case "DELETE":
             sql_worker.delete_model(model_id)
             return "", HTTPStatus.OK
@@ -164,13 +174,11 @@ def train_model(
         raise Error("Invalid model found", HTTPStatus.NOT_ACCEPTABLE)
     assert_dimensions_match(model["layers"])
 
-    dataset = extract_train_data(request.data, model)
-
     convert_model(model)
-    model = {"graph": model, "dataset": dataset}
+    model = {"graph": model}
 
     response = requests.post(
-        current_app.config["CPP_SERVER"] + f"/train/{user_id}/{model_id}",
+        cpp_url(f"train/{user_id}/{model_id}"),
         json=model,
         timeout=3,
     )
@@ -179,25 +187,25 @@ def train_model(
     return response.text, response.status_code
 
 
-@app.route("/predict/<int:user_id>/<int:model_id>", methods=["PUT"])
+@app.route("/predict/<int:user_id>/<int:model_id>", methods=["GET", "PUT"])
 def predict(user_id: int, model_id: int):
+    """PUT method is for uploading the png, GET method is for receiving the result"""
     sql_worker.verify_access(user_id, model_id)
-
-    if not request.data:
-        raise Error("No csv data provided")
-
-    model = sql_worker.get_graph_elements(model_id)
-    convert_model_parameters(model)
-    json_data = extract_predict_data(request.data, model)
 
     if not sql_worker.is_model_trained(model_id):
         raise Error("Not trained", HTTPStatus.PRECONDITION_FAILED)
 
-    response = requests.post(
-        current_app.config["CPP_SERVER"] + f"/predict/{user_id}/{model_id}",
-        json=json_data,
-        timeout=3,
-    )
+    match request.method:
+        case "GET":
+            response = requests.put(
+                cpp_url(f"predict/{model_id}"),
+            )
+        case "PUT":
+            response = requests.post(
+                cpp_url(f"upload_data/{model_id}/1"),
+                data=request.data,
+                headers={"Content-Type": "image/png"},
+            )
 
     return response.text, response.status_code
 
@@ -265,5 +273,5 @@ def get_plots(user_id: int, model_id: int):
     current_dir = os.getcwd()
     print(current_dir)
     response = send_file(os.path.join(current_dir, "images", plot_path))
-    delete_file(os.path.join(current_dir, "images", plot_path))
+    # delete_file(os.path.join(current_dir, "images", plot_path))
     return response
