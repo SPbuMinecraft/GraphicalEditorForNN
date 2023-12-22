@@ -146,7 +146,7 @@ void Graph::Initialize(crow::json::rvalue modelJson,
             CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
             auto params = ParseAxes(layerDicts[layer_id]["parameters"]);
             layers_.emplace(layer_id, new MeanLayer{params, prevLayers});
-        } else if (type == "MaxPool") {
+        } else if (type == "Pooling") {
             layers_.emplace(layer_id, new MaxPool{prevLayers});
         } else if (type == "SoftMax") {
             CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
