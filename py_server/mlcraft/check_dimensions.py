@@ -132,7 +132,7 @@ def create_checker(layer: dict):
             return MSEChecker()
         case "Sum":
             return SumChecker()
-        case "Conv2d":
+        case "Conv2D":
             return Conv2dChecker(
                 layer["parameters"]["inChannels"], layer["parameters"]["outChannels"]
             )
@@ -151,7 +151,6 @@ def assert_dimensions_match(layers: list[dict]):
     # TODO: maybe it's possible to optimize memory usage is some nice way?
     edges = defaultdict(list)
     parents = defaultdict(list)
-
     for layer in layers:
         if layer["type"] == "Output":
             continue
@@ -174,12 +173,14 @@ def assert_dimensions_match(layers: list[dict]):
                 ]
             )
             if not acceptable:
+                print(f"Layer {layer_id} does not match with it's parents in dimensions")
                 raise Error(
                     f"Layer {layer_id} does not match with it's parents in dimensions",
                     HTTPStatus.NOT_ACCEPTABLE,
                     problemNode=layer_id,
                 )
     except TypeError:
+        print(f"Invalid number of inputs for layer {current_layer_id}")
         raise Error(
             f"Invalid number of inputs for layer {current_layer_id}",
             HTTPStatus.NOT_ACCEPTABLE,

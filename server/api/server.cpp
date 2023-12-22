@@ -47,7 +47,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     Allocator::end();
 
     RandomObject initObject(0, 1, 42);
-    OptimizerBase SGD = OptimizerBase(0.1);
+    OptimizerBase SGD = OptimizerBase(0.01);
 
     // Should be adopted for DataLoader possibilities
     std::string path = getDataPath(model_id);
@@ -74,12 +74,12 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     lastTrainNode.clear();
     Allocator::endVirtualMode();
 
-    size_t buffer_size = 2, actual_size = 0;
+    size_t buffer_size = 1, actual_size = 0;
     web::json::value request;
     request[U("rewrite")] = web::json::value::boolean(true);
     std::vector<web::json::value> targets, outputs;
 
-    size_t max_epochs = 5;
+    size_t max_epochs = 10;
     std::pair<std::vector<float>, std::vector<float>> batch;
 
     web::http::client::http_client client(U("http://localhost:3000"));
@@ -117,6 +117,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
         if ((epoch == max_epochs - 1 && actual_size > 0) ||
             actual_size == buffer_size) {
             request[U("label")] = web::json::value::string("train");
+            std::cerr << request << std::endl;
             client.request(web::http::methods::PUT, U(request_url.str()), request);
             request = web::json::value();
             actual_size = 0;

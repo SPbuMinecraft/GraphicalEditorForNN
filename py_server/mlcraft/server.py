@@ -211,9 +211,10 @@ def predict(user_id: int, model_id: int):
 @app.route("/update_metrics/<int:user_id>/<int:model_id>", methods=["PUT"])
 def update_metrics(user_id: int, model_id: int):
     sql_worker.verify_access(user_id, model_id)
-
+    
     json = request.json or {}
     targets = np.array(json["targets"])
+
     n_epochs, n_samples = targets.shape
     outputs = np.array(json["outputs"])
     if targets.shape != outputs.shape:

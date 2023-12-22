@@ -32,6 +32,7 @@ def is_valid_model(model_dict):
     stop_ids = list(map(lambda layer: layer["id"], stop_candidates))
     loss_ids = list(map(lambda layer: layer["id"], loss_layer))
     target_ids = list(map(lambda layer: layer["id"], target_layer))
+
     return (
         check_paths_exist(start_ids, stop_ids, model_dict)
         and check_paths_exist(start_ids, loss_ids, model_dict)
