@@ -147,6 +147,7 @@ class SQLWorker:
                 model.name = name
             if raw is not None:
                 model.raw = raw
+            db.session.add(model)
             db.session.commit()
 
     def copy_model(self, model_id: int, dst_model_id: int | None = None):
