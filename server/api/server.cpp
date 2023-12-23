@@ -47,7 +47,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     Allocator::end();
 
     RandomObject initObject(0, 1, 42);
-    OptimizerBase SGD = OptimizerBase(0.1);
+    OptimizerBase SGD = OptimizerBase(0.01);
 
     // Should be adopted for DataLoader possibilities
     std::string path = getDataPath(model_id);
@@ -80,7 +80,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     std::vector<web::json::value> targets, outputs;
     float epoch_loss = 0;
 
-    size_t max_epochs = 5;
+    size_t max_epochs = 10;
     std::pair<std::vector<float>, std::vector<float>> batch;
 
     web::http::client::http_client client(U("http://localhost:3000"));

@@ -351,8 +351,14 @@ class SQLWorker:
             model = self.get_model(model_id)
             return model.is_trained
 
-    def update_metrics(self, model_id, values: list[float], label: str, rewrite: bool,
-                       is_loss: bool = False):
+    def update_metrics(
+        self,
+        model_id,
+        values: list[float],
+        label: str,
+        rewrite: bool,
+        is_loss: bool = False,
+    ):
         with current_app.app_context(), self.content_lock:
             metrics = (
                 Metrics.query.filter_by(model=model_id, label=label, is_loss=is_loss)
