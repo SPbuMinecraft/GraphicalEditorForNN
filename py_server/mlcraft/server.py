@@ -226,23 +226,13 @@ def update_metrics(user_id: int, model_id: int):
         values = probs.argmax(axis=2)
         metrics = np.mean(targets == values, axis=1)
 
-    # Write metrics
+    # Write metrics and loss
     sql_worker.update_metrics(
         model_id,
+        json["losses"],
         list(metrics),
         json.get("label", "default"),
         json.get("rewrite", False),
-        is_loss=False,
-    )
-
-    # Write loss
-    loss = json["losses"]
-    sql_worker.update_metrics(
-        model_id,
-        loss,
-        json.get("label", "default"),
-        json.get("rewrite", False),
-        is_loss=True,
     )
     return "", HTTPStatus.OK
 
@@ -255,7 +245,7 @@ def get_metircs(user_id: int, model_id: int, get_loss: bool):
     values = sql_worker.get_metrics(
         model_id,
         json.get("label", "default"),
-        is_loss=bool(get_loss),
+        get_loss=bool(get_loss),
     )
     return {"values": list(map(float, values.split()))}, HTTPStatus.OK
 
