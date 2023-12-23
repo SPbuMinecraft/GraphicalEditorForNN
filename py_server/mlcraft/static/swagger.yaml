@@ -604,57 +604,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /protect_metrics/{user_id}/{model_id}:
-    put:
-      tags:
-      - use
-      summary: "Protects model's metrics from auto-deletion"
-      description: "PROTECTS metric values"
-      operationId: "protect_metrics"
-      parameters:
-        - name: user_id
-          in: path
-          description: model owner's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: model_id
-          in: path
-          description: model's ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        description: "Whar record to protect"
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProtectMetricValues'
-      responses:
-        '200':
-          description: "Settings updated successfully"
-        '400':
-          description: "Json isn't provided or required fields missing"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: "The model does not exist or you have no rights for changing it"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: "Model / layer does not exist"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /get_metrics/{user_id}/{model_id}:
+  /get_metrics/{user_id}/{model_id}/{get_loss}:
     put:
       tags:
       - use
@@ -672,6 +622,13 @@ paths:
         - name: model_id
           in: path
           description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: get_loss
+          in: path
+          description: 1 if loss is needed, 0 - otherwise
           required: true
           schema:
             type: integer
@@ -708,7 +665,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /get_plots/{user_id}/{model_id}:
+  /get_plots/{user_id}/{model_id}/{get_loss}:
     put:
       tags:
       - use
@@ -726,6 +683,13 @@ paths:
         - name: model_id
           in: path
           description: model's ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: get_loss
+          in: path
+          description: 1 if loss is needed, 0 - otherwise
           required: true
           schema:
             type: integer
@@ -849,15 +813,6 @@ components:
           example: true
       required:
         - values
-    ProtectMetricValues:
-      type: object
-      properties:
-        label:
-          type: string
-          example: "train"
-        protected:
-          type: boolean
-          example: true
     ReadMetricValues:
       type: object
       properties:

@@ -216,52 +216,53 @@ def update_metrics(user_id: int, model_id: int):
     if targets.shape != outputs.shape:
         outputs = outputs.reshape(n_epochs, n_samples, -1)
 
-    # assert targets.shape == outputs.shape  # Это временное
-    # metrics = np.mean((targets - outputs) ** 2, axis=1)
+    if outputs.shape[-1] == 1:
+        # In this case, we count MAE
+        metrics = np.mean(np.abs(targets - outputs), axis=1)
+    else:
+        # In this case, we count Accuracy
+        probs = np.exp(outputs)
+        probs /= probs.sum(axis=2)[:, :, np.newaxis]
+        values = probs.argmax(axis=2)
+        metrics = np.mean(targets == values, axis=1)
 
-    # count probs
-    probs = np.exp(outputs)
-    probs /= probs.sum(axis=2)[:, :, np.newaxis]
-    values = probs.argmax(axis=2)
-    metrics = np.mean(targets == values, axis=1)
-
+    # Write metrics
     sql_worker.update_metrics(
         model_id,
         list(metrics),
         json.get("label", "default"),
         json.get("rewrite", False),
+        is_loss=False,
     )
-    return "", HTTPStatus.OK
 
-
-@app.route("/protect_metrics/<int:user_id>/<int:model_id>", methods=["PUT"])
-def protect_metrics(user_id: int, model_id: int):
-    sql_worker.verify_access(user_id, model_id)
-
-    json = request.json or {}
-    sql_worker.protect_metrics(
+    # Write loss
+    loss = json["losses"]
+    sql_worker.update_metrics(
         model_id,
+        loss,
         json.get("label", "default"),
-        json.get("protected", True),
+        json.get("rewrite", False),
+        is_loss=True,
     )
     return "", HTTPStatus.OK
 
 
-@app.route("/get_metrics/<int:user_id>/<int:model_id>", methods=["PUT"])
-def get_metircs(user_id: int, model_id: int):
+@app.route("/get_metrics/<int:user_id>/<int:model_id>/<int:get_loss>", methods=["PUT"])
+def get_metircs(user_id: int, model_id: int, get_loss: bool):
     sql_worker.verify_access(user_id, model_id)
 
     json = request.json or {}
     values = sql_worker.get_metrics(
         model_id,
         json.get("label", "default"),
+        is_loss=bool(get_loss),
     )
     return {"values": list(map(float, values.split()))}, HTTPStatus.OK
 
 
 # Add swagger description
-@app.route("/get_plots/<int:user_id>/<int:model_id>", methods=["PUT"])
-def get_plots(user_id: int, model_id: int):
+@app.route("/get_plots/<int:user_id>/<int:model_id>/<int:get_loss>", methods=["PUT"])
+def get_plots(user_id: int, model_id: int, get_loss: bool):
     sql_worker.verify_access(user_id, model_id)
 
     json = request.json or {}
@@ -269,6 +270,7 @@ def get_plots(user_id: int, model_id: int):
     values = sql_worker.get_metrics(
         model_id,
         label,
+        is_loss=bool(get_loss),
     )
 
     plot_path = plot_metrics(list(map(float, values.split())), user_id, model_id, label)

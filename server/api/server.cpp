@@ -78,6 +78,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     web::json::value request;
     request[U("rewrite")] = web::json::value::boolean(true);
     std::vector<web::json::value> targets, outputs;
+    float epoch_loss = 0;
 
     size_t max_epochs = 5;
     std::pair<std::vector<float>, std::vector<float>> batch;
@@ -100,6 +101,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
 
             GetLogs(lastPredictNode.value(), outputs);
             GetLogs(targetsNode.value(), targets);
+            epoch_loss += lastTrainNode.output.value()(0, 0, 0, 0);
 
             lastTrainNode.gradient = Blob::ones({{1}});
             lastTrainNode.backward();
@@ -110,8 +112,11 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
 
         request[U("targets")][actual_size] = web::json::value::array(targets);
         request[U("outputs")][actual_size] = web::json::value::array(outputs);
+        request[U("losses")][actual_size] = web::json::value::number(epoch_loss / dataLoader.batch_count());
+        std::cerr << request << std::endl;
         targets.clear();
         outputs.clear();
+        epoch_loss = 0;
         ++actual_size;
 
         if ((epoch == max_epochs - 1 && actual_size > 0) ||

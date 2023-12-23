@@ -38,10 +38,10 @@ class Metrics(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     model = db.Column(db.Integer, db.ForeignKey("users_table.id"), nullable=False)
     label = db.Column(db.Text)
+    is_loss = db.Column(db.Boolean)
     values = db.Column(db.Text)
     begin_time = db.Column(db.DateTime)
     end_time = db.Column(db.DateTime)
-    protected = db.Column(db.Boolean)
 
 
 class SQLWorker:
@@ -351,10 +351,11 @@ class SQLWorker:
             model = self.get_model(model_id)
             return model.is_trained
 
-    def update_metrics(self, model_id, values: list[float], label: str, rewrite: bool):
+    def update_metrics(self, model_id, values: list[float], label: str, rewrite: bool,
+                       is_loss: bool = False):
         with current_app.app_context(), self.content_lock:
             metrics = (
-                Metrics.query.filter_by(model=model_id, label=label)
+                Metrics.query.filter_by(model=model_id, label=label, is_loss=is_loss)
                 .order_by(Metrics.id.desc())
                 .first()
             )
@@ -362,10 +363,10 @@ class SQLWorker:
                 metrics = Metrics()
                 metrics.model = model_id
                 metrics.label = label
+                metrics.is_loss = is_loss
                 metrics.values = " ".join(list(map(str, values)))
                 metrics.begin_time = datetime.datetime.now()
                 metrics.end_time = datetime.datetime.now()
-                metrics.protected = False
             if rewrite:
                 metrics.values = ""
             else:
@@ -376,27 +377,10 @@ class SQLWorker:
             db.session.commit()
             return 0
 
-    def protect_metrics(self, model_id, label: str, protected: bool):
+    def get_metrics(self, model_id, label: str, is_loss: bool = False) -> str:
         with current_app.app_context(), self.content_lock:
             metrics = (
-                Metrics.query.filter_by(model=model_id, label=label)
-                .order_by(Metrics.id.desc())
-                .first()
-            )
-            if not metrics:
-                raise Error(
-                    f"No recordings found for model with id {model_id} and label {label}.",
-                    HTTPStatus.NOT_FOUND,
-                )
-            metrics.protected = protected
-            db.session.add(metrics)
-            db.session.commit()
-            return 0
-
-    def get_metrics(self, model_id, label: str) -> str:
-        with current_app.app_context(), self.content_lock:
-            metrics = (
-                Metrics.query.filter_by(model=model_id, label=label)
+                Metrics.query.filter_by(model=model_id, label=label, is_loss=is_loss)
                 .order_by(Metrics.id.desc())
                 .first()
             )
@@ -415,7 +399,7 @@ class SQLWorker:
             ).delete()
             Metrics.query.filter(
                 Metrics.end_time < datetime.datetime.now() - datetime.timedelta(days=1)
-            ).filter_by(protected=False).delete()
+            ).delete()
             db.session.commit()
 
 
