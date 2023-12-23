@@ -260,7 +260,7 @@ def get_plots(user_id: int, model_id: int, get_loss: bool):
     values = sql_worker.get_metrics(
         model_id,
         label,
-        is_loss=bool(get_loss),
+        get_loss=bool(get_loss),
     )
 
     plot_path = plot_metrics(list(map(float, values.split())), user_id, model_id, label)

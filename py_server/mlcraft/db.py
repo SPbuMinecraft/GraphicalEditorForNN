@@ -351,7 +351,14 @@ class SQLWorker:
             model = self.get_model(model_id)
             return model.is_trained
 
-    def update_metrics(self, model_id, loss: list[float], values: list[float], label: str, rewrite: bool):
+    def update_metrics(
+        self,
+        model_id,
+        loss: list[float],
+        values: list[float],
+        label: str,
+        rewrite: bool,
+    ):
         with current_app.app_context(), self.content_lock:
             metrics = (
                 Metrics.query.filter_by(model=model_id, label=label)
@@ -362,7 +369,6 @@ class SQLWorker:
                 metrics = Metrics()
                 metrics.model = model_id
                 metrics.label = label
-                metrics.is_loss = is_loss
                 metrics.values = ""
                 metrics.loss = ""
                 metrics.begin_time = datetime.datetime.now()
@@ -376,7 +382,7 @@ class SQLWorker:
                 metrics.loss += " "
 
             metrics.values += " ".join(list(map(str, values)))
-            metrics.loss += " ".join(list(map, float, loss))
+            metrics.loss += " ".join(list(map(str, loss)))
             metrics.end_time = datetime.datetime.now()
             db.session.add(metrics)
             db.session.commit()
