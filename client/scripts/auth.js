@@ -19,8 +19,6 @@ const getSHA256Hash = async input => {
     return hash
 }
 
-const py_server_address = localStorage.getItem("py_server_address")
-
 signup.addEventListener("click", () => {
     formSection.classList.add("form-section-move")
 })
