@@ -16,6 +16,8 @@ TEST_CASE("Csv-load") {
     std::vector<std::vector<float>> and_train = {{0, 0, 0}, {0, 1, 0}, {1, 0, 0}, {1, 1, 1}};
     std::vector<std::vector<float>> xor_train = {{0, 0, 0}, {0, 1, 1}, {1, 0, 1}, {1, 1, 0}};
     std::vector<std::vector<float>> predict11 = {{1, 1}};
+    std::vector<std::vector<float>> no_endline = {{1, 1, 1}};
+    std::vector<std::vector<float>> big_no_endline = {{0, 0, 0}, {0, 1, 0}, {1, 0, 0}, {1, 1, 1}};
     SUBCASE("and_train") {
         std::vector<std::vector<float>> result = CsvLoader::load_csv("./tests/data/and-train.csv");
         check_vectors(and_train, result);
@@ -27,5 +29,13 @@ TEST_CASE("Csv-load") {
     SUBCASE("predict") {
         std::vector<std::vector<float>> result = CsvLoader::load_csv("./tests/data/predict11.csv");
         check_vectors(predict11, result);
+    }
+    SUBCASE("No_endline") {
+        std::vector<std::vector<float>> result = CsvLoader::load_csv("./tests/data/no_endline.csv");
+        check_vectors(no_endline, result);
+    }
+    SUBCASE("Big_no_endline") {
+        std::vector<std::vector<float>> result = CsvLoader::load_csv("./tests/data/big_no_endline.csv");
+        check_vectors(big_no_endline, result);
     }
 }

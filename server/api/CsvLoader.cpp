@@ -9,15 +9,20 @@ std::vector<std::vector<float>> CsvLoader::load_csv(std::string path) {
     }
     std::string line;
     std::vector<std::vector<float>> result;
-    getline(fin, line);
-    while (!line.empty()) {
+    bool last_line = false;
+    if (!getline(fin, line)) {
+        last_line = true;
+    }
+    while (!line.empty() && !last_line) {
         std::stringstream line_stream(line);
         result.push_back(std::vector<float>());
         std::string number;
         while (getline(line_stream, number, ',')) {
             result.back().push_back(std::stof(number));
         }
-        getline(fin, line);
+        if (!getline(fin, line)) {
+            last_line = true;
+        }
     }
     return result;
 }
