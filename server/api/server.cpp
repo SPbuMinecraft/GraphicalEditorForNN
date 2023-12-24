@@ -197,6 +197,8 @@ int main(int argc, char *argv[]) {
         } catch (const std::runtime_error &err) {
             std::cout << err.what() << std::endl;
             return response(status::BAD_REQUEST, "Invalid body");
+        } catch (...) {
+            return response(status::INTERNAL_SERVER_ERROR, "Predict failed");
         }
         json::wvalue response = (int)(answer[1] > answer[0]);
         return crow::response(status::OK, response);
@@ -212,8 +214,12 @@ int main(int argc, char *argv[]) {
             delete sessions[model_id];
         }
         Graph* g = nullptr;
-
-        train(body, &g, model_id, user_id, file_types[model_id]);
+        try {
+            train(body, &g, model_id, user_id, file_types[model_id]);
+        }
+        catch (...) {
+            return response(status::INTERNAL_SERVER_ERROR, "Train failed");
+        }
         sessions[model_id] = g;
         return response(status::OK, "done");
     });
@@ -255,6 +261,9 @@ int main(int argc, char *argv[]) {
         }
 
         std::ofstream out_file(path, ios::binary);
+        if (!out_file) {
+            return response(status::INTERNAL_SERVER_ERROR, "Error in loading zip");
+        }
         out_file << req.body;
         out_file.close();
 
