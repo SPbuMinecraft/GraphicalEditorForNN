@@ -7,7 +7,7 @@ from .errors import Error
 
 class DataChecker:
     def __init__(self, shape: list[int]):
-        self.output_shape = shape
+        self.output_shape = [1] * (3 - len(shape)) + shape
 
     def __call__(self):
         return True
@@ -84,9 +84,11 @@ class CrossEntropyChecker:
         self.class_count = class_count
 
     def __call__(self, input_shape: list[int], targets_shape: list[int]):
-        if input_shape[1] != targets_shape[1]:
-            return False
-        if targets_shape[-1] != self.class_count or input_shape[-1] != 1:
+        for prim_dim in range(2):
+            if input_shape[prim_dim] != 1 or targets_shape[prim_dim] != 1:
+                return False
+        print(input_shape, targets_shape, self.class_count)
+        if input_shape[-1] != self.class_count or targets_shape[-1] != 1:
             return False
         self.output_shape = None
         return True
@@ -96,7 +98,7 @@ class DimReduceChecker:
     def __init__(self, axes):
         self.axes = axes
 
-    def __call__(self, input_shape: list[int], targets_shape: list[int]):
+    def __call__(self, input_shape: list[int]):
         self.output_shape = input_shape.copy()
         for ax in self.axes:
             self.output_shape[ax - 1] = 1
@@ -117,12 +119,13 @@ class PoolingChecker:
 
 
 def create_checker(layer: dict):
+    print(layer)
     match layer["type"]:
         case "Data" | "Target":
-            return DataChecker(layer["parameters"]["shape"])
+            return DataChecker(list(map(int, layer["parameters"]["shape"])))
         case "Linear":
             return LinearChecker(
-                layer["parameters"]["inFeatures"], layer["parameters"]["outFeatures"]
+                int(layer["parameters"]["inFeatures"]), int(layer["parameters"]["outFeatures"])
             )
         case "ReLU":
             return ReLUChecker()
@@ -134,18 +137,18 @@ def create_checker(layer: dict):
             if layer["parameters"]["type"] == "MSE":
                 return MSEChecker()
             elif layer["parameters"]["type"] == "Entropy":
-                return CrossEntropyChecker()
+                return CrossEntropyChecker(int(layer["parameters"]["classCount"]))
             else:
                 raise TypeError(f"Unknown loss type: {layer['parameters']['type']}")
         case "Sum":
             return SumChecker()
-        case "Conv2d":
+        case "Conv2D":
             return Conv2dChecker(
-                layer["parameters"]["inChannels"], layer["parameters"]["outChannels"]
+                int(layer["parameters"]["inChannels"]), int(layer["parameters"]["outChannels"])
             )
         case "Mean" | "SoftMax":
-            return DimReduceChecker(layer["parameters"]["axes"])
-        case "MaxPool":
+            return DimReduceChecker(list(map(int, layer["parameters"]["axes"])))
+        case "Pooling":
             return PoolingChecker()
         case _:
             raise TypeError(f"Unknown layer type: {layer['type']}")
@@ -181,12 +184,14 @@ def assert_dimensions_match(layers: list[dict]):
                 ]
             )
             if not acceptable:
+                print(f"Layer {layer_id} does not match with it's parents in dimensions")
                 raise Error(
                     f"Layer {layer_id} does not match with it's parents in dimensions",
                     HTTPStatus.NOT_ACCEPTABLE,
                     problemNode=layer_id,
                 )
-    except TypeError:
+    except TypeError as e:
+        print(e)
         raise Error(
             f"Invalid number of inputs for layer {current_layer_id}",
             HTTPStatus.NOT_ACCEPTABLE,
