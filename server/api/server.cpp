@@ -48,7 +48,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
 
     RandomObject initObject(0, 1, 42);
     OptimizerBase SGD(0.1);
-    GammaScheduler scheduler(&SGD, 2, 0.1);
+    GammaScheduler scheduler(&SGD, 2, 1);
 
     // Should be adopted for DataLoader possibilities
     std::string path = getDataPath(model_id);
@@ -56,10 +56,8 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
         path += "/1.csv";
     }
 
-    std::cerr << "start data processing" << std::endl;
     DataMarker dataMarker = DataMarker(path, extension, 100, 4);
     DataLoader dataLoader = dataMarker.get_train_loader();
-    std::cerr << "stop data processing" << std::endl;
 
     size_t batch_size = 4;  // hard-coded
     *graph = new Graph();
@@ -132,6 +130,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
 }
 
 void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtension extension) {
+    std::cerr << "Predict extension is .csv: " << (extension == FileExtension::Csv) << std::endl;
     std::vector<std::vector<float>> predict_data;
     if (extension == FileExtension::Csv) {
         predict_data = CsvLoader::load_csv(getPredictPath(model_id) + "/1.csv");

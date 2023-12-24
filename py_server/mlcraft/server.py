@@ -12,6 +12,7 @@ from .utils import (
     convert_model,
     plot_metrics,
 )
+from .check_dimensions import assert_dimensions_match
 from .errors import Error
 
 from .db import sql_worker
@@ -211,16 +212,14 @@ def update_metrics(user_id: int, model_id: int):
 
     json = request.json or {}
     targets = np.array(json["targets"])
-    n_epochs, n_samples = targets.shape
     outputs = np.array(json["outputs"])
-    if targets.shape != outputs.shape:
-        outputs = outputs.reshape(n_epochs, n_samples, -1)
 
-    if outputs.shape[-1] == 1:
+    if outputs.shape == targets.shape:
         # In this case, we count MAE
         metrics = np.mean(np.abs(targets - outputs), axis=1)
     else:
         # In this case, we count Accuracy
+        outputs = outputs.reshape(targets.shape[0], targets.shape[1], -1)
         probs = np.exp(outputs)
         probs /= probs.sum(axis=2)[:, :, np.newaxis]
         values = probs.argmax(axis=2)

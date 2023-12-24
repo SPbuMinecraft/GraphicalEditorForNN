@@ -126,10 +126,17 @@ def create_checker(layer: dict):
             )
         case "ReLU":
             return ReLUChecker()
+        case "Sum":
+            return SumChecker()
         case "LayerNorm":
             return LayerNormChecker()
-        case "MSELoss":
-            return MSEChecker()
+        case "Loss":
+            if layer["parameters"]["type"] == "MSE":
+                return MSEChecker()
+            elif layer["parameters"]["type"] == "Entropy":
+                return CrossEntropyChecker()
+            else:
+                raise TypeError(f"Unknown loss type: {layer['parameters']['type']}")
         case "Sum":
             return SumChecker()
         case "Conv2d":
