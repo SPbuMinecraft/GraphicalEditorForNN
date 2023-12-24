@@ -109,6 +109,15 @@
         <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `conv2d`)" data-node="conv2d">
           <span> Conv2D</span>
         </div>
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `mean`)" data-node="mean">
+          <span> Mean</span>
+        </div>
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `sum`)" data-node="sum">
+          <span> Sum</span>
+        </div>
+        <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `softmax`)" data-node="softmax">
+          <span> SoftMax</span>
+        </div>
         <br />
 
         <label class="button-wrapper">
@@ -192,12 +201,57 @@
         </div>
 
         <div class="layernorm-layer-parameters layer-parameters" id="layernorm-layer-parameters" style="display: none">
-          <label for="layernorm-axis-parameter">Axis</label>
-          <input id="layernorm-axis-parameter" type="number" value="1" size="4" />
+          <label for="layernorm-axes-choice-parameter">Axes number: </label>
+          <select id="layernorm-axes-choice-parameter">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+          <div id="layernorm-axes-parameter"></div>
           <h3></h3>
           <div id="layernorm-input-selection">
             <label class="layer-input-list" style="display: none">Input ID order: </label>
             <ul id="layernorm-inputs-sortable-list"></ul>
+          </div>
+        </div>
+
+        <div class="mean-layer-parameters layer-parameters" id="mean-layer-parameters" style="display: none">
+          <label for="mean-axes-choice-parameter">Axes number: </label>
+          <select id="mean-axes-choice-parameter">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+          <div id="mean-axes-parameter"></div>
+          <h3></h3>
+          <div id="mean-input-selection">
+            <label class="layer-input-list" style="display: none">Input ID order: </label>
+            <ul id="mean-inputs-sortable-list"></ul>
+          </div>
+        </div>
+
+        <div class="sum-layer-parameters layer-parameters" id="sum-layer-parameters" style="display: none">
+          <div id="sum-input-selection">
+            <label class="layer-input-list" style="display: none">Input ID order: </label>
+            <ul id="sum-inputs-sortable-list"></ul>
+          </div>
+        </div>
+
+        <div class="softmax-layer-parameters layer-parameters" id="softmax-layer-parameters" style="display: none">
+          <label for="softmax-axes-choice-parameter">Axes number: </label>
+          <select id="softmax-axes-choice-parameter">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+          <div id="softmax-axes-parameter"></div>
+          <h3></h3>
+          <div id="softmax-input-selection">
+            <label class="layer-input-list" style="display: none">Input ID order: </label>
+            <ul id="softmax-inputs-sortable-list"></ul>
           </div>
         </div>
 
@@ -390,6 +444,9 @@
             pooling: "Pooling",
             layernorm: "LayerNorm",
             conv2d: "Conv2D",
+            mean: "Mean",
+            sum: "Sum",
+            softmax: "SoftMax",
             data: "Data",
             output: "Output",
             loss: "MSELoss",
@@ -399,8 +456,11 @@
             linear: "bias=0;inFeatures=2;outFeatures=1",
             relu: "",
             pooling: "",
-            layernorm: "axis=1",
+            layernorm: "axes=[]",
             conv2d: "kernelSize=1;inChannels=1;outChannels=1",
+            mean: "axes=[]",
+            sum: "",
+            softmax: "axes=[]",
             data: "shape=[3,512,512]",
             output: "",
             loss: "",
@@ -607,6 +667,23 @@
         saveCanvasToLocalStorage(editor)
       })
 
+      //needed for axes
+      window.onload = function () {
+        const new_value_layernorm = document.getElementById("layernorm-axes-choice-parameter").value
+        setupAxesParameter(new_value_layernorm, "layernorm")
+        const new_value_mean = document.getElementById("mean-axes-choice-parameter").value
+        setupAxesParameter(new_value_mean, "mean")
+        const new_value_softmax = document.getElementById("softmax-axes-choice-parameter").value
+        setupAxesParameter(new_value_softmax, "softmax")
+      }
+      function getAxes(vals) {
+        let res = []
+        for (let val of vals) {
+          res.push(val.value)
+        }
+        return res
+      }
+
       //linear
       const linear_bias_selector = document.getElementById("bias-parameter")
       linear_bias_selector.addEventListener("change", () => {
@@ -668,21 +745,31 @@
       })
 
       //layernorm
-      const layernorm_axis_input = document.getElementById("layernorm-axis-parameter")
-      layernorm_axis_input.addEventListener("change", () => {
+      const layernorm_axes_input = document.getElementById("layernorm-axes-parameter")
+      layernorm_axes_input.addEventListener("change", () => {
         setModelView("irrelevant")
         const parameters = getParametersFromNode(last_changed_parameters_layer_id)
-        const new_value = document.getElementById("layernorm-axis-parameter").value
-
+        const new_value = getAxes(document.getElementsByName("layernorm-axes[]"))
         for (i in parameters) {
-          if (parameters[i][0] == "axis") {
-            parameters[i][1] = new_value
+          if (parameters[i][0] == "axes") {
+            parameters[i][1] = "[" + new_value.toString() + "]"
             joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
             break
           }
         }
       })
-      layernorm_axis_input.addEventListener("input", () => {
+      layernorm_axes_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
+
+      const layernorm_axes_choice_input = document.getElementById("layernorm-axes-choice-parameter")
+      layernorm_axes_choice_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const new_value = document.getElementById("layernorm-axes-choice-parameter").value
+        setupAxesParameter(new_value, "layernorm")
+      })
+      layernorm_axes_choice_input.addEventListener("input", () => {
         setModelView("irrelevant")
         last_changed_parameters_layer_id = last_selected_node_id
       })
@@ -741,6 +828,66 @@
         }
       })
       conv2d_outChannels_input.addEventListener("input", () => {
+        setModelView("irrelevant")
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
+
+      //mean
+      const mean_axes_input = document.getElementById("mean-axes-parameter")
+      mean_axes_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
+        const new_value = getAxes(document.getElementsByName("mean-axes[]"))
+        for (i in parameters) {
+          if (parameters[i][0] == "axes") {
+            parameters[i][1] = "[" + new_value.toString() + "]"
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
+            break
+          }
+        }
+      })
+      mean_axes_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
+
+      const mean_axes_choice_input = document.getElementById("mean-axes-choice-parameter")
+      mean_axes_choice_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const new_value = document.getElementById("mean-axes-choice-parameter").value
+        setupAxesParameter(new_value, "mean")
+      })
+      mean_axes_choice_input.addEventListener("input", () => {
+        setModelView("irrelevant")
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
+
+      //softmax
+      const softmax_axes_input = document.getElementById("softmax-axes-parameter")
+      softmax_axes_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const parameters = getParametersFromNode(last_changed_parameters_layer_id)
+        const new_value = getAxes(document.getElementsByName("softmax-axes[]"))
+        for (i in parameters) {
+          if (parameters[i][0] == "axes") {
+            parameters[i][1] = "[" + new_value.toString() + "]"
+            joinUpdatedLayerParameters(parameters, last_changed_parameters_layer_id)
+            break
+          }
+        }
+      })
+      softmax_axes_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        last_changed_parameters_layer_id = last_selected_node_id
+      })
+
+      const softmax_axes_choice_input = document.getElementById("softmax-axes-choice-parameter")
+      softmax_axes_choice_input.addEventListener("change", () => {
+        setModelView("irrelevant")
+        const new_value = document.getElementById("softmax-axes-choice-parameter").value
+        setupAxesParameter(new_value, "softmax")
+      })
+      softmax_axes_choice_input.addEventListener("input", () => {
         setModelView("irrelevant")
         last_changed_parameters_layer_id = last_selected_node_id
       })
@@ -817,6 +964,18 @@
           case "conv2d":
             layer_drag_offset_X = ev.clientX - 50 // Conv2D layer offset X coord
             layer_drag_offset_Y = ev.clientY - 361 // Conv2D layer offset Y coord
+            break
+          case "mean":
+            layer_drag_offset_X = ev.clientX - 50 // Mean layer offset X coord
+            layer_drag_offset_Y = ev.clientY - 427 // Mean layer offset Y coord
+            break
+          case "sum":
+            layer_drag_offset_X = ev.clientX - 50 // Sum layer offset X coord
+            layer_drag_offset_Y = ev.clientY - 493 // Sum layer offset Y coord
+            break
+          case "softmax":
+            layer_drag_offset_X = ev.clientX - 50 // SoftMax layer offset X coord
+            layer_drag_offset_Y = ev.clientY - 559 // SoftMax layer offset Y coord
             break
           default:
             throw "Unreachable"
@@ -910,24 +1069,36 @@
         const empty_data = {}
         switch (name) {
           case "linear":
-            const linear = `<div class="layer"><i class="fab moduleA"></i> Linear</div>`
+            const linear = `<div class="layer"> Linear </div>`
             editor.addNode("linear", 1, 1, pos_x, pos_y, "linear", empty_data, linear)
             break
           case "relu":
-            const relu = `<div class="layer"><i class="fab moduleA"></i> ReLU</div>`
+            const relu = `<div class="layer"> ReLU </div>`
             editor.addNode("relu", 1, 1, pos_x, pos_y, "relu", empty_data, relu)
             break
           case "pooling":
-            const pooling = `<div class="layer"><i class="fab moduleA"></i> Pooling</div>`
+            const pooling = `<div class="layer"> Pooling </div>`
             editor.addNode("pooling", 1, 1, pos_x, pos_y, "pooling", empty_data, pooling)
             break
           case "layernorm":
-            const layernorm = `<div class="layer"><i class="fab moduleA"></i> LayerNorm</div>`
+            const layernorm = `<div class="layer"> LayerNorm </div>`
             editor.addNode("layernorm", 1, 1, pos_x, pos_y, "layernorm", empty_data, layernorm)
             break
           case "conv2d":
-            const conv2d = `<div class="layer"><i class="fab moduleA"></i> Conv2D</div>`
+            const conv2d = `<div class="layer"> Conv2D </div>`
             editor.addNode("conv2d", 1, 1, pos_x, pos_y, "conv2d", empty_data, conv2d)
+            break
+          case "mean":
+            const mean = `<div class="layer"> Mean </div>`
+            editor.addNode("mean", 1, 1, pos_x, pos_y, "mean", empty_data, mean)
+            break
+          case "sum":
+            const sum = `<div class="layer"> Sum </div>`
+            editor.addNode("sum", 1, 1, pos_x, pos_y, "sum", empty_data, sum)
+            break
+          case "softmax":
+            const softmax = `<div class="layer"> SoftMax </div>`
+            editor.addNode("softmax", 1, 1, pos_x, pos_y, "softmax", empty_data, softmax)
             break
           case "data":
             const data = '<div class="title-box"><i class="fas fa-file-signature"></i> Data </div>'
@@ -1385,6 +1556,12 @@
             return document.querySelector("#layernorm-inputs-sortable-list")
           case "conv2d":
             return document.querySelector("#conv2d-inputs-sortable-list")
+          case "mean":
+            return document.querySelector("#mean-inputs-sortable-list")
+          case "sum":
+            return document.querySelector("#sum-inputs-sortable-list")
+          case "softmax":
+            return document.querySelector("#softmax-inputs-sortable-list")
           case "special":
             if (layer.name == "Loss") {
               return document.querySelector("#loss-inputs-sortable-list")
@@ -1479,9 +1656,22 @@
             matchConnectionsAfterSelection(new_input_order)
           },
         })
-
+        document.getElementById("layer-id").innerHTML = "ID: " + layer_dbid.toString()
         document.getElementById("layer-data").style.display = "block"
         setupLayerParameters(node, correct_id)
+      }
+      function setupAxesParameter(num, type) {
+        let contents = ""
+        for (let i = 0; i < num; i++) {
+          contents = contents + '<input type="number" name="' + type + '-axes[]"/> <br>'
+        }
+        let elem = document.getElementById(`${type}-axes-parameter`)
+        elem.innerHTML = contents
+        if (num != 0) {
+          elem.style.display = "block"
+        } else {
+          elem.style.display = "none"
+        }
       }
 
       function setupLayerParameters(layer, layer_id) {
@@ -1544,7 +1734,7 @@
             break
 
           case "pooling":
-            document.querySelector("#pooling-layer-parameters").style.display = "block"
+            document.querySelector("#pooling-layer-parasmeters").style.display = "block"
             for (i in layer_parameters) {
               // Not given
             }
@@ -1553,8 +1743,21 @@
           case "layernorm":
             document.querySelector("#layernorm-layer-parameters").style.display = "block"
             for (i in layer_parameters) {
-              if (layer_parameters[i][0] == "axis") {
-                document.querySelector("#layernorm-axis-parameter").value = layer_parameters[i][1]
+              if (layer_parameters[i][0] == "axes") {
+                let vals = layer_parameters[i][1].replace("[", "").replace("]", "").split(",")
+                if (vals[0] == "") {
+                  setupAxesParameter(0, "layernorm")
+                  document.querySelector("#layernorm-axes-choice-parameter").value = 0
+                  break
+                }
+                setupAxesParameter(vals.length, "layernorm")
+                document.querySelector("#layernorm-axes-choice-parameter").value = vals.length
+                let axes_list = document.getElementsByName("layernorm-axes[]")
+                let j = 0
+                for (let node of axes_list) {
+                  node.value = vals[j]
+                  j++
+                }
               }
             }
             break
@@ -1575,6 +1778,53 @@
               }
             }
             break
+
+          case "mean":
+            document.querySelector("#mean-layer-parameters").style.display = "block"
+            for (i in layer_parameters) {
+              if (layer_parameters[i][0] == "axes") {
+                let vals = layer_parameters[i][1].replace("[", "").replace("]", "").split(",")
+                if (vals[0] == "") {
+                  setupAxesParameter(0, "mean")
+                  document.querySelector("#mean-axes-choice-parameter").value = 0
+                  break
+                }
+                setupAxesParameter(vals.length, "mean")
+                document.querySelector("#mean-axes-choice-parameter").value = vals.length
+                let axes_list = document.getElementsByName("mean-axes[]")
+                let j = 0
+                for (let node of axes_list) {
+                  node.value = vals[j]
+                  j++
+                }
+              }
+            }
+            break
+
+          case "sum":
+            break
+
+          case "softmax":
+            document.querySelector("#softmax-layer-parameters").style.display = "block"
+            for (i in layer_parameters) {
+              if (layer_parameters[i][0] == "axes") {
+                let vals = layer_parameters[i][1].replace("[", "").replace("]", "").split(",")
+                if (vals[0] == "") {
+                  setupAxesParameter(0, "softmax")
+                  document.querySelector("#softmax-axes-choice-parameter").value = 0
+                  break
+                }
+                setupAxesParameter(vals.length, "softmax")
+                document.querySelector("#softmax-axes-choice-parameter").value = vals.length
+                let axes_list = document.getElementsByName("softmax-axes[]")
+                let j = 0
+                for (let node of axes_list) {
+                  node.value = vals[j]
+                  j++
+                }
+              }
+            }
+            break
         }
       }
 
@@ -1587,6 +1837,9 @@
         document.querySelector("#pooling-layer-parameters").style.display = "none"
         document.querySelector("#layernorm-layer-parameters").style.display = "none"
         document.querySelector("#conv2d-layer-parameters").style.display = "none"
+        document.querySelector("#mean-layer-parameters").style.display = "none"
+        document.querySelector("#sum-layer-parameters").style.display = "none"
+        document.querySelector("#softmax-layer-parameters").style.display = "none"
         document.querySelector("#loss-layer-parameters").style.display = "none"
 
         if (is_id_on_paths) {
