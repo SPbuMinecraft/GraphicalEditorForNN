@@ -167,7 +167,7 @@ def train_model(
     convert_model_parameters(model)
     if not is_valid_model(model):
         raise Error("Invalid model found", HTTPStatus.NOT_ACCEPTABLE)
-    # assert_dimensions_match(model["layers"])
+    assert_dimensions_match(model["layers"])
 
     convert_model(model)
     model = {"graph": model}
