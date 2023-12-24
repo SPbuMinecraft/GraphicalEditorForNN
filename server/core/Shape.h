@@ -6,6 +6,8 @@
 
 struct Shape {
     short dimsCount;
+    size_t strides[3];
+
     Shape(std::vector<size_t> dims = {});
     Shape(std::vector<size_t> dims, short dimsCount);
 
@@ -20,6 +22,7 @@ struct Shape {
     std::size_t size() const;
     std::string toString() const;
     std::vector<std::size_t> getDims() const;
+    void calculateStrides();
 
     std::size_t cols() const;
     std::size_t rows() const;
@@ -30,6 +33,7 @@ struct Shape {
 
 private:
     std::size_t dims[4];
+    std::size_t cachedSize;
 };
 
 template<>

@@ -127,6 +127,8 @@ async function deleteConnection(sending_object) {
 function uploadRequest() {
     if (data_upload.files.length == 0) return
     const file = data_upload.files[0]
+    const button_wrapper = document.getElementById("train-button")
+    const train_button = button_wrapper.children[0]
 
     fetch(`http://${py_server_address}/${user_id}/${model_id}`, {
         method: "PATCH",
@@ -142,6 +144,8 @@ function uploadRequest() {
                 timer: 1500,
             })
             console.error(`Failed to upload data for ${file.name}`)
+            button_wrapper.setAttribute("disabled", true)
+            train_button.setAttribute("disabled", true)
             return
         }
         Swal.fire({
@@ -152,9 +156,6 @@ function uploadRequest() {
             timer: 1500,
         })
         // allow user to press a train button from now on
-        button_wrapper = document.getElementById("train-button")
-        button_wrapper.getElementsByTy
-        train_button = button_wrapper.children[0]
         button_wrapper.removeAttribute("disabled")
         train_button.removeAttribute("disabled")
     })
