@@ -474,7 +474,7 @@
             softmax: "axes=[3]",
             data: "shape=[3,512,512]",
             output: "",
-            loss: "type=MSE;classCount=0",
+            loss: "type=MSE;classCount=2",
             target: "shape=[1]",
           }
           const layer = {
@@ -963,8 +963,7 @@
       loss_classCount_input.addEventListener("change", () => {
         setModelView("irrelevant")
         const parameters = getParametersFromNode(last_changed_parameters_layer_id)
-        const new_value = document.getElementById("loss-classCount-parameter").value
-
+        const new_value = document.getElementsByName("classCount-parameter[]")[0].value
         for (i in parameters) {
           if (parameters[i][0] == "classCount") {
             parameters[i][1] = new_value
@@ -1749,7 +1748,7 @@
       function setupAxesParameter(num, type) {
         let contents = ""
         for (let i = 0; i < num; i++) {
-          contents = contents + '<input type="number" name="' + type + '-axes[]"/> <br>'
+          contents = contents + '<input type="number" name="' + type + '-axes[]" size="4"/> <br>'
         }
         let elem = document.getElementById(`${type}-axes-parameter`)
         elem.innerHTML = contents
@@ -1763,7 +1762,7 @@
       function setupShapeParameter(num) {
         let contents = ""
         for (let i = 0; i < num; i++) {
-          contents = contents + '<input type="number" name="shape[]"/> <br>'
+          contents = contents + '<input type="number" name="shape[]" size="4"/> <br>'
         }
         let elem = document.getElementById("data-shape-parameter")
         elem.innerHTML = contents
@@ -1777,7 +1776,7 @@
       function setupLossParameter(type) {
         let elem = document.getElementById("loss-classCount-parameter")
         if (type == "Entropy") {
-          elem.innerHTML = 'classCount <input type="number" value="1" size="4" />'
+          elem.innerHTML = 'classCount <input type="number" name="classCount-parameter[]" size="4"/>'
         } else {
           elem.innerHTML = ""
         }
@@ -1811,9 +1810,10 @@
               for (i in layer_parameters) {
                 switch (layer_parameters[i][0]) {
                   case "classCount":
-                    document.querySelector("#loss-classCount-parameter").value = layer_parameters[i][1]
+                    document.getElementsByName("classCount-parameter[]")[0].value = layer_parameters[i][1]
                     break
                   case "type":
+                    setupLossParameter(layer_parameters[i][1])
                     document.querySelector("#loss-type-parameter").value = layer_parameters[i][1]
                     break
                 }
