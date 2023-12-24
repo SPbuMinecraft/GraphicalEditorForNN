@@ -1359,6 +1359,20 @@
         is_id_on_paths = false
       }
 
+      function changeDigitsColorOnConnections() {
+        for (let path of pathsWithWrittenID) {
+          try {
+            if (is_dark_theme) {
+              path.setAttribute("fill", "white")
+            } else {
+              path.setAttribute("fill", "black")
+            }
+          } catch (e) {
+            console.error(e)
+          }
+        }
+      }
+
       function getSortableInputList(layer) {
         switch (layer.class) {
           case "linear":
