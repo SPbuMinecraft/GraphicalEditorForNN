@@ -87,7 +87,6 @@ class CrossEntropyChecker:
         for prim_dim in range(2):
             if input_shape[prim_dim] != 1 or targets_shape[prim_dim] != 1:
                 return False
-        print(input_shape, targets_shape, self.class_count)
         if input_shape[-1] != self.class_count or targets_shape[-1] != 1:
             return False
         self.output_shape = None
