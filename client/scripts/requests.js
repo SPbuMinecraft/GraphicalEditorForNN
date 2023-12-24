@@ -151,14 +151,14 @@ function uploadRequest() {
             showConfirmButton: false,
             timer: 1500,
         })
+        // allow user to press a train button from now on
+        button_wrapper = document.getElementById("train-button")
+        button_wrapper.getElementsByTy
+        train_button = button_wrapper.children[0]
+        button_wrapper.removeAttribute("disabled")
+        train_button.removeAttribute("disabled")
     })
     setModelView("irrelevant")
-    // allow user to press a train button from now on
-    button_wrapper = document.getElementById("train-button")
-    button_wrapper.getElementsByTy
-    train_button = button_wrapper.children[0]
-    button_wrapper.removeAttribute("disabled")
-    train_button.removeAttribute("disabled")
 }
 
 function trainRequest() {

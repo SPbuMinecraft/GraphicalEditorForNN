@@ -52,9 +52,9 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
 
     // Should be adopted for DataLoader possibilities
     std::string path = getDataPath(model_id);
-//    if (extension == FileExtension::Csv) {
-//        path += "/1.csv";
-//    }
+    if (extension == FileExtension::Csv) {
+        path += "/1.csv";
+    }
 
     std::cerr << "start data processing" << std::endl;
     DataMarker dataMarker = DataMarker(path, extension, 100, 4);
