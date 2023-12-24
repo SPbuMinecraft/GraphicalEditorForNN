@@ -19,3 +19,15 @@ void OptimizerBase::step() {
         Allocator::endSession();
     }
 }
+
+GammaScheduler::GammaScheduler(OptimizerBase* optim, size_t stepSize, float gamma)
+    : optim{optim}, stepSize{stepSize}, gamma{gamma} {
+}
+
+void GammaScheduler::step() {
+    ++stepAccum;
+    if (optim && stepAccum == stepSize) {
+        optim->lr *= gamma;
+        stepAccum = 0;
+    }
+}

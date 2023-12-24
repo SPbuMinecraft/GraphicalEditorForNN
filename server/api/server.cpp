@@ -47,7 +47,8 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     Allocator::end();
 
     RandomObject initObject(0, 1, 42);
-    OptimizerBase SGD = OptimizerBase(0.01);
+    OptimizerBase SGD(0.1);
+    GammaScheduler scheduler(&SGD, 2, 0.1);
 
     // Should be adopted for DataLoader possibilities
     std::string path = getDataPath(model_id);
@@ -109,6 +110,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
             Allocator::endSession();
             lastTrainNode.clear();
         }
+        scheduler.step();
 
         request[U("targets")][actual_size] = web::json::value::array(targets);
         request[U("outputs")][actual_size] = web::json::value::array(outputs);
