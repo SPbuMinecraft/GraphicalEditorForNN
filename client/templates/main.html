@@ -298,6 +298,11 @@
           </select>
           <h3></h3>
           <div id="loss-classCount-parameter"></div>
+          <h3></h3>
+          <div id="loss-input-selection">
+            <label class="layer-input-list" style="display: none"> Input ID order: </label>
+            <ul id="loss-inputs-sortable-list"></ul>
+          </div>
         </div>
       </div>
     </div>
@@ -1465,7 +1470,7 @@
                 <span class="text-wrapper"> ${name} </span>
                 <label class="button-wrapper">
                     Open
-                    <input type="button" onclick="openNNInConstructor(this.parentElement.parentElement.children[0])"> <!--передает id nn-->
+                    <input type="button" onclick="openNNInConstructor(this.parentElement.parentElement.children[0])">
                 </label>
                 <label class="button-wrapper">
                     Export
@@ -1629,6 +1634,9 @@
           case "softmax":
             return document.querySelector("#softmax-inputs-sortable-list")
           case "special":
+            if (layer.name == "loss") {
+              return document.querySelector("#loss-inputs-sortable-list")
+            }
             return document.querySelector("#special-inputs-sortable-list")
         }
       }
