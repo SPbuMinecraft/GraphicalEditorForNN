@@ -285,6 +285,7 @@
           <label for="data-shape-choice-parameter">Shape number: </label>
           <select id="data-shape-choice-parameter" style="margin-right: 10px">
             <option value="1">1</option>
+            <option value="2">2</option>
             <option value="3">3</option>
           </select>
           <div id="data-shape-parameter"></div>
@@ -466,11 +467,11 @@
             linear: "bias=0;inFeatures=2;outFeatures=1",
             relu: "",
             pooling: "",
-            layernorm: "axes=[]",
+            layernorm: "axes=[2,3]",
             conv2d: "kernelSize=1;inChannels=1;outChannels=1",
-            mean: "axes=[]",
+            mean: "axes=[2]",
             sum: "",
-            softmax: "axes=[]",
+            softmax: "axes=[3]",
             data: "shape=[3,512,512]",
             output: "",
             loss: "type=MSE;classCount=0",
