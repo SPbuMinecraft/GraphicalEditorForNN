@@ -199,7 +199,7 @@ def predict(user_id: int, model_id: int):
             response = requests.post(
                 cpp_url(f"upload_data/{model_id}/1"),
                 data=request.data,
-                headers={"Content-Type": "image/png"},
+                headers={"Content-Type": request.content_type},
             )
 
     return response.text, response.status_code
