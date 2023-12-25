@@ -166,6 +166,5 @@ MaxPool::MaxPool(const std::vector<TensorRef>& args) {
 
 SumLayer::SumLayer(const std::vector<TensorRef>& args) {
     assert(args.size() == 2);
-    assert(args[0].get().output.value().shape == args[1].get().output.value().shape);
     result = Tensor(sumOp, {args[0], args[1]});
 }

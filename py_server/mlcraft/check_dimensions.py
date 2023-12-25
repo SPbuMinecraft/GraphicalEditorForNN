@@ -119,13 +119,13 @@ class PoolingChecker:
 
 
 def create_checker(layer: dict):
-    print(layer)
     match layer["type"]:
         case "Data" | "Target":
             return DataChecker(list(map(int, layer["parameters"]["shape"])))
         case "Linear":
             return LinearChecker(
-                int(layer["parameters"]["inFeatures"]), int(layer["parameters"]["outFeatures"])
+                int(layer["parameters"]["inFeatures"]),
+                int(layer["parameters"]["outFeatures"]),
             )
         case "ReLU":
             return ReLUChecker()
@@ -144,7 +144,8 @@ def create_checker(layer: dict):
             return SumChecker()
         case "Conv2D":
             return Conv2dChecker(
-                int(layer["parameters"]["inChannels"]), int(layer["parameters"]["outChannels"])
+                int(layer["parameters"]["inChannels"]),
+                int(layer["parameters"]["outChannels"]),
             )
         case "Mean" | "SoftMax":
             return DimReduceChecker(list(map(int, layer["parameters"]["axes"])))
@@ -184,7 +185,9 @@ def assert_dimensions_match(layers: list[dict]):
                 ]
             )
             if not acceptable:
-                print(f"Layer {layer_id} does not match with it's parents in dimensions")
+                print(
+                    f"Layer {layer_id} does not match with it's parents in dimensions"
+                )
                 raise Error(
                     f"Layer {layer_id} does not match with it's parents in dimensions",
                     HTTPStatus.NOT_ACCEPTABLE,

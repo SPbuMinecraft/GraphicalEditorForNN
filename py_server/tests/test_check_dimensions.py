@@ -14,7 +14,7 @@ def test_correct_simple():
             "parents": [1],
         },
         {"id": 3, "type": "ReLU", "parameters": {}, "parents": [2]},
-        {"id": 4, "type": "MSELoss", "parameters": {}, "parents": [0, 3]},
+        {"id": 4, "type": "Loss", "parameters": {"type": "MSE"}, "parents": [0, 3]},
         {"id": 5, "type": "Output", "parameters": {}, "parents": [3]},
     ]
     # Assert no exception is raised
@@ -47,7 +47,7 @@ def test_correct_harder():
             "parents": [6],
         },
         {"id": 8, "type": "ReLU", "parameters": {}, "parents": [7]},
-        {"id": 9, "type": "MSELoss", "parameters": {}, "parents": [0, 8]},
+        {"id": 9, "type": "Loss", "parameters": {"type": "MSE"}, "parents": [0, 8]},
         {"id": 10, "type": "Output", "parameters": {}, "parents": [8]},
     ]
     assert_dimensions_match(layers)
@@ -64,7 +64,7 @@ def test_mismatch_simple():
             "parents": [1],
         },
         {"id": 3, "type": "ReLU", "parameters": {}, "parents": [2]},
-        {"id": 4, "type": "MSELoss", "parameters": {}, "parents": [0, 3]},
+        {"id": 4, "type": "Loss", "parameters": {"type": "MSE"}, "parents": [0, 3]},
         {"id": 5, "type": "Output", "parameters": {}, "parents": [3]},
     ]
 
@@ -101,7 +101,7 @@ def test_mismatch_harder():
             "parents": [6],
         },
         {"id": 8, "type": "ReLU", "parameters": {}, "parents": [7]},
-        {"id": 9, "type": "MSELoss", "parameters": {}, "parents": [0, 8]},
+        {"id": 9, "type": "Loss", "parameters": {"type": "MSE"}, "parents": [0, 8]},
         {"id": 10, "type": "Output", "parameters": {}, "parents": [8]},
     ]
 

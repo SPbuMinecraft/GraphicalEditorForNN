@@ -47,8 +47,8 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     Allocator::end();
 
     RandomObject initObject(0, 1, 42);
-    OptimizerBase SGD(0.1);
-    GammaScheduler scheduler(&SGD, 2, 1);
+    OptimizerBase SGD(0.3);
+    GammaScheduler scheduler(&SGD, 4, 0.3);
 
     // Should be adopted for DataLoader possibilities
     std::string path = getDataPath(model_id);
@@ -155,6 +155,7 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtensi
 }
 
 void extract_from_zip(std::string path, std::string root) {
+    std::cerr << "Extracting from zip" << std::endl;
     zip_t* z;
     int err;
     z = zip_open(path.c_str(), 0, &err);
@@ -249,7 +250,8 @@ int main(int argc, char *argv[]) {
             path += "/1.csv";
             file_types[model_id] = FileExtension::Csv;
         }
-        else if (content_type == "application/zip") {
+        else if (content_type == "application/zip"
+                 || content_type == "application/x-zip-compressed") {
             path += "/1.zip";
             file_types[model_id] = FileExtension::Png;
         } else if (content_type == "image/png") {
@@ -266,7 +268,8 @@ int main(int argc, char *argv[]) {
         out_file << req.body;
         out_file.close();
 
-        if (content_type == "application/zip" && type == 0) {
+        if ((content_type == "application/zip" || content_type  == "application/x-zip-compressed")
+            && type == 0) {
             try {
                 extract_from_zip(path, root);
             }
