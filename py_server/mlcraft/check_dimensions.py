@@ -185,16 +185,12 @@ def assert_dimensions_match(layers: list[dict]):
                 ]
             )
             if not acceptable:
-                print(
-                    f"Layer {layer_id} does not match with it's parents in dimensions"
-                )
                 raise Error(
                     f"Layer {layer_id} does not match with it's parents in dimensions",
                     HTTPStatus.NOT_ACCEPTABLE,
                     problemNode=layer_id,
                 )
     except TypeError as e:
-        print(e)
         raise Error(
             f"Invalid number of inputs for layer {current_layer_id}",
             HTTPStatus.NOT_ACCEPTABLE,

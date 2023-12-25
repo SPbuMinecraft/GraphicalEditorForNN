@@ -48,7 +48,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
 
     RandomObject initObject(0, 1, 42);
     OptimizerBase SGD(0.3);
-    GammaScheduler scheduler(&SGD, 4, 0.3);
+    GammaScheduler scheduler(&SGD, 4, 0.1);
 
     // Should be adopted for DataLoader possibilities
     std::string path = getDataPath(model_id);
