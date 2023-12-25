@@ -79,7 +79,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     std::vector<web::json::value> targets, outputs;
     float epoch_loss = 0;
 
-    size_t max_epochs = 10;
+    size_t max_epochs = 5;
     std::pair<std::vector<float>, std::vector<float>> batch;
 
     web::http::client::http_client client(U("http://localhost:3000"));
@@ -200,7 +200,9 @@ int main(int argc, char *argv[]) {
         } catch (...) {
             return response(status::INTERNAL_SERVER_ERROR, "Predict failed");
         }
-        json::wvalue response = (int)(answer[1] > answer[0]);
+        json::wvalue response;
+        if (file_types[model_id] == FileExtension::Csv) response = answer[0];
+        else response = (int)(answer[1] > answer[0]);
         return crow::response(status::OK, response);
     });
 
