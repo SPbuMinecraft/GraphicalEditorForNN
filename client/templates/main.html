@@ -1275,9 +1275,38 @@
 
     <!--Метрики-->
     <script>
+      // async function getMetricsFromServer() {
+      //   let metricsPage = document.querySelector("#metrics")
+      //   const response = await fetch(`http://${py_server_address}/get_plots/${user_id}/${model_id}/1`, {
+      //     method: "PUT",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({
+      //       label: "train",
+      //     }),
+      //   })
+      //   if (!response.ok) {
+      //     console.error("Ошибка при получении метрик:", response.statusText)
+      //     return
+      //   }
+      //   const blob = await response.blob()
+      //   const imageUrl = URL.createObjectURL(blob)
+      //   metricsPage.innerHTML = ""
+      //   const imageElement = document.createElement("img")
+      //   imageElement.src = imageUrl
+      //   // Добавляем стили для центрирования изображения
+      //   imageElement.style.display = "block"
+      //   imageElement.style.margin = "auto"
+      //   metricsPage.appendChild(imageElement)
+      //   URL.revokeObjectURL(imageUrl)
+      // }
+
+
       async function getMetricsFromServer() {
-        let metricsPage = document.querySelector("#metrics")
-        const response = await fetch(`http://${py_server_address}/get_plots/${user_id}/${model_id}/1`, {
+        let metricsPage = document.querySelector("#metrics");
+
+        const response1 = await fetch(`http://${py_server_address}/get_plots/${user_id}/${model_id}/1`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -1285,24 +1314,50 @@
           body: JSON.stringify({
             label: "train",
           }),
-        })
-        if (!response.ok) {
-          console.error("Ошибка при получении метрик:", response.statusText)
-          return
-        }
-        const blob = await response.blob()
-        const imageUrl = URL.createObjectURL(blob)
-        metricsPage.innerHTML = ""
-        const imageElement = document.createElement("img")
-        imageElement.src = imageUrl
-        // Добавляем стили для центрирования изображения
-        imageElement.style.display = "block"
-        imageElement.style.margin = "auto"
-        metricsPage.appendChild(imageElement)
-        URL.revokeObjectURL(imageUrl)
-      }
+        });
 
-      setInterval(getMetricsFromServer, 10000)
+        const response2 = await fetch(`http://${py_server_address}/get_plots/${user_id}/${model_id}/0`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            label: "train",
+          }),
+        });
+
+        if (!response1.ok || !response2.ok) {
+          console.error("Ошибка при получении метрик");
+          return;
+        }
+
+        const blob1 = await response1.blob();
+        const imageUrl1 = URL.createObjectURL(blob1);
+
+        const blob2 = await response2.blob();
+        const imageUrl2 = URL.createObjectURL(blob2);
+
+        metricsPage.innerHTML = "";
+
+        const imageElement1 = document.createElement("img");
+        imageElement1.src = imageUrl1;
+
+        const imageElement2 = document.createElement("img");
+        imageElement2.src = imageUrl2;
+
+        imageElement1.style.display = "block";
+        imageElement1.style.margin = "auto";
+
+        imageElement2.style.display = "block";
+        imageElement2.style.margin = "auto";
+
+        metricsPage.appendChild(imageElement1);
+        metricsPage.appendChild(imageElement2);
+
+        URL.revokeObjectURL(imageUrl1);
+        URL.revokeObjectURL(imageUrl2);
+      }
+      setInterval(getMetricsFromServer, 10000);
     </script>
     <!--Метрики-->
 
