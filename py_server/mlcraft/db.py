@@ -36,7 +36,7 @@ class Metrics(db.Model):  # type: ignore
     __tablename__ = "metrics_table"
 
     id = db.Column(db.Integer, primary_key=True)
-    model = db.Column(db.Integer, db.ForeignKey("users_table.id"), nullable=False)
+    model = db.Column(db.Integer, db.ForeignKey("models_table.id"), nullable=False)
     label = db.Column(db.Text)
     loss = db.Column(db.Text)
     values = db.Column(db.Text)

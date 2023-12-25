@@ -120,3 +120,9 @@ public:
     MaxPoolOp maxPool;
     MaxPool(const std::vector<TensorRef>& args);
 };
+
+class SumLayer: public Layer {
+public:
+    Sum sumOp;
+    SumLayer(const std::vector<TensorRef>& args);
+};

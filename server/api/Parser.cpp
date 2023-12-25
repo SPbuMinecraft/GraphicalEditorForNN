@@ -6,15 +6,6 @@ void CHECK_HAS_FIELD(const crow::json::rvalue& layer, const std::string& field) 
     }
 }
 
-// void ParseCsvData(const std::vector<std::vector<float>>& data, std::vector<float>& instances, std::vector<float>& answers) {
-//     instances.reserve(data.size());
-//     answers.reserve(data.size());
-//     for (auto& instance : data) {
-//         answers.push_back(instance.back());
-//         instances.emplace_back(instance.begin(), std::prev(instance.end()));
-//     }
-// }
-
 LinearLayerParameters ParseLinear(const crow::json::rvalue& parameters) {
     size_t inFeatures, outFeatures;
     bool bias = true;
@@ -25,11 +16,11 @@ LinearLayerParameters ParseLinear(const crow::json::rvalue& parameters) {
     inFeatures = static_cast<size_t>(parameters["inFeatures"].i());
     outFeatures = static_cast<size_t>(parameters["outFeatures"].i());
 
-    // if (parameters.has("bias")) {
-    //     std::cout << parameters["bias"] << std::endl;
-    //     bias = parameters["bias"].b();
-    //     std::cout << "done" << std::endl;
-    // }
+    // Something fails here, TODO: catch the bug
+    if (parameters.has("bias")) {
+        bias = static_cast<bool>(parameters["bias"].i());
+        std::cout << "done" << std::endl;
+    }
 
     return LinearLayerParameters{inFeatures, outFeatures, bias};
 }
@@ -60,18 +51,16 @@ Conv2DLayerParameters ParseConv2d(const crow::json::rvalue& parameters) {
 }
 
 AxisParameters ParseAxes(const crow::json::rvalue& parameters) {
-//    CHECK_HAS_FIELD(parameters, "axes");
+    CHECK_HAS_FIELD(parameters, "axes");
 
-//    std::vector<short> axes;
-//    for (auto ax_num : parameters["axes"]) {
-//        axes.push_back(static_cast<short>(ax_num.i()));
-//    }
-//    return AxisParameters{std::move(axes)};
-    return AxisParameters{{2, 3}};
+    std::vector<short> axes;
+    for (auto ax_num : parameters["axes"]) {
+        axes.push_back(static_cast<short>(ax_num.i()));
+    }
+    return AxisParameters{std::move(axes)};
 }
 
 CrossEntropyLossParameters ParseCrossEntropyLoss(const crow::json::rvalue& parameters) {
-//    CHECK_HAS_FIELD(parameters, "classCount");
-    return CrossEntropyLossParameters{2};
-//    return CrossEntropyLossParameters{static_cast<size_t>(parameters["classCount"].i())};
+    CHECK_HAS_FIELD(parameters, "classCount");
+    return CrossEntropyLossParameters{static_cast<size_t>(parameters["classCount"].i())};
 }

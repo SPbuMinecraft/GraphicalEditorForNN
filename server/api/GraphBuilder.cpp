@@ -125,13 +125,19 @@ void Graph::Initialize(crow::json::rvalue modelJson,
             for (auto prevLayerId : reversedEdges[layer_id]) {
                 lastPredictIds_.push_back(prevLayerId);
             }
-//        } else if (type == "MSELoss") {
-//            layers_.emplace(layer_id, new MSELoss{prevLayers});
-//            lastTrainIds_.push_back(layer_id);
-        } else if (type == "MSELoss" || type == "CrossEntropyLoss") {
+       } else if (type == "Loss") {
             CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
-            auto params = ParseCrossEntropyLoss(layerDicts[layer_id]["parameters"]);
-            layers_.emplace(layer_id, new EntropyLoss{params, prevLayers});
+            CHECK_HAS_FIELD(layerDicts[layer_id]["parameters"], "type");
+            if (layerDicts[layer_id]["parameters"]["type"] == "MSE") {
+                layers_.emplace(layer_id, new MSELoss{prevLayers});
+            } else if (layerDicts[layer_id]["parameters"]["type"] == "Entropy") {
+                auto params = ParseCrossEntropyLoss(layerDicts[layer_id]["parameters"]);
+                layers_.emplace(layer_id, new EntropyLoss{params, prevLayers});
+            } else {
+                std::ostringstream error_message;
+                error_message << "Unexpected loss type: " << layerDicts[layer_id]["parameters"]["type"];
+                throw std::invalid_argument(error_message.str());
+            }
             lastTrainIds_.push_back(layer_id);
         } else if (type == "Conv2D") {
             CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
@@ -146,6 +152,8 @@ void Graph::Initialize(crow::json::rvalue modelJson,
             CHECK_HAS_FIELD(layerDicts[layer_id], "parameters");
             auto params = ParseAxes(layerDicts[layer_id]["parameters"]);
             layers_.emplace(layer_id, new MeanLayer{params, prevLayers});
+        } else if (type == "Sum") {
+            layers_.emplace(layer_id, new SumLayer{prevLayers});
         } else if (type == "Pooling") {
             layers_.emplace(layer_id, new MaxPool{prevLayers});
         } else if (type == "SoftMax") {
