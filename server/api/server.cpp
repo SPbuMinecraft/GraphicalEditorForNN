@@ -200,7 +200,9 @@ int main(int argc, char *argv[]) {
         } catch (...) {
             return response(status::INTERNAL_SERVER_ERROR, "Predict failed");
         }
-        json::wvalue response = (int)(answer[1] > answer[0]);
+        json::wvalue response;
+        if (file_types[model_id] == FileExtension::Csv) response = answer[0];
+        else response = (int)(answer[1] > answer[0]);
         return crow::response(status::OK, response);
     });
 

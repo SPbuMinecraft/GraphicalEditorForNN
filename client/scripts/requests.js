@@ -166,15 +166,20 @@ function trainRequest() {
     fetch(`http://${py_server_address}/train/${user_id}/${model_id}/0`, {
         method: "PUT",
         mode: "cors",
-    }).then(response => {
-        showBuildNotification(response.ok)
-        onTrainShowPredict(response.ok)
-        if (response.ok) {
-            setModelView("success")
-        } else {
-            setModelView("error")
-        }
     })
+        .then(response => {
+            showBuildNotification(response.ok, response)
+            onTrainShowPredict(response.ok)
+            if (response.ok) {
+                setModelView("success")
+            } else {
+                setModelView("error")
+            }
+        })
+        .catch(reason => {
+            showBuildNotification(false)
+            setModelView("error")
+        })
 }
 
 async function predictRequest() {
@@ -220,5 +225,8 @@ async function predictRequest() {
         return
     }
     hideResult() // hide previous predict result
-    onPredictShowResult(responseJson)
+    const extension = file.name.split(".").pop()
+    if (extension == "png")
+        onPredictShowResult(responseJson == 0 ? "It's a cat!" : "It's a dog!")
+    else onPredictShowResult(responseJson)
 }

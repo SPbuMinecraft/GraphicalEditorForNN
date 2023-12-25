@@ -1551,17 +1551,19 @@
           timer: 1500,
         })
       }
-      const buildUnsuccessful = () => {
-        Swal.fire({
-          position: "top-end",
-          icon: "error",
-          title: "Failed to build neural network",
-          showConfirmButton: false,
-          timer: 1500,
+      const buildUnsuccessful = response => {
+        response.json().then(json => {
+          Swal.fire({
+            position: "top-end",
+            icon: "error",
+            title: json.error,
+            showConfirmButton: false,
+            timer: 1500,
+          })
         })
       }
-      const showBuildNotification = build_status => {
-        build_status ? buildSuccessful() : buildUnsuccessful()
+      const showBuildNotification = (build_status, response) => {
+        build_status ? buildSuccessful() : buildUnsuccessful(response)
       }
       const data_upload = document.getElementById("dataset-upload-button")
       data_upload.onclick = () => {
@@ -1581,7 +1583,7 @@
         }
       }
       function onPredictShowResult(res) {
-        document.getElementById("res-value-out").innerHTML = res == 0 ? "It's a cat!" : "It's a dog!"
+        document.getElementById("res-value-out").innerHTML = res
         document.getElementById("predict-result-wrapper").style.textAlign = "center"
         document.getElementById("predict-result-wrapper").style.display = "block"
       }
