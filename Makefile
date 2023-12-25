@@ -1,9 +1,17 @@
-.PHONY: help build.% test.% clean
+.PHONY: help docker build.% test.% clean
 .DEFAULT_GOAL = help
 
 targets = py_server server
 
 export CONFIG_PATH = $(abspath config.json)
+
+ifeq ($(shell which node),)
+$(error 'node' not found, see README about node)
+endif
+
+clientPort = $(shell node -p "require('$(CONFIG_PATH)').client.PORT")
+pythonPort = $(shell node -p "require('$(CONFIG_PATH)').py_server.PORT")
+# pythonPort = $(call getField,PORT)
 
 MAKEFLAGS += -k
 ifneq ($V,2)
@@ -20,6 +28,8 @@ Example (runs tests in py_server): make test.py_server V=2
 
 Targets:
 --------
+docker: launches everything in 3 docker containers
+test.docker: start docker containers, run tests in them and exit
 run.client: starts the client
 run.py_server: starts the py_server
 run.server: starts the c++ server
@@ -45,6 +55,17 @@ endef
 help: export HELP := $(HELP)
 help:
 	@echo "$$HELP"
+
+docker: export WEBPORT=$(clientPort)
+docker: export PYPORT=$(pythonPort)
+docker: compose.yml
+	docker compose up
+
+test.docker.py_server:
+	$(MAKE) docker -C py_server -e
+
+test.docker.server:
+	$(MAKE) docker -C server -e
 
 $(addprefix run.,py_server client): run.%:
 	$(MAKE) -C $* -e

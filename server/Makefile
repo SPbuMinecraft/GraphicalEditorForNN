@@ -1,3 +1,4 @@
+app = mlcraft
 dirApi = api
 dirCore = core
 dirTests = tests
@@ -39,7 +40,7 @@ ifneq ($V,2)
 .SILENT:
 endif
 .DEFAULT_GOAL = default
-.PHONY: default serve test test.% clean checkboost
+.PHONY: default docker serve test test.% clean checkboost
 
 include $(wildcard $(dirBuild)/*.d)
 
@@ -60,6 +61,7 @@ help:
 	@echo
 	@echo "Available targets:"
 	@echo "default: builds and runs core/main.cpp file"
+	@echo "docker: tests application inside the docker container"
 	@echo "serve: builds and runs api/server.cpp file"
 	@echo "test: builds and runs all tests in the tests directory"
 	@echo "test.<object>: runs specific test, for example 'make test.Blob'"
@@ -79,6 +81,14 @@ help:
 
 build: $(core) $(server) $(testTargets)
 
+
+### DOCKER ###
+
+docker: export CPORT := $(port)
+docker: Dockerfile
+	docker build -t $(app)/cpp:test .
+	docker run -v $(CONFIG_PATH):/app/config.json $(app)/cpp:test
+	
 
 ### CORE ###
 

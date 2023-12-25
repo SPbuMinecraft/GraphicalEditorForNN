@@ -5,7 +5,7 @@
     },
 
     "py_server": { 
-        "HOST": "localhost",
+        "HOST": "0.0.0.0",
         "PORT": 3000,
         "SECRET_KEY": "minecraft",
         "SQLALCHEMY_DATABASE_URI": "sqlite:///database.db",

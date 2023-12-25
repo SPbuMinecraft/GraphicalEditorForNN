@@ -1,0 +1,6 @@
+bin
+Build
+model_data
+.cache
+*.xcodeproj
+*.entitlements

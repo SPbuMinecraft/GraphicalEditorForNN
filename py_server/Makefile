@@ -2,7 +2,7 @@ app = mlcraft
 dirEnv = .venv
 dirBin = $(dirEnv)/bin
 
-.PHONY: help default build format test pytest typecheck formatcheck clean
+.PHONY: help default docker build format test pytest typecheck formatcheck clean
 .DEFAULT_GOAL = default
 
 ifneq ($V,2)
@@ -22,7 +22,9 @@ $(error 'node' not found, see README about node)
 endif
 
 getField = $(shell node -p "require('$(CONFIG_PATH)').py_server.$1")
-flags = -h $(call getField,HOST) -p $(call getField,PORT)
+port = $(call getField,PORT)
+host = $(call getField,HOST)
+flags = -h $(host) -p $(port)
 
 python = $(shell which 'python3.10' || which 'python3' || which 'python')
 ifeq ("$(python)","")
@@ -57,6 +59,11 @@ default: install
 	@echo "---------------------------------------------------------------------------"
 	$(dirBin)/flask --app $(app) run --debug $(flags)
 
+docker: export PYPORT := $(port)
+docker: Dockerfile
+	docker build -t $(app)/python:test .
+	docker run -v $(CONFIG_PATH):/app/config.json $(app)/python:test
+
 build: install
 
 format: install
@@ -83,4 +90,3 @@ $(dirEnv):
 
 clean:
 	$(RM) install
-	$(RM) -r instance
