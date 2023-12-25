@@ -1300,13 +1300,12 @@
       //   URL.revokeObjectURL(imageUrl)
       // }
 
-
       async function getMetricsFromServer() {
-        let metricsPage = document.querySelector("#metrics");
+        let metricsPage = document.querySelector("#metrics")
 
-        const container = document.createElement("div");
-        container.style.display = "flex";
-        container.style.justifyContent = "center";
+        const container = document.createElement("div")
+        container.style.display = "flex"
+        container.style.justifyContent = "center"
 
         const response1 = await fetch(`http://${py_server_address}/get_plots/${user_id}/${model_id}/1`, {
           method: "PUT",
@@ -1316,7 +1315,7 @@
           body: JSON.stringify({
             label: "train",
           }),
-        });
+        })
 
         const response2 = await fetch(`http://${py_server_address}/get_plots/${user_id}/${model_id}/0`, {
           method: "PUT",
@@ -1326,38 +1325,38 @@
           body: JSON.stringify({
             label: "train",
           }),
-        });
+        })
 
         if (!response1.ok || !response2.ok) {
-          console.error("Ошибка при получении метрик");
-          return;
+          console.error("Ошибка при получении метрик")
+          return
         }
 
-        const blob1 = await response1.blob();
-        const imageUrl1 = URL.createObjectURL(blob1);
+        const blob1 = await response1.blob()
+        const imageUrl1 = URL.createObjectURL(blob1)
 
-        const blob2 = await response2.blob();
-        const imageUrl2 = URL.createObjectURL(blob2);
+        const blob2 = await response2.blob()
+        const imageUrl2 = URL.createObjectURL(blob2)
 
-        const imageElement1 = document.createElement("img");
-        imageElement1.src = imageUrl1;
+        const imageElement1 = document.createElement("img")
+        imageElement1.src = imageUrl1
 
-        const imageElement2 = document.createElement("img");
-        imageElement2.src = imageUrl2;
+        const imageElement2 = document.createElement("img")
+        imageElement2.src = imageUrl2
 
-        imageElement1.style.margin = "auto";
-        imageElement2.style.margin = "auto";
+        imageElement1.style.margin = "auto"
+        imageElement2.style.margin = "auto"
 
-        container.appendChild(imageElement1);
-        container.appendChild(imageElement2);
+        container.appendChild(imageElement1)
+        container.appendChild(imageElement2)
 
-        metricsPage.innerHTML = "";
+        metricsPage.innerHTML = ""
 
-        metricsPage.appendChild(container);
-        URL.revokeObjectURL(imageUrl1);
-        URL.revokeObjectURL(imageUrl2);
+        metricsPage.appendChild(container)
+        URL.revokeObjectURL(imageUrl1)
+        URL.revokeObjectURL(imageUrl2)
       }
-      setInterval(getMetricsFromServer, 10000);
+      setInterval(getMetricsFromServer, 10000)
     </script>
     <!--Метрики-->
 
