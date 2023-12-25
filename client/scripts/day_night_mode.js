@@ -1,6 +1,10 @@
 function changeTheme() {
     is_dark_theme = !is_dark_theme
-    changeDigitsColorOnConnections()
+    try {
+        changeDigitsColorOnConnections()
+    } catch (e) {
+        console.error(e)
+    }
     const checkbox = document.getElementById("day-night-checkbox-id")
     let root = document.documentElement.style
     if (checkbox.checked) {
