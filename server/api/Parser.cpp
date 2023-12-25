@@ -16,10 +16,8 @@ LinearLayerParameters ParseLinear(const crow::json::rvalue& parameters) {
     inFeatures = static_cast<size_t>(parameters["inFeatures"].i());
     outFeatures = static_cast<size_t>(parameters["outFeatures"].i());
 
-    // Something fails here, TODO: catch the bug
     if (parameters.has("bias")) {
         bias = static_cast<bool>(parameters["bias"].i());
-        std::cout << "done" << std::endl;
     }
 
     return LinearLayerParameters{inFeatures, outFeatures, bias};
