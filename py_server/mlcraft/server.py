@@ -269,7 +269,6 @@ def get_plots(user_id: int, model_id: int, get_loss: bool):
         label,
         "Loss" if get_loss else "Metric",
     )
-    print(plot_path)
     current_dir = os.getcwd()
     response = send_file(os.path.join(current_dir, "images", plot_path))
     # delete_file(os.path.join(current_dir, "images", plot_path))
