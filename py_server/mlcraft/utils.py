@@ -130,9 +130,12 @@ def convert_model(model):
     )
 
 
-def plot_metrics(values: list[float], user_id: int, model_id: int, label: str) -> str:
+def plot_metrics(
+    values: list[float], user_id: int, model_id: int, label: str, title: str = ""
+) -> str:
     dt = datetime.datetime.now()
     plt.plot(list(range(1, len(values) + 1)), values)
+    plt.title(title)
     isoformat_dt = re.sub(r"[:\.\-]", "_", dt.isoformat())
     path = f"{user_id}_{model_id}_{label}_{isoformat_dt}.png"
     plt.savefig(os.path.join("images", path))
