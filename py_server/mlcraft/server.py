@@ -262,7 +262,13 @@ def get_plots(user_id: int, model_id: int, get_loss: bool):
         get_loss=bool(get_loss),
     )
 
-    plot_path = plot_metrics(list(map(float, values.split())), user_id, model_id, label)
+    plot_path = plot_metrics(
+        list(map(float, values.split())),
+        user_id,
+        model_id,
+        label,
+        "Loss" if get_loss else "Metric",
+    )
     current_dir = os.getcwd()
     print(current_dir)
     response = send_file(os.path.join(current_dir, "images", plot_path))
