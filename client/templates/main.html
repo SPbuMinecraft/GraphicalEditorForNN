@@ -308,7 +308,7 @@
       </div>
     </div>
 
-    <div class="metrics" id="metrics">Coming soon!</div>
+    <div class="metrics" id="metrics">No metrics yet</div>
 
     <!--Работа с Drawflow-->
     <script>
@@ -1268,6 +1268,39 @@
         metricsPage.appendChild(imageElement)
         URL.revokeObjectURL(imageUrl)
       }
+    </script>
+    <!--Метрики-->
+
+    <!--Метрики-->
+    <script>
+      async function getMetricsFromServer() {
+        let metricsPage = document.querySelector("#metrics")
+        const response = await fetch(`http://${py_server_address}/get_plots/${user_id}/${model_id}/1`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            label: "train",
+          }),
+        })
+        if (!response.ok) {
+          console.error("Ошибка при получении метрик:", response.statusText)
+          return
+        }
+        const blob = await response.blob()
+        const imageUrl = URL.createObjectURL(blob)
+        metricsPage.innerHTML = ""
+        const imageElement = document.createElement("img")
+        imageElement.src = imageUrl
+        // Добавляем стили для центрирования изображения
+        imageElement.style.display = "block"
+        imageElement.style.margin = "auto"
+        metricsPage.appendChild(imageElement)
+        URL.revokeObjectURL(imageUrl)
+      }
+
+      setInterval(getMetricsFromServer, 10000)
     </script>
     <!--Метрики-->
 
