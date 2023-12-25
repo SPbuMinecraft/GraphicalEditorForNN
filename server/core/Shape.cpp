@@ -64,7 +64,6 @@ size_t Shape::operator [] (int i) const {
 
 size_t Shape::stride(int i) const {
     assert(i >= 0 && i < 4);
-    size_t result = 1;
     switch (i) {
         case 0: return dims[1] * dims[2] * dims[3];
         case 1: return dims[2] * dims[3];

@@ -11,7 +11,7 @@ endif
 
 clientPort = $(shell node -p "require('$(CONFIG_PATH)').client.PORT")
 pythonPort = $(shell node -p "require('$(CONFIG_PATH)').py_server.PORT")
-# pythonPort = $(call getField,PORT)
+cppPort = $(shell node -p "require('$(CONFIG_PATH)').cpp_server.PORT")
 
 MAKEFLAGS += -k
 ifneq ($V,2)
@@ -58,8 +58,9 @@ help:
 
 docker: export WEBPORT=$(clientPort)
 docker: export PYPORT=$(pythonPort)
+docker: export CPORT=$(cppPort)
 docker: compose.yml
-	docker compose up
+	docker compose up --build --remove-orphans
 
 test.docker.py_server:
 	$(MAKE) docker -C py_server -e

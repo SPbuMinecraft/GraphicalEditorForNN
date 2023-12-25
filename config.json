@@ -1,6 +1,6 @@
 {
     "client": {
-        "HOST": "localhost",
+        "HOST": "0.0.0.0",
         "PORT": 2001
     },
 
@@ -13,7 +13,7 @@
     },
 
     "cpp_server": {
-        "HOST": "localhost",
+        "HOST": "0.0.0.0",
         "PORT": 2000,
         "BOOST_ROOT": ""
     }

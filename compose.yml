@@ -1,0 +1,52 @@
+name: mlcraft
+
+services:
+  web:
+    build:
+      context: client
+      dockerfile_inline: |
+        FROM node:21-alpine3.18
+        RUN apk add --update --no-cache make
+        WORKDIR /app
+        COPY . .
+    ports:
+      - ${WEBPORT}:${WEBPORT}
+    command: make
+    volumes:
+      - ${CONFIG_PATH}:/app/config.json
+    environment:
+      - CONFIG_PATH=/app/config.json
+    depends_on:
+      - pyServer
+  # FROM python:${PYTHON_VERSION}-slim
+
+  pyServer:
+    image: mlcraft/python
+    build: py_server
+    ports:
+      - ${PYPORT}:${PYPORT}
+    command: make
+    volumes:
+      - ${CONFIG_PATH}:/app/config.json
+      - saveme:/app/.venv
+      - ./py_server/instance/database.db:/app/instance/database.db
+    environment:
+      - CONFIG_PATH=/app/config.json
+    depends_on:
+      - cppServer
+
+  cppServer:
+    image: mlcraft/cpp
+    build: server
+    ports:
+      - ${CPORT}:${CPORT}
+    command: make serve V=2
+    volumes:
+      - ${CONFIG_PATH}:/app/config.json
+    environment:
+      - CONFIG_PATH=/app/config.json
+
+
+volumes:
+  database:
+  saveme:
