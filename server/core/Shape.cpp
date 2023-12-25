@@ -14,12 +14,16 @@ Shape::Shape(vector<size_t> dims, short dimsCount): dimsCount(dimsCount) {
     for (; dims.size() < 4; dims.insert(dims.begin(), 1));
     for (int i = 0; i < 4; i++)
         this->dims[i] = dims[i];
+    this->cachedSize = dims[0] * dims[1] * dims[2] * dims[3];
+    calculateStrides();
 }
 
 Shape::Shape(const Shape& other): dimsCount(other.dimsCount) {
     for (int i = 0; i < 4; i++) {
         this->dims[i] = other.dims[i];
     }
+    this->cachedSize = other.cachedSize;
+    calculateStrides();
 }
 
 Shape& Shape::operator = (const Shape& other) {
@@ -27,6 +31,8 @@ Shape& Shape::operator = (const Shape& other) {
     for (int i = 0; i < 4; i++) {
         this->dims[i] = other.dims[i];
     }
+    this->cachedSize = other.cachedSize;
+    calculateStrides();
     return *this;
 }
 
@@ -39,7 +45,7 @@ bool Shape::operator != (const Shape& other) const {
 }
 
 size_t Shape::size() const {
-    return cols() * rows() * dim3() * dim4();
+    return cachedSize;
 }
 
 string Shape::toString() const {
@@ -65,11 +71,17 @@ size_t Shape::operator [] (int i) const {
 size_t Shape::stride(int i) const {
     assert(i >= 0 && i < 4);
     switch (i) {
-        case 0: return dims[1] * dims[2] * dims[3];
-        case 1: return dims[2] * dims[3];
-        case 2: return dims[3];
+        case 0: return strides[0];
+        case 1: return strides[1];
+        case 2: return strides[2];
         default: return 1;
     }
+}
+
+void Shape::calculateStrides() {
+    strides[0] = dims[1] * dims[2] * dims[3];
+    strides[1] = dims[2] * dims[3];
+    strides[2] = dims[3];
 }
 
 size_t Shape::cols() const {

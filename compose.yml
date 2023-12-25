@@ -18,7 +18,6 @@ services:
       - CONFIG_PATH=/app/config.json
     depends_on:
       - pyServer
-  # FROM python:${PYTHON_VERSION}-slim
 
   pyServer:
     image: mlcraft/python
@@ -28,7 +27,6 @@ services:
     command: make
     volumes:
       - ${CONFIG_PATH}:/app/config.json
-      - saveme:/app/.venv
       - ./py_server/instance/database.db:/app/instance/database.db
     environment:
       - CONFIG_PATH=/app/config.json
@@ -45,8 +43,3 @@ services:
       - ${CONFIG_PATH}:/app/config.json
     environment:
       - CONFIG_PATH=/app/config.json
-
-
-volumes:
-  database:
-  saveme:

@@ -127,6 +127,8 @@ async function deleteConnection(sending_object) {
 function uploadRequest() {
     if (data_upload.files.length == 0) return
     const file = data_upload.files[0]
+    const button_wrapper = document.getElementById("train-button")
+    const train_button = button_wrapper.children[0]
 
     fetch(`http://${py_server_address}/${user_id}/${model_id}`, {
         method: "PATCH",
@@ -142,6 +144,8 @@ function uploadRequest() {
                 timer: 1500,
             })
             console.error(`Failed to upload data for ${file.name}`)
+            button_wrapper.setAttribute("disabled", true)
+            train_button.setAttribute("disabled", true)
             return
         }
         Swal.fire({
@@ -151,29 +155,31 @@ function uploadRequest() {
             showConfirmButton: false,
             timer: 1500,
         })
+        // allow user to press a train button from now on
+        button_wrapper.removeAttribute("disabled")
+        train_button.removeAttribute("disabled")
     })
     setModelView("irrelevant")
-    // allow user to press a train button from now on
-    button_wrapper = document.getElementById("train-button")
-    button_wrapper.getElementsByTy
-    train_button = button_wrapper.children[0]
-    button_wrapper.removeAttribute("disabled")
-    train_button.removeAttribute("disabled")
 }
 
 function trainRequest() {
     fetch(`http://${py_server_address}/train/${user_id}/${model_id}/0`, {
         method: "PUT",
         mode: "cors",
-    }).then(response => {
-        showBuildNotification(response.ok)
-        onTrainShowPredict(response.ok)
-        if (response.ok) {
-            setModelView("success")
-        } else {
-            setModelView("error")
-        }
     })
+        .then(response => {
+            showBuildNotification(response.ok, response)
+            onTrainShowPredict(response.ok)
+            if (response.ok) {
+                setModelView("success")
+            } else {
+                setModelView("error")
+            }
+        })
+        .catch(reason => {
+            showBuildNotification(false)
+            setModelView("error")
+        })
 }
 
 async function predictRequest() {
@@ -219,5 +225,8 @@ async function predictRequest() {
         return
     }
     hideResult() // hide previous predict result
-    onPredictShowResult(responseJson)
+    const extension = file.name.split(".").pop()
+    if (extension == "png")
+        onPredictShowResult(responseJson == 0 ? "It's a cat!" : "It's a dog!")
+    else onPredictShowResult(responseJson)
 }

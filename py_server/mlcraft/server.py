@@ -12,6 +12,7 @@ from .utils import (
     convert_model,
     plot_metrics,
 )
+from .check_dimensions import assert_dimensions_match
 from .errors import Error
 
 from .db import sql_worker
@@ -167,7 +168,7 @@ def train_model(
     convert_model_parameters(model)
     if not is_valid_model(model):
         raise Error("Invalid model found", HTTPStatus.NOT_ACCEPTABLE)
-    # assert_dimensions_match(model["layers"])
+    assert_dimensions_match(model["layers"])
 
     convert_model(model)
     model = {"graph": model}
@@ -199,7 +200,7 @@ def predict(user_id: int, model_id: int):
             response = requests.post(
                 cpp_url(f"upload_data/{model_id}/1"),
                 data=request.data,
-                headers={"Content-Type": "image/png"},
+                headers={"Content-Type": request.content_type},
             )
 
     return response.text, response.status_code
@@ -211,16 +212,14 @@ def update_metrics(user_id: int, model_id: int):
 
     json = request.json or {}
     targets = np.array(json["targets"])
-    n_epochs, n_samples = targets.shape
     outputs = np.array(json["outputs"])
-    if targets.shape != outputs.shape:
-        outputs = outputs.reshape(n_epochs, n_samples, -1)
 
-    if outputs.shape[-1] == 1:
+    if outputs.shape == targets.shape:
         # In this case, we count MAE
         metrics = np.mean(np.abs(targets - outputs), axis=1)
     else:
         # In this case, we count Accuracy
+        outputs = outputs.reshape(targets.shape[0], targets.shape[1], -1)
         probs = np.exp(outputs)
         probs /= probs.sum(axis=2)[:, :, np.newaxis]
         values = probs.argmax(axis=2)
@@ -263,7 +262,13 @@ def get_plots(user_id: int, model_id: int, get_loss: bool):
         get_loss=bool(get_loss),
     )
 
-    plot_path = plot_metrics(list(map(float, values.split())), user_id, model_id, label)
+    plot_path = plot_metrics(
+        list(map(float, values.split())),
+        user_id,
+        model_id,
+        label,
+        "Loss" if get_loss else "Metric",
+    )
     current_dir = os.getcwd()
     print(current_dir)
     response = send_file(os.path.join(current_dir, "images", plot_path))

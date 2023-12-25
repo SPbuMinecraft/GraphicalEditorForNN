@@ -479,18 +479,12 @@ Blob& operator *= (Blob& a, const LazyBlob& b) {
 class LazyBlobConv: public LazyBlob {
 public:
     const LazyBlob &a, &b;
-    const int size_r, size_c;
-    LazyBlobConv(const LazyBlob &a, const LazyBlob &b): 
+    const size_t size_r, size_c;
+    LazyBlobConv(const LazyBlob &a, const LazyBlob &b):
         a(a), b(b), 
         size_r(b.shape().rows()),
         size_c(b.shape().cols()) 
         {};
-
-    float a_get(std::size_t k, std::size_t l, long i, long j) const {
-        if (i < 0 || j < 0 || i >= a.shape().rows() || j >= a.shape().cols())
-            return 0;
-        return a(k, l, i, j);
-    }
 
     void initShape() const final override { 
         // TODO: assert
@@ -499,11 +493,15 @@ public:
 
     float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
         float res = 0;
-
+        size_t rows = a.shape().rows();
+        size_t cols = a.shape().cols();
         for (size_t c = 0; c < b.shape().dim3(); ++c) {
             for (long i1 = 0; i1 < size_r; ++i1) {
                 for (long j1 = 0; j1 < size_c; ++j1) {
-                    res += a_get(k, c, i + i1 - size_r / 2, j + j1 - size_c / 2) * b(l, c, i1, j1);
+                    long y = i1 + i - size_r / 2;
+                    long x = j1 + j - size_c / 2;
+                    if (0 <= y && y < rows && 0 <= x && x < cols)
+                        res += a(k, c, y, x) * b(l, c, i1, j1);
                 }
             }
         }
@@ -524,21 +522,20 @@ public:
     LazyBlobConvI(const LazyBlob &a, const LazyBlob &b, size_t kernelSize, size_t i): 
         a(a), b(b), kernelSize(kernelSize), index(i) {};
 
-    float a_get(std::size_t k, std::size_t l, long i, long j) const {
-        if (i < 0 || j < 0 || i >= a.shape().rows() || j >= a.shape().cols())
-            return 0;
-        return a(k, l, i, j);
-    }
-
-    void initShape() const final override { 
+    void initShape() const final override {
         shape_ = Shape {{b.shape().dim3(), a.shape().dim3(), kernelSize, kernelSize}, a.shape().dimsCount};
     }
 
     float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
         float res = 0;
-        for (long i1 = 0; i1 < a.shape().rows(); ++i1) {
-            for (long j1 = 0; j1 < a.shape().cols(); ++j1) {
-                res += a_get(index, l, i1 + i - kernelSize / 2, j1 + j - kernelSize / 2) * b(index, k, i1, j1);
+        size_t rows = a.shape().rows();
+        size_t cols = a.shape().cols();
+        for (long i1 = 0; i1 < rows; ++i1) {
+            for (long j1 = 0; j1 < cols; ++j1) {
+                long y = i1 + i - kernelSize / 2;
+                long x = j1 + j - kernelSize / 2;
+                if (0 <= y && y < rows && 0 <= x && x < cols)
+                    res += a(index, l, y, x) * b(index, k, i1, j1);
             }
         }
         return res;

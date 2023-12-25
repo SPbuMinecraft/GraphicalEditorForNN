@@ -47,19 +47,17 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     Allocator::end();
 
     RandomObject initObject(0, 1, 42);
-    OptimizerBase SGD(0.1);
-    GammaScheduler scheduler(&SGD, 2, 0.1);
+    OptimizerBase SGD(0.3);
+    GammaScheduler scheduler(&SGD, 4, 0.1);
 
     // Should be adopted for DataLoader possibilities
     std::string path = getDataPath(model_id);
-//    if (extension == FileExtension::Csv) {
-//        path += "/1.csv";
-//    }
+    if (extension == FileExtension::Csv) {
+        path += "/1.csv";
+    }
 
-    std::cerr << "start data processing" << std::endl;
     DataMarker dataMarker = DataMarker(path, extension, 100, 4);
     DataLoader dataLoader = dataMarker.get_train_loader();
-    std::cerr << "stop data processing" << std::endl;
 
     size_t batch_size = 4;  // hard-coded
     *graph = new Graph();
@@ -81,7 +79,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     std::vector<web::json::value> targets, outputs;
     float epoch_loss = 0;
 
-    size_t max_epochs = 10;
+    size_t max_epochs = 5;
     std::pair<std::vector<float>, std::vector<float>> batch;
 
     web::http::client::http_client client(U("http://localhost:3000"));
@@ -132,6 +130,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
 }
 
 void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtension extension) {
+    std::cerr << "Predict extension is .csv: " << (extension == FileExtension::Csv) << std::endl;
     std::vector<std::vector<float>> predict_data;
     if (extension == FileExtension::Csv) {
         predict_data = CsvLoader::load_csv(getPredictPath(model_id) + "/1.csv");
@@ -156,6 +155,7 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtensi
 }
 
 void extract_from_zip(std::string path, std::string root) {
+    std::cerr << "Extracting from zip" << std::endl;
     zip_t* z;
     int err;
     z = zip_open(path.c_str(), 0, &err);
@@ -197,8 +197,12 @@ int main(int argc, char *argv[]) {
         } catch (const std::runtime_error &err) {
             std::cout << err.what() << std::endl;
             return response(status::BAD_REQUEST, "Invalid body");
+        } catch (...) {
+            return response(status::INTERNAL_SERVER_ERROR, "Predict failed");
         }
-        json::wvalue response = (int)(answer[1] > answer[0]);
+        json::wvalue response;
+        if (file_types[model_id] == FileExtension::Csv) response = answer[0];
+        else response = (int)(answer[1] > answer[0]);
         return crow::response(status::OK, response);
     });
 
@@ -212,8 +216,12 @@ int main(int argc, char *argv[]) {
             delete sessions[model_id];
         }
         Graph* g = nullptr;
-
-        train(body, &g, model_id, user_id, file_types[model_id]);
+        try {
+            train(body, &g, model_id, user_id, file_types[model_id]);
+        }
+        catch (...) {
+            return response(status::INTERNAL_SERVER_ERROR, "Train failed");
+        }
         sessions[model_id] = g;
         return response(status::OK, "done");
     });
@@ -244,7 +252,8 @@ int main(int argc, char *argv[]) {
             path += "/1.csv";
             file_types[model_id] = FileExtension::Csv;
         }
-        else if (content_type == "application/zip") {
+        else if (content_type == "application/zip"
+                 || content_type == "application/x-zip-compressed") {
             path += "/1.zip";
             file_types[model_id] = FileExtension::Png;
         } else if (content_type == "image/png") {
@@ -255,10 +264,14 @@ int main(int argc, char *argv[]) {
         }
 
         std::ofstream out_file(path, ios::binary);
+        if (!out_file) {
+            return response(status::INTERNAL_SERVER_ERROR, "Error in loading zip");
+        }
         out_file << req.body;
         out_file.close();
 
-        if (content_type == "application/zip" && type == 0) {
+        if ((content_type == "application/zip" || content_type  == "application/x-zip-compressed")
+            && type == 0) {
             try {
                 extract_from_zip(path, root);
             }
