@@ -1,0 +1,7 @@
+**/.DS_Store
+bin
+Build
+model_data
+.cache
+*.xcodeproj
+*.entitlements

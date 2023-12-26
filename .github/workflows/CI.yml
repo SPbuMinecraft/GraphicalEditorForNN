@@ -26,49 +26,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: install-python
-        uses: actions/setup-python@v4
-        id: python
-        with:
-          python-version: "3.10"
-
-      - name: Build
-        run: make build.py_server
-        env:
-          python: ${{steps.python.outputs.python-path}}
-
       - name: Test
-        run: make test.py_server
+        run: make test.docker.py_server
 
   CPP:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
 
-      - name: compiler-update
-        run: |
-          sudo apt update
-          sudo apt install -y g++-11
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 90
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 90
-          sudo apt install libzip-dev
-
-      - name: install-cpprest
-        run: sudo apt install libcpprest-dev
-
-      - name: install-boost
-        uses: MarkusJx/install-boost@v2.4.4
-        id: install-boost
-        with:
-          boost_version: 1.81.0
-          platform_version: 20.04
-
-      - name: Build
-        run: make build.server
-        env:
-          boost: ${{steps.install-boost.outputs.BOOST_ROOT}}
-
       - name: Test
-        run: make test.server
-        env:
-          boost: ${{steps.install-boost.outputs.BOOST_ROOT}}
+        run: make test.docker.server
