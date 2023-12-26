@@ -145,6 +145,7 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtensi
     auto& lastPredictNode = graph->getLayers(BaseLayerType::PredictOut)[0]->result.value();
     lastPredictNode.clear();
     lastPredictNode.forward();
+    Allocator::endSession();
     auto& result = lastPredictNode.output.value();
 
     answer.reserve(result.shape.cols());
