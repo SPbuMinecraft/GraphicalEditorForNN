@@ -82,6 +82,9 @@ def topology_sort(entry_nodes: list[int], edges: dict[int, list[int]]) -> list[i
         dfs_stack.append(entry_node)
         while dfs_stack:
             current_node = dfs_stack[-1]
+            if current_node in closed:
+                dfs_stack.pop()
+                continue
             is_final = True
             if current_node in edges:
                 for next_node in edges[current_node]:

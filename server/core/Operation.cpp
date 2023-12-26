@@ -319,3 +319,75 @@ Shape MaxPoolOp::computeDim(const vector<LazyBlobRef>& args) const {
     args1(a);
     return {{a.shape().dim4(), a.shape().dim3(), a.shape().rows() / 2, a.shape().cols() / 2}, a.shape().dimsCount};
 }
+
+std::string Noop::getName() const {
+    return name;
+}
+
+std::string ReLU::getName() const {
+    return name;
+}
+
+std::string Sum::getName() const {
+    return name;
+}
+
+std::string Multiply::getName() const {
+    return name;
+}
+
+std::string Divide::getName() const {
+    return name;
+}
+
+std::string BiasSum::getName() const {
+    return name;
+}
+
+std::string Square::getName() const {
+    return name;
+}
+
+std::string Root::getName() const {
+    return name;
+}
+
+std::string Mean::getName() const {
+    return name;
+}
+
+std::string SumAxis::getName() const {
+    return name;
+}
+
+std::string Var::getName() const {
+    return name;
+}
+
+std::string Substract::getName() const {
+    return name;
+}
+
+std::string Conv2D::getName() const {
+    return name;
+}
+
+std::string Fill::getName() const {
+    return name;
+}
+
+std::string EPS::getName() const {
+    return name;
+}
+
+std::string Exp::getName() const {
+    return name;
+}
+
+std::string Entropy::getName() const {
+    return name;
+}
+
+std::string MaxPoolOp::getName() const {
+    return name;
+}

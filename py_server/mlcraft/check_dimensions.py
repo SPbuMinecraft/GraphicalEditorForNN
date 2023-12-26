@@ -173,6 +173,7 @@ def assert_dimensions_match(layers: list[dict]):
             parents[layer["id"]].append(prev)
 
     layers_order = topology_sort(data_layers, edges)
+    print(layers_order)
     current_layer_id = None
     try:
         for layer_id in layers_order:

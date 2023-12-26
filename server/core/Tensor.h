@@ -9,6 +9,7 @@ typedef std::reference_wrapper<Tensor> TensorRef;
 
 class Tensor {
 private:
+    bool backwardDone = false;
     int childrenCount = 0;
     int childrenGradReady = 0;
     const Operation& operation;
@@ -26,6 +27,12 @@ public:
 
     Tensor(const Tensor& other) = delete;
     Tensor(Tensor&& other) noexcept;
+
+    void Print() const {
+        if (output.has_value()) {
+            std::cerr << output.value() << std::endl;
+        }
+    }
 
     Tensor& operator = (Tensor&& other) noexcept;
 //    Tensor& operator=(const Tensor & other);

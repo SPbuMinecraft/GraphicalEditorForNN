@@ -51,9 +51,21 @@ Tensor& Tensor::operator = (Tensor&& other) noexcept {
 
 void Tensor::forward() {
     if (!output) {
+        std::cout << operation.getName() << std::endl;
         vector<LazyBlobRef> datas;
         datas.reserve(parents.size());
         getParentsData(datas);
+        if (operation.getName() == "Multiply") {
+            for (auto p : parents) {
+                if (p.get().output.has_value()) {
+                    std::cerr << p.get().output.value() << std::endl;
+                } else {
+                    std::cerr << "No output" << std::endl;
+                }
+                std::cerr << "-----------------------------" << std::endl;
+            }
+            std::cerr << "=============================" << std::endl;
+        }
         // here the blob's move constructor is used
         this->output = operation.compute(datas);
         // Don't need references to parents datas anymore
@@ -63,7 +75,7 @@ void Tensor::forward() {
 
 void Tensor::backward() {
     // go backward only if we have parents
-    if (!parents.size()) return;
+    if (!parents.size() || backwardDone) return;
 
     assert(childrenGradReady <= childrenCount);
     if (childrenGradReady < childrenCount) return;
@@ -73,27 +85,33 @@ void Tensor::backward() {
     getParentsData(datas);
     auto grads = operation.grad(*gradient, datas);
     assert(grads.size() == parents.size());
-    for (int i = 0; i < parents.size(); ++i)
+    for (int i = 0; i < parents.size(); ++i) {
         parents[i].get().accumulate(grads[i]);
+    }
 
     // We need to end session in the allocator after all gradients
     // have been used and we don't need to store references to them anymore
     Allocator::endSession();
 
+    backwardDone = true;
     for (auto p: parents) p.get().backward();
 }
 
 void Tensor::accumulate(const LazyBlob& gradient) {
     if (!this->gradient)
         this->gradient = gradient;
-    else 
+    else
         *this->gradient += gradient;
     childrenGradReady++;
 }
 
 void Tensor::clear() {
+    if (!backwardDone && childrenGradReady == 0 &&
+        (parents.empty() || !output)) return;
+
     // if has parents, then clear output cache
     this->gradient = {};
+    this->backwardDone = false;
     if (parents.size())
         this->output = {};
     this->childrenGradReady = 0;
