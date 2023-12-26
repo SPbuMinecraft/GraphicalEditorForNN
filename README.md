@@ -149,10 +149,12 @@ Use `make help` to see available targets there
 ## Architecture
 
 ### Overview
-![](documentation/ComponentsArchitecture.jpg)
+![](documentation/ComponentsArchitecture.png)
 
 ### Server++
-![](documentation/ServerArchitecture.svg)
+![](documentation/Tensor.png)
+![](documentation/LazyBlobSixth.png)
+![](documentation/GraphFirst.png)
 
 ### Data
 ![](documentation/DatabaseArchitecture.png)
