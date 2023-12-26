@@ -51,21 +51,9 @@ Tensor& Tensor::operator = (Tensor&& other) noexcept {
 
 void Tensor::forward() {
     if (!output) {
-        std::cout << operation.getName() << std::endl;
         vector<LazyBlobRef> datas;
         datas.reserve(parents.size());
         getParentsData(datas);
-        if (operation.getName() == "Multiply") {
-            for (auto p : parents) {
-                if (p.get().output.has_value()) {
-                    std::cerr << p.get().output.value() << std::endl;
-                } else {
-                    std::cerr << "No output" << std::endl;
-                }
-                std::cerr << "-----------------------------" << std::endl;
-            }
-            std::cerr << "=============================" << std::endl;
-        }
         // here the blob's move constructor is used
         this->output = operation.compute(datas);
         // Don't need references to parents datas anymore

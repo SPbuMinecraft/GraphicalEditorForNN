@@ -47,7 +47,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     Allocator::end();
 
     RandomObject initObject(0, 1, 42);
-    OptimizerBase SGD(0.7);
+    OptimizerBase SGD(0.01);
     GammaScheduler scheduler(&SGD, 10, 0.5);
 
     // Should be adopted for DataLoader possibilities
@@ -139,9 +139,7 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtensi
         predict_data = {ImageLoader::load_image((getPredictPath(model_id) + "/1.png").c_str())};
     }
 
-    std::cerr << graph->getLayers(BaseLayerType::Data)[0]->result.value().output.value() << std::endl;
     graph->ChangeLayersData(predict_data[0], BaseLayerType::Data);
-    std::cerr << graph->getLayers(BaseLayerType::Data)[0]->result.value().output.value() << std::endl;
 
     // Пока не думаем о нескольких выходах (!) Hard-coded
     auto& lastPredictNode = graph->getLayers(BaseLayerType::PredictOut)[0]->result.value();
@@ -150,13 +148,10 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtensi
     auto& result = lastPredictNode.output.value();
 
     answer.reserve(result.shape.cols());
-    for (size_t j = 0; j < result.shape.dim4(); ++j) {
-        for (size_t i = 0; i < result.shape.cols(); ++i) {
-            answer.push_back(result(0, 0, 0, i));
-            std::cout << result(j, 0, 0, i) << std::endl;
-        }
+    for (size_t i = 0; i < result.shape.cols(); ++i) {
+        answer.push_back(result(0, 0, 0, i));
+        std::cout << result(0, 0, 0, i) << std::endl;
     }
-
     lastPredictNode.clear();
 }
 

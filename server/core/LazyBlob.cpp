@@ -213,12 +213,14 @@ public:
     float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
         float result = 0;
         size_t size[] = {1, 1, 1, a.shape().cols()};
+        auto b_s = k < b.shape().dim4() ? k : 0;
         map(size, [&](size_t k1, size_t l1, size_t i1, size_t j1) {
-            result += a(k, l, i, j1) * b(0, 0, j1, j);
+            result += a(k, l, i, j1) * b(b_s, 0, j1, j);
         });
 
         return result;
     }
+
 };
 
 class LazyBlobCombine final: public LazyBlobBinaryOperation {
