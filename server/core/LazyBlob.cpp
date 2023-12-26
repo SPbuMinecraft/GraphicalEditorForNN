@@ -226,6 +226,7 @@ public:
 
         return result;
     }
+
 };
 
 class LazyBlobCombine final: public LazyBlobBinaryOperation {

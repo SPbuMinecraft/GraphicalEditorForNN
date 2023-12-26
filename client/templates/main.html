@@ -9,9 +9,10 @@
     <script src="../scripts/storage.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"></script>
     <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js"
-      integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs="
+      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"
+      integrity="sha512-GWzVrcGlo0TxTRvz9ttioyYJ+Wwk9Ck0G81D+eO63BaqHaJ3YZX9wuqjwgfcV/MrB2PhaVX9DkYVhbFpStnqpQ=="
       crossorigin="anonymous"
+      referrerpolicy="no-referrer"
     ></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.css" />
     <link rel="stylesheet" type="text/css" href="../styles/style.css" />
@@ -95,28 +96,28 @@
       <div class="col">
         <br />
         <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `linear`)" data-node="linear">
-          <span> Linear</span>
+          <span><i class="fa-solid fa-timeline"></i> Linear</span>
         </div>
         <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `relu`)" data-node="relu">
-          <span> ReLU</span>
+          <span><i class="fa-solid fa-chart-line"></i> ReLU</span>
         </div>
         <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `pooling`)" data-node="pooling">
-          <span> Pooling</span>
+          <span><i class="fa-solid fa-filter"></i> Pooling</span>
         </div>
         <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `layernorm`)" data-node="layernorm">
-          <span> LayerNorm</span>
+          <span><i class="fa-solid fa-cube"></i> LayerNorm</span>
         </div>
         <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `conv2d`)" data-node="conv2d">
-          <span> Conv2D</span>
+          <span><i class="fa-solid fa-chart-simple"></i> Conv2D</span>
         </div>
         <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `mean`)" data-node="mean">
-          <span> Mean</span>
+          <span><i class="fa-solid fa-ranking-star"></i> Mean</span>
         </div>
         <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `sum`)" data-node="sum">
-          <span> Sum</span>
+          <span><i class="fa-solid fa-plus"></i> Sum</span>
         </div>
         <div class="drag-drawflow" draggable="true" ondragstart="drag(event, `softmax`)" data-node="softmax">
-          <span> SoftMax</span>
+          <span><i class="fa-solid fa-maximize"></i> SoftMax</span>
         </div>
         <br />
 
@@ -308,7 +309,7 @@
       </div>
     </div>
 
-    <div class="metrics" id="metrics">Coming soon!</div>
+    <div class="metrics" id="metrics" style="display: flex; justify-content: center">No metrics yet</div>
 
     <!--Работа с Drawflow-->
     <script>
@@ -595,6 +596,7 @@
 
       // Events!
       editor.on("nodeCreated", function (id) {
+        saveCanvasToLocalStorage(editor)
         let last_created_node = editor.getNodeFromId(id)
         if (last_created_node.name == "loss") {
           let target_node = editor.getNodesFromName("target")[0]
@@ -1154,35 +1156,35 @@
         const empty_data = {}
         switch (name) {
           case "linear":
-            const linear = `<div class="layer"> Linear </div>`
+            const linear = `<div class="layer"><i class="fa-solid fa-timeline"></i> Linear </div>`
             editor.addNode("linear", 1, 1, pos_x, pos_y, "linear", empty_data, linear)
             break
           case "relu":
-            const relu = `<div class="layer"> ReLU </div>`
+            const relu = `<div class="layer"><i class="fa-solid fa-chart-line"></i> ReLU </div>`
             editor.addNode("relu", 1, 1, pos_x, pos_y, "relu", empty_data, relu)
             break
           case "pooling":
-            const pooling = `<div class="layer"> Pooling </div>`
+            const pooling = `<div class="layer"><i class="fa-solid fa-filter"></i> Pooling </div>`
             editor.addNode("pooling", 1, 1, pos_x, pos_y, "pooling", empty_data, pooling)
             break
           case "layernorm":
-            const layernorm = `<div class="layer"> LayerNorm </div>`
+            const layernorm = `<div class="layer"><i class="fa-solid fa-cube"></i> LayerNorm </div>`
             editor.addNode("layernorm", 1, 1, pos_x, pos_y, "layernorm", empty_data, layernorm)
             break
           case "conv2d":
-            const conv2d = `<div class="layer"> Conv2D </div>`
+            const conv2d = `<div class="layer"><i class="fa-solid fa-chart-simple"></i> Conv2D </div>`
             editor.addNode("conv2d", 1, 1, pos_x, pos_y, "conv2d", empty_data, conv2d)
             break
           case "mean":
-            const mean = `<div class="layer"> Mean </div>`
+            const mean = `<div class="layer"><i class="fa-solid fa-ranking-star"></i> Mean </div>`
             editor.addNode("mean", 1, 1, pos_x, pos_y, "mean", empty_data, mean)
             break
           case "sum":
-            const sum = `<div class="layer"> Sum </div>`
+            const sum = `<div class="layer"><i class="fa-solid fa-plus"></i> Sum </div>`
             editor.addNode("sum", 1, 1, pos_x, pos_y, "sum", empty_data, sum)
             break
           case "softmax":
-            const softmax = `<div class="layer"> SoftMax </div>`
+            const softmax = `<div class="layer"><i class="fa-solid fa-maximize"></i> SoftMax </div>`
             editor.addNode("softmax", 1, 1, pos_x, pos_y, "softmax", empty_data, softmax)
             break
           case "data":
@@ -1268,6 +1270,68 @@
         metricsPage.appendChild(imageElement)
         URL.revokeObjectURL(imageUrl)
       }
+    </script>
+    <!--Метрики-->
+
+    <!--Метрики-->
+    <script>
+      async function getMetricsFromServer() {
+        let metricsPage = document.querySelector("#metrics")
+
+        const container = document.createElement("div")
+        container.style.display = "flex"
+        container.style.justifyContent = "center"
+
+        const response1 = await fetch(`http://${py_server_address}/get_plots/${user_id}/${model_id}/1`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            label: "train",
+          }),
+        })
+
+        const response2 = await fetch(`http://${py_server_address}/get_plots/${user_id}/${model_id}/0`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            label: "train",
+          }),
+        })
+
+        if (!response1.ok || !response2.ok) {
+          console.error("Ошибка при получении метрик")
+          return
+        }
+
+        const blob1 = await response1.blob()
+        const imageUrl1 = URL.createObjectURL(blob1)
+
+        const blob2 = await response2.blob()
+        const imageUrl2 = URL.createObjectURL(blob2)
+
+        const imageElement1 = document.createElement("img")
+        imageElement1.src = imageUrl1
+
+        const imageElement2 = document.createElement("img")
+        imageElement2.src = imageUrl2
+
+        imageElement1.style.margin = "auto"
+        imageElement2.style.margin = "auto"
+
+        container.appendChild(imageElement1)
+        container.appendChild(imageElement2)
+
+        metricsPage.innerHTML = ""
+
+        metricsPage.appendChild(container)
+        URL.revokeObjectURL(imageUrl1)
+        URL.revokeObjectURL(imageUrl2)
+      }
+      setInterval(getMetricsFromServer, 20000)
     </script>
     <!--Метрики-->
 
@@ -1860,7 +1924,7 @@
             break
 
           case "pooling":
-            document.querySelector("#pooling-layer-parasmeters").style.display = "block"
+            document.querySelector("#pooling-layer-parameters").style.display = "block"
             for (i in layer_parameters) {
               // Not given
             }

@@ -47,8 +47,8 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     Allocator::end();
 
     RandomObject initObject(0, 1, 42);
-    OptimizerBase SGD(0.01);
-    GammaScheduler scheduler(&SGD, 4, 1);
+    OptimizerBase SGD(0.5);
+    GammaScheduler scheduler(&SGD, 10, 1);
 
     // Should be adopted for DataLoader possibilities
     std::string path = getDataPath(model_id);
@@ -79,7 +79,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     std::vector<web::json::value> targets, outputs;
     float epoch_loss = 0;
 
-    size_t max_epochs = 500;
+    size_t max_epochs = 30;
     std::pair<std::vector<float>, std::vector<float>> batch;
 
     web::http::client::http_client client(U("http://localhost:3000"));
@@ -146,21 +146,22 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtensi
     else {
         predict_data = {ImageLoader::load_image((getPredictPath(model_id) + "/1.png").c_str())};
     }
+
     graph->ChangeLayersData(predict_data[0], BaseLayerType::Data);
 
     // Пока не думаем о нескольких выходах (!) Hard-coded
-    auto& lastNode = graph->getLayers(BaseLayerType::PredictOut)[0]->result.value();
-    lastNode.clear();
-    lastNode.forward();
+    auto& lastPredictNode = graph->getLayers(BaseLayerType::PredictOut)[0]->result.value();
+    lastPredictNode.clear();
+    lastPredictNode.forward();
     Allocator::endSession();
-
-    auto& result = lastNode.output.value();
+    auto& result = lastPredictNode.output.value();
 
     answer.reserve(result.shape.cols());
     for (size_t i = 0; i < result.shape.cols(); ++i) {
         answer.push_back(result(0, 0, 0, i));
         std::cout << result(0, 0, 0, i) << std::endl;
     }
+    lastPredictNode.clear();
 }
 
 void extract_from_zip(std::string path, std::string root) {
@@ -262,7 +263,8 @@ int main(int argc, char *argv[]) {
             file_types[model_id] = FileExtension::Csv;
         }
         else if (content_type == "application/zip"
-                 || content_type == "application/x-zip-compressed") {
+                 || content_type == "application/x-zip-compressed"
+                 || content_type == "application/vnd.ms-excel") {
             path += "/1.zip";
             file_types[model_id] = FileExtension::Png;
         } else if (content_type == "image/png") {
@@ -279,7 +281,8 @@ int main(int argc, char *argv[]) {
         out_file << req.body;
         out_file.close();
 
-        if ((content_type == "application/zip" || content_type  == "application/x-zip-compressed")
+        if ((content_type == "application/zip" || content_type  == "application/x-zip-compressed"
+            || content_type == "application/vnd.ms-excel")
             && type == 0) {
             try {
                 extract_from_zip(path, root);

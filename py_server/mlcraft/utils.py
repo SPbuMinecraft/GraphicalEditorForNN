@@ -140,7 +140,7 @@ def plot_metrics(
     plt.title(title)
     path = f"{user_id}_{model_id}_{label}_{title}.png"
     plt.savefig(os.path.join("images", path))
-    plt.cla()
+    plt.close()
     return path
 
 
