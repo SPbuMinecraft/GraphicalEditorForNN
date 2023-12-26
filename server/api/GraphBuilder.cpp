@@ -53,6 +53,10 @@ void Graph::TopologySort(std::unordered_map<int, std::vector<int>>& edges,
         dfsStack.push(entryNode);
         while (!dfsStack.empty()) {
             int currentNode = dfsStack.top();
+            if (std::find(closed.begin(), closed.end(), currentNode) != closed.end()) {
+                dfsStack.pop();
+                continue;
+            }
             isFinal = true;
             if (edges.find(currentNode) != edges.end()) {
                 for (int nextNode : edges[currentNode]) {
