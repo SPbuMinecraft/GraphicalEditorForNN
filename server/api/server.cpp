@@ -108,14 +108,6 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
             Allocator::endSession();
             lastTrainNode.clear();
         }
-        lastTrainNode.forward();
-        GetLogs(lastPredictNode.value(), outputs);
-        GetLogs(targetsNode.value(), targets);
-        epoch_loss += lastTrainNode.output.value()(0, 0, 0, 0);
-
-        Allocator::endSession();
-        lastTrainNode.clear();
-
         scheduler.step();
 
         request[U("targets")][actual_size] = web::json::value::array(targets);
