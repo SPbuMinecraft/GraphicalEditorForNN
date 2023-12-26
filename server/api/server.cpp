@@ -47,8 +47,8 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     Allocator::end();
 
     RandomObject initObject(0, 1, 42);
-    OptimizerBase SGD(0.3);
-    GammaScheduler scheduler(&SGD, 4, 0.1);
+    OptimizerBase SGD(0.01);
+    GammaScheduler scheduler(&SGD, 4, 1);
 
     // Should be adopted for DataLoader possibilities
     std::string path = getDataPath(model_id);
@@ -73,13 +73,13 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     lastTrainNode.clear();
     Allocator::endVirtualMode();
 
-    size_t buffer_size = 2, actual_size = 0;
+    size_t buffer_size = 1, actual_size = 0;
     web::json::value request;
     request[U("rewrite")] = web::json::value::boolean(true);
     std::vector<web::json::value> targets, outputs;
     float epoch_loss = 0;
 
-    size_t max_epochs = 5;
+    size_t max_epochs = 500;
     std::pair<std::vector<float>, std::vector<float>> batch;
 
     web::http::client::http_client client(U("http://localhost:3000"));
@@ -108,6 +108,14 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
             Allocator::endSession();
             lastTrainNode.clear();
         }
+        lastTrainNode.forward();
+        GetLogs(lastPredictNode.value(), outputs);
+        GetLogs(targetsNode.value(), targets);
+        epoch_loss += lastTrainNode.output.value()(0, 0, 0, 0);
+
+        Allocator::endSession();
+        lastTrainNode.clear();
+
         scheduler.step();
 
         request[U("targets")][actual_size] = web::json::value::array(targets);
@@ -144,6 +152,7 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtensi
     auto& lastNode = graph->getLayers(BaseLayerType::PredictOut)[0]->result.value();
     lastNode.clear();
     lastNode.forward();
+    Allocator::endSession();
 
     auto& result = lastNode.output.value();
 
