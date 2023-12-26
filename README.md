@@ -12,6 +12,22 @@
 
 [Artifacts](https://docs.google.com/spreadsheets/d/1bWZJQjIyJ7C32olwx6MAcjix8CeSey4rFpeFd0Huoyc/edit#gid=0)
 
+## About
+
+Our project is a visual editor for neural networks designed to simplify the creation and customization of deep learning models. In a browser-accessible interface, users can intuitively assemble, configure, and optimize neural networks by dragging layers and adjusting parameters in real-time.
+
+A key feature of the project is the ability to train models directly from the editor. The C++ server ensures high performance, allowing users to experiment with architectures and parameters. The trained neural networks generated are ready to predict outcomes for new data
+
+Features of our project:
+
+* Intuitive Interface: User-friendly experience thanks to an intuitively designed interface.
+* Progress Saving: Capability to save the current work progress for user convenience.
+* Light/Dark Themes: Personalization of the user experience.
+* Custom Framework for Neural Network Training: Utilization of our own framework with automatic gradient computation for efficient neural network training.
+* On-the-Spot Training and Prediction: Ability to conduct training sessions and obtain predictions directly within the neural network editor.
+* Export Capabilities: The option to export created models.
+* Neural Network Integrity Check: Built-in validation of the correctness of the neural network.
+
 ## Build options
 
 > **Important:** If CI tests don't pass, but work locally, make sure 
@@ -133,10 +149,12 @@ Use `make help` to see available targets there
 ## Architecture
 
 ### Overview
-![](documentation/ComponentsArchitecture.jpg)
+![](documentation/ComponentsArchitecture.png)
 
 ### Server++
-![](documentation/ServerArchitecture.svg)
+![](documentation/Tensor.png)
+![](documentation/LazyBlobSixth.png)
+![](documentation/GraphFirst.png)
 
 ### Data
 ![](documentation/DatabaseArchitecture.png)
