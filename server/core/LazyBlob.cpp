@@ -68,7 +68,13 @@ protected:
         auto ja = j < a.shape().cols() ? j : 0;
         auto ib = i < b.shape().rows() ? i : 0;
         auto jb = j < b.shape().cols() ? j : 0;
-        return operation(a(k, l, ia, ja), b(k, l, ib, jb));
+
+        auto la = l < a.shape().dim3() ? l : 0;
+        auto ka = k < a.shape().dim4() ? k : 0;
+        auto lb = l < b.shape().dim3() ? l : 0;
+        auto kb = k < b.shape().dim4() ? k : 0;
+
+        return operation(a(ka, la, ia, ja), b(kb, lb, ib, jb));
     }
 };
 
@@ -213,7 +219,7 @@ public:
     float operator() (std::size_t k, std::size_t l, std::size_t i, std::size_t j) const override {
         float result = 0;
         size_t size[] = {1, 1, 1, a.shape().cols()};
-        auto b_s = k < b.shape().dim4() ? k : 0;
+        size_t b_s = k < b.shape().dim4() ? k : 0;
         map(size, [&](size_t k1, size_t l1, size_t i1, size_t j1) {
             result += a(k, l, i, j1) * b(b_s, 0, j1, j);
         });
