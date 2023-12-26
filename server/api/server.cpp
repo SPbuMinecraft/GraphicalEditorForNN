@@ -47,8 +47,8 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     Allocator::end();
 
     RandomObject initObject(0, 1, 42);
-    OptimizerBase SGD(0.01);
-    GammaScheduler scheduler(&SGD, 10, 0.5);
+    OptimizerBase SGD(0.5);
+    GammaScheduler scheduler(&SGD, 10, 1);
 
     // Should be adopted for DataLoader possibilities
     std::string path = getDataPath(model_id);
@@ -143,8 +143,8 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtensi
 
     // Пока не думаем о нескольких выходах (!) Hard-coded
     auto& lastPredictNode = graph->getLayers(BaseLayerType::PredictOut)[0]->result.value();
+    lastPredictNode.clear();
     lastPredictNode.forward();
-    std::cerr << graph->getLayers(BaseLayerType::Data)[0]->result.value().output.value() << std::endl;
     auto& result = lastPredictNode.output.value();
 
     answer.reserve(result.shape.cols());
@@ -254,7 +254,8 @@ int main(int argc, char *argv[]) {
             file_types[model_id] = FileExtension::Csv;
         }
         else if (content_type == "application/zip"
-                 || content_type == "application/x-zip-compressed") {
+                 || content_type == "application/x-zip-compressed"
+                 || content_type == "application/vnd.ms-excel") {
             path += "/1.zip";
             file_types[model_id] = FileExtension::Png;
         } else if (content_type == "image/png") {
@@ -271,7 +272,8 @@ int main(int argc, char *argv[]) {
         out_file << req.body;
         out_file.close();
 
-        if ((content_type == "application/zip" || content_type  == "application/x-zip-compressed")
+        if ((content_type == "application/zip" || content_type  == "application/x-zip-compressed"
+            || content_type == "application/vnd.ms-excel")
             && type == 0) {
             try {
                 extract_from_zip(path, root);
