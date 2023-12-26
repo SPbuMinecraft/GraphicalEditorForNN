@@ -595,6 +595,7 @@
 
       // Events!
       editor.on("nodeCreated", function (id) {
+        saveCanvasToLocalStorage(editor)
         let last_created_node = editor.getNodeFromId(id)
         if (last_created_node.name == "loss") {
           let target_node = editor.getNodesFromName("target")[0]
