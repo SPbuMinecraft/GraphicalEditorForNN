@@ -129,7 +129,7 @@ void train(json::rvalue& json, Graph** graph, int model_id, int user_id, FileExt
     }
 }
 
-void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtension extension) {
+void predict(int model_id, Graph* graph, std::vector<json::wvalue>& answer, FileExtension extension) {
     std::cerr << "Predict extension is .csv: " << (extension == FileExtension::Csv) << std::endl;
     std::vector<std::vector<float>> predict_data;
     if (extension == FileExtension::Csv) {
@@ -150,7 +150,8 @@ void predict(int model_id, Graph* graph, std::vector<float>& answer, FileExtensi
 
     answer.reserve(result.shape.cols());
     for (size_t i = 0; i < result.shape.cols(); ++i) {
-        answer.push_back(result(0, 0, 0, i));
+        json::wvalue res = result(0, 0, 0, i);
+        answer.push_back(res);
         std::cout << result(0, 0, 0, i) << std::endl;
     }
     lastPredictNode.clear();
@@ -193,7 +194,7 @@ int main(int argc, char *argv[]) {
     ([&](const request& req, int model_id) -> response {
         (void)req;
         if (sessions.find(model_id) == sessions.end()) return response(status::METHOD_NOT_ALLOWED, "Not trained");
-        std::vector<float> answer;
+        std::vector<json::wvalue> answer;
         try {
             predict(model_id, sessions[model_id], answer, file_types[model_id]);
         } catch (const std::runtime_error &err) {
@@ -202,9 +203,9 @@ int main(int argc, char *argv[]) {
         } catch (...) {
             return response(status::INTERNAL_SERVER_ERROR, "Predict failed");
         }
-        json::wvalue response;
-        if (file_types[model_id] == FileExtension::Csv) response = answer[0];
-        else response = (int)(answer[1] > answer[0]);
+        json::wvalue response = std::move(answer);
+//        if (file_types[model_id] == FileExtension::Csv) response = answer[0];
+//        else response = (int)(answer[1] > answer[0]);
         return crow::response(status::OK, response);
     });
 

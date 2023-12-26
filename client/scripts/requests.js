@@ -207,9 +207,7 @@ async function predictRequest() {
     )
     if (!response.ok) {
         Swal.fire("Error!", "Failed to upload the png image", "error")
-        console.error(
-            `Failed to upload the png with ${response.statusText}: ${responseJson.error}`,
-        )
+        console.error(`Failed to upload the png with ${response.statusText}`)
         return
     }
     response = await fetch(
@@ -225,8 +223,10 @@ async function predictRequest() {
         return
     }
     hideResult() // hide previous predict result
-    const extension = file.name.split(".").pop()
-    if (extension == "png")
-        onPredictShowResult(responseJson == 0 ? "It's a cat!" : "It's a dog!")
-    else onPredictShowResult(responseJson)
+    // const extension = file.name.split(".").pop()
+    // if (extension == "png")
+    //     onPredictShowResult(responseJson == 0 ? "It's a cat!" : "It's a dog!")
+    // else
+    const result = responseJson.join("\n")
+    onPredictShowResult(result)
 }
