@@ -12,6 +12,12 @@
 
 [Artifacts](https://docs.google.com/spreadsheets/d/1bWZJQjIyJ7C32olwx6MAcjix8CeSey4rFpeFd0Huoyc/edit#gid=0)
 
+## About
+
+Our project is a visual editor for neural networks designed to simplify the creation and customization of deep learning models. In a browser-accessible interface, users can intuitively assemble, configure, and optimize neural networks by dragging layers and adjusting parameters in real-time.
+
+A key feature of the project is the ability to train models directly from the editor. The C++ server ensures high performance, allowing users to experiment with architectures and parameters. The trained neural networks generated are ready to predict outcomes for new data.
+
 ## Build options
 
 > **Important:** If CI tests don't pass, but work locally, make sure 
